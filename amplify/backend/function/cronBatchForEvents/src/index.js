@@ -12,12 +12,14 @@ exports.handler = async (event) => {
     console.log(`EVENT: ${JSON.stringify(event)}`);
     let params = {
         Item: {
-            id: {S: 'test'},
-            test: {S: 'abc'}
+            name: {S: 'test'},
+            descriptionn: {S: 'abc'}
         },
 //        TableName: process.env.USERTABLE
-        TableName: 'TestTable'
+        TableName: 'Todo'
     }
+
+    // Put Item into DynamoDB
     try {
         await ddb.putItem(params).promise()
         console.log('Success')
