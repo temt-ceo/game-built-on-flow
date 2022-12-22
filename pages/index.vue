@@ -13,7 +13,6 @@
 </template>
 
 <script>
-// import { Auth, Logger, I18n } from 'aws-amplify';
 import { Auth, API } from 'aws-amplify'
 import { createTodo } from '~/src/graphql/mutations'
 import { listTodos } from '~/src/graphql/queries'

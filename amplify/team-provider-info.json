@@ -17,6 +17,12 @@
       },
       "api": {
         "flowgamebuiltonflow": {}
+      },
+      "function": {
+        "cronBatchForEvents": {
+          "deploymentBucketName": "amplify-flowgamebuiltonflow-dev-95621-deployment",
+          "s3Key": "amplify-builds/cronBatchForEvents-5947636f2f4475395935-build.zip"
+        }
       }
     }
   }
