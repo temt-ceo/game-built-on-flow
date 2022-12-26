@@ -12,11 +12,14 @@ exports.handler = async (event) => {
     console.log(`EVENT: ${JSON.stringify(event)}`);
     let params = {
         Item: {
+            id: {S: Date.parse(new Date()).toString()},
             name: {S: 'test'},
-            descriptionn: {S: 'abc'}
+            description: {S: 'abc'},
+            FlowEvent: {"M": {"Name": {"S": "AAA"}, "Age": {"N": "999"}}},
+            createdAt: {S: (new Date()).toISOString()},
+            updatedAt: {S: (new Date()).toISOString()}
         },
-//        TableName: process.env.USERTABLE
-        TableName: 'Todo'
+        TableName: process.env.TODOTABLE
     }
 
     // Put Item into DynamoDB

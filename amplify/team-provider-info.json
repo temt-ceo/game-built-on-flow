@@ -21,7 +21,7 @@
       "function": {
         "cronBatchForEvents": {
           "deploymentBucketName": "amplify-flowgamebuiltonflow-dev-95621-deployment",
-          "s3Key": "amplify-builds/cronBatchForEvents-434d705446574b6f4833-build.zip"
+          "s3Key": "amplify-builds/cronBatchForEvents-38414a54772b674b5542-build.zip"
         }
       }
     }
