@@ -15,8 +15,8 @@
     <div>
       <div><button @click="flowWalletLogin">Wallet Log In</button></div>
       <div><button @click="flowWalletLogout">Wallet Log Out</button></div>
-      <div><button @click="flowWalletLogin">Wallet Log In</button></div>
-      <div><button @click="flowWalletLogin">Wallet Log In</button></div>
+      <div><button @click="flowWalletLogin">交換所に出品</button></div>
+      <div><button @click="flowWalletLogin">出品の取り消し</button></div>
       <ul>
         <li v-for="todo in todos" :key="todo.id">
           {{ todo.name }} : {{ todo.description }}
@@ -105,6 +105,7 @@ export default {
       await API.graphql({
         query: listTodos,
       }).then((todos) => {
+        console.log(todos)
         this.todos = todos.data.listTodos.items
       }).catch((err) => {
         console.log('Error:', err)
