@@ -170,91 +170,168 @@ export default {
     Solidity is well-known and many blockchains use EVM (Ethereum Virtual Machine) which handles Solidity, but there are security concerns.
     Perhaps because Solidity was not suitable for implementing the secure transfer of NFT assets, and perhaps because it was the CTO of Flow Blockchaion who proposed NFT, Flow Blockchain has developed an original smart contract language, the Cadence.`,
   page8_5: ``,
-  page9_1: ``,
-  page9_2: ``,
+  page9_1: `What only Cadence can do`,
+  page9_2: `There are many. As I said in 1.1, Solidity basically embeds the transactional code in the smart contract, so there is a complete division of labor between Javascript and Solidity. This can be a bit cumbersome during development. If you are usually a web developer, it is more efficient to develop the front-end while developing the back-end. In fact, with AWS's Amplify and GoogleCloud's Firebase, you can write the source code for the cloud server while writing the front-end source code.
+
+  Amplify and Firebase are growing rapidly because of this convenience.
+  
+  Cadence allows you to pass Cadence code to JavaScript libraries, allowing you to develop in tandem with your front-end code. Once you get involved in Cadence development, Solidity development can feel a bit sluggish.
+  
+  I wrote at the beginning that because we can deploy in a fraction of the time and spare no time, we can use it to develop systems in a variety of fields. Also, there are many cases where an audit is not necessary: Solidity has many traps and audits are necessary to code safely, but with Cadence, the developers can check the code themselves.`,
   page9_3: ``,
   page9_4: ``,
   page9_5: ``,
-  page10_1: ``,
-  page10_2: ``,
-  page10_3: ``,
+  page10_1: `Let's do development in Cadence!`,
+  page10_2: `To write Cadence`,
+  page10_3: `Prepare a personal computer.
+  You will also need software called an editor that allows you to write programs and software that allows you to execute commands such as downloading software via the Internet.
+  For the former, we will use software called VSCode in this manual.
+  For the latter, on a Mac, software called Terminal is installed by default.
+  For Windows, VSCode has a function that performs the same role as Terminal.
+  
+  Anyone with an Internet environment can write smart contracts and deploy them on the blockchain.`,
   page10_4: ``,
   page10_5: ``,
-  page11_1: ``,
-  page11_2: ``,
-  page11_3: ``,
-  page11_4: ``,
-  page11_5: ``,
-  page12_1: ``,
+  page11_1: `Prepare your development environment`,
+  page11_2: `The instructions for launching each of these software programs are as follows.
+
+  Download and install VSCode from the following URL according to the OS of your computer.
+  URL: https://code.visualstudio.com/download`,
+  page11_3: `The Terminal can be found by opening the Applications folder and then the Utilities folder.`,
+  page11_4: `If your OS is Windows, use the Terminal that exists in the VSCode application.
+  Open VSCode and press the following toggle in the upper right corner`,
+  page11_5: `You will see Terminal in the lower pane of the screen.
+  You can change the shell by clicking the "+" button in the upper right corner of the pane with Terminal.`,
+  page12_1: `Next, install Node.js.
+
+  Download and install Node.js from the following URL according to your computer's operating system.
+  
+  URL: https://nodejs.org/en/download/
+  `,
   page12_2: ``,
   page12_3: ``,
   page12_4: ``,
   page12_5: ``,
-  page13_1: ``,
-  page13_2: ``,
-  page13_3: ``,
-  page13_4: ``,
+  page13_1: `Next, install the Flow CLI.
+
+  On a Mac, execute the following command on the Terminal.
+  
+  *For Mac.`,
+  page13_2: `If brew is not installed, try running the command /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" to install it.`,
+  page13_3: `In case of Windows, please execute the following commands on Terminal.
+
+  *For Windows.`,
+  page13_4: `This completes the preparation of the computer environment.`,
   page13_5: ``,
-  page14_1: ``,
-  page14_2: ``,
-  page14_3: ``,
+  page14_1: `Let's write Hello, World in Cadence!`,
+  page14_2: `The Cadence Playground web page will appear. Select the 0x01 link on the far left.`,
+  page14_3: `0x01 refers to 0x01's account.
+
+  This screen shows the smart contract deployed by 0x01.
+  
+  The location where this smart contract is stored is essentially the same as the storage where resources such as FLOW tokens or NFTs are stored.
+  
+  In fact, there is a web page where you can check this smart contract code, and the number of FLOW tokens you hold is also shown on that screen. You can think of your account as having a place to store resources such as tokens and a place to hold deployed smart contracts.
+  
+  *Deploy: placing on the blockchain`,
   page14_4: ``,
   page14_5: ``,
-  page15_1: ``,
-  page15_2: ``,
-  page15_3: ``,
-  page15_4: ``,
+  page15_1: `After clicking 0x01, your web browser should display the following screen.`,
+  page15_2: `Indicated by the red box is the contract deployed by 0x01. By referring to this contract, other accounts can obtain information on this contract. (Play Ground allows only one deployment, but it is possible to deploy multiple contracts with a single account.)
+
+  Seeing is believing, so let's write a Hello World contract.`,
+  page15_3: `Let's change self.greeting = "Hello, World!" as follows`,
+  page15_4: `Then press the Deploy button in the upper right corner.`,
   page15_5: ``,
-  page16_1: ``,
-  page16_2: ``,
-  page16_3: ``,
-  page16_4: ``,
+  page16_1: `You will see the following at the bottom of the screen.`,
+  page16_2: `You will see this display when you deploy a smart contract on the blockchain. This blockchain is the blockchain on the emulator.`,
+  page16_3: `You can now refer to this address to see the information about this smart contract from anywhere.
+
+  Click on "General Script" in the lower left corner of the screen under "SCRIPT TEMPLATES".`,
+  page16_4: `You will see the following on the screen.`,
   page16_5: ``,
-  page17_1: ``,
-  page17_2: ``,
-  page17_3: ``,
-  page17_4: ``,
-  page17_5: ``,
-  page18_1: ``,
-  page18_2: ``,
-  page18_3: ``,
+  page17_1: `Let's write the code here as follows`,
+  page17_2: `The hello method of the HelloWorld smart contract for the 0x01 account is called.`,
+  page17_3: `Click the Execute button in the upper right corner of the screen.`,
+  page17_4: `Then you will see the following in the area circled in blue.`,
+  page17_5: `You now have your first blockchain app, HelloWorld.
+
+  Next, let's change the information in your smart contract.`,
+  page18_1: `Let's go back to account 0x01 and add the code as shown in red below. Also, change pub let in line 3 to pub var.`,
+  page18_2: `Variables cannot be changed if let is attached, but var can be changed.
+  When you have finished making changes, press the Deploy button in the upper right corner.`,
+  page18_3: `Click on "Simple Transaction" which can be seen under "TRANSACTION TEMPLATES" in the lower left corner of the screen.`,
   page18_4: ``,
   page18_5: ``,
-  page19_1: ``,
-  page19_2: ``,
-  page19_3: ``,
-  page19_4: ``,
+  page19_1: `You will see the following on the screen.`,
+  page19_2: `Let's write the code here as follows. The part in red is the part to be added.`,
+  page19_3: `In this state, try pressing the Send button in the upper right corner. If the message "Goodbye, My Smart Contract!" appears at the bottom of the screen, you have succeeded.`,
+  page19_4: `Now we have made changes to the smart contract on the blockchain.
+
+  Next, let's get into more serious development.`,
   page19_5: ``,
-  page20_1: ``,
-  page20_2: ``,
-  page20_3: ``,
+  page20_1: `To create software in Cadence`,
+  page20_2: `The Transaction of blockchain is carried out with the approval of the account. In the previous transaction, this is the following part. This prepare method has an argument of type AuthAccount, which is the object of the account passed as an argument when it is authorized in the wallet.`,
+  page20_3: `This AuthAccount object is used to perform changes to the smart contract information. Otherwise, anyone can modify the smart contract.`,
   page20_4: ``,
   page20_5: ``,
-  page21_1: ``,
-  page21_2: ``,
-  page21_3: ``,
+  page21_1: `prepare method using AuthAccount`,
+  page21_2: `In most cases, the actual transaction is executed using an AuthAccount, as shown below. In the following, the AuthAccount, i.e., the authorizer of the transaction, has obtained a reference to the Collection resource from the MyNFTCollection smart contract in its own storage.`,
+  page21_3: `Naturally, this process can only be performed by the account that owns the storage itself.
+  Therefore, the AuthAccount, which is the object authorized by the storage owner, plays the most important role in the transaction.
+  
+  There is another role, "Capability," which can be used to perform other actions, such as depositing NFTs into storage for other accounts." Capability" is defined using the resource interface. See 6 Resource Interface for more information on resource interfaces. This book is explained in the development flow, so please refer to the reference in Chapter 8 for more details.`,
   page21_4: ``,
   page21_5: ``,
-  page22_1: ``,
-  page22_2: ``,
-  page22_3: ``,
+  page22_1: `NFT Standard`,
+  page22_2: `Next, let's create an NFT contract.
+  When the Cadence Playground web page appears, click the 0x01 on the left side of the screen.
+  
+  (If you find it difficult during the process, please refer to the reference at the end of this document as appropriate. )
+  `,
+  page22_3: `After clicking 0x01, your web browser should display the following screen.`,
   page22_4: ``,
   page22_5: ``,
-  page23_1: ``,
-  page23_2: ``,
-  page23_3: ``,
-  page23_4: ``,
+  page23_1: `Change this to the Non Fungible Token Standard.
+
+  The Non Fungible Token Standard can be found on the Flow core team's Github.
+  
+  URL: https://github.com/onflow/flow-nft/blob/master/contracts/NonFungibleToken.cdc
+  
+  (Here, choose the branch standard-v2 or stable-cadence, not master.)
+  
+  Copy and paste the contents here into the contract space of the 0x01 account.`,
+  page23_2: `As of 2022/12/21, the following getViews and resolveViews exist in the master branch, although Play Ground will error if this is present. At this time, I am commenting out it to avoid the error. In the future, Play Ground will support this. Even if there are no new methods, it is not a problem, just a different version of NFT.`,
+  page23_3: `As of 2022/12/21, an error occurs if the following method is present in Play Ground, but the following borrowNFTSafe method is present in the master branch. At this time, the following borrowNFTSafe is commented out to avoid the error. In the future, Play Ground will support this. Even if there are no new methods, it is not a problem, just a different version of NFT.`,
+  page23_4: `Comments have been removed to prevent the page from getting too long.`,
   page23_5: ``,
-  page24_1: ``,
-  page24_2: ``,
+  page24_1: `This is called an interface and lists the methods and states that the contract must implement.
+
+  There are two types of interfaces: contract interfaces and resource interfaces.`,
+  page24_2: `The contract interface lists items that the smart contract must conform to, while the resource interface lists items that the resource must conform to. For resource interfaces, see also 6 Resource Interface.
+
+  This interface is the NFT standard that the Flow core team has come up with, and it is considered to be the interface that a resource must conform to in order to be implemented as an NFT.
+  
+  Once compliant, it will be considered and displayed as an NFT in wallets and marketplaces around the world.
+  
+  Since Flow Blockchain is still a new blockchain, specifications will be added in the future, but no disruptive changes are expected at this time.
+  (Now according to the core developer's talking on Discord, "Stable Cadence" is considered the last disruptive change.)
+  
+  This makes it seem like there are surprisingly few implementations needed for NFTs, don't you think?`,
   page24_3: ``,
   page24_4: ``,
   page24_5: ``,
-  page25_1: ``,
-  page25_2: ``,
-  page25_3: ``,
-  page25_4: ``,
-  page25_5: ``,
+  page25_1: `The one state (variable): totalSupply
+
+  In the Flow blockchain, the variable that is placed directly under the contract is called the State. This value represents the state of the smart contract, and this value means the current information of the smart contract. The methods directly under the contract are called logic. The logic defines how the information in the smart contract is changed.`,
+  page25_2: `There are three events: ContractInitialized、Withdraw、Deposit
+
+  The event is for when you want to be notified when something changes on the blockchain. For more information, see section 9. Query for Events (How to get event notifications).`,
+  page25_3: `Four resource interfaces ： INFT, Provider, Receiver, CollectionPublic`,
+  page25_4: `Two resources ： NFT, Collection
+  `,
+  page25_5: `If we prepare a contract that implements only these features, we can call it an NFT.
+  The NFT resource is the body that contains the NFT-specific information, and the Collection is the object that stores these resources. Thanks to this object, it is possible to have multiple NFTs with one path to the account's storage. (See section 3 How to Create an NFT for more information.`,
   page26_1: ``,
   page26_2: ``,
   page26_3: ``,
