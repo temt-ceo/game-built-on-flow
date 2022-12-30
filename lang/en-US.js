@@ -332,79 +332,155 @@ export default {
   `,
   page25_5: `If we prepare a contract that implements only these features, we can call it an NFT.
   The NFT resource is the body that contains the NFT-specific information, and the Collection is the object that stores these resources. Thanks to this object, it is possible to have multiple NFTs with one path to the account's storage. (See section 3 How to Create an NFT for more information.`,
-  page26_1: ``,
+  page26_1: `The resource interface INFT defines the methods and other information that an NFT resource must comply with.
+
+  The Provider, Receiver, and CollectionPublic resource interfaces define methods for Collection resources to comply with.
+  
+  The Receiver has a \`deposit\` method, which is the one that makes the deposit. Generally, it is the same as a bank or other transfer deposit, and the incoming side should not require approval.
+  
+  Of course, it is possible to make Smart Contract to require approval, but in the case of NFT, it is not necessary.
+  
+  The Provider has a \`withdraw\` method, which is used to retrieve the NFT from the collection. Therefore, this interface is set to a Capability only for who owns NFTs.
+  
+  CollectionPublic has "Public" in the interface name, so it is safe to assume that it defines a method that is set to a Public Capability that does not require authorization.
+  
+  "Collection" resources are structured in such a way that Provider, Receiver, and CollectionPublic interfaces should be compliant.
+  
+  Since the Collection is the outermost part of the resources held by an account when viewed on the blockchain, it is possible to securely hold resources by preparing Public Capability and Private Capability, so it is recommended to prepare interfaces corresponding to these two types. Therefore, it is important to prepare the corresponding interfaces.
+  
+  Incidentally, resource holders are usually granted full execution rights to resources. (Resource holders do not need Capability when transferring their Resources. See 7 Private Capabilities for more information.)`,
   page26_2: ``,
   page26_3: ``,
   page26_4: ``,
   page26_5: ``,
-  page27_1: ``,
+  page27_1: `Finally, a method named createEmptyCollection is defined in the contract interface.
+
+
+  Since resources can only be created within a contract, this method is not limited to NFT contracts, but is required for almost all contracts.
+  
+  Deploy this NFT contract interface to the 0x01 account.
+  
+  Click the Deploy button in the upper right corner to deploy.
+  `,
   page27_2: ``,
   page27_3: ``,
   page27_4: ``,
   page27_5: ``,
-  page28_1: ``,
-  page28_2: ``,
-  page28_3: ``,
+  page28_1: `5 . 4 NFT Contracts
+
+  On Play Ground, only one contract can be deployed per account. Therefore, let's deploy our NFT smart contract to account 0x02.
+  
+  Click on 0x02 and type the following code on the screen.`,
+  page28_2: `Next, make this contract compliant with the interface. Please add the code as shown in red below.`,
+  page28_3: `At this time, an error should appear on Play Ground. This is because the interface contains items that must be implemented by the Smart Contract, and these items have not been implemented.`,
   page28_4: ``,
   page28_5: ``,
-  page29_1: ``,
-  page29_2: ``,
-  page29_3: ``,
-  page29_4: ``,
+  page29_1: `Implement the items that should be implemented in the smart contract. First, add the code for the event as shown in red below.`,
+  page29_2: `This defines the Events. Events are methods, but just define them in pub event and you are good to go. When you want to generate an event, call this method.
+  You will then be able to receive notifications from the blockchain.`,
+  page29_3: `Next, add the States as shown in red below.`,
+  page29_4: `The States must always be initialized in init, and the Init process is required not only in the Contract, but also in the Resource and in the Struct.`,
   page29_5: ``,
-  page30_1: ``,
-  page30_2: ``,
-  page30_3: ``,
+  page30_1: `Next, add the code for the NFT resource as shown in red below.`,
+  page30_2: `This NFT is the body of the resource you wish to store in the account storage. You will add the necessary methods and states to this method. In this document, however, we will only implement id.`,
+  page30_3: `Next, we want this resource to be compliant with the NFT standard, so we add the interface as shown in red below.`,
   page30_4: ``,
   page30_5: ``,
-  page31_1: ``,
-  page31_2: ``,
-  page31_3: ``,
-  page31_4: ``,
+  page31_1: `Next, add a collection resource to store the NFT as shown in red below.`,
+  page31_2: `When creating a resource, '<-' is required.`,
+  page31_3: `(Omitted)`,
+  page31_4: `Now make this Collection compliant with the NFT Contract interface. Add the following.`,
   page31_5: ``,
-  page32_1: ``,
-  page32_2: ``,
+  page32_1: `Next, the necessary logic is added to the collection resource to comply with the resource interface. Add the following in red below.`,
+  page32_2: `All of its methods must be implemented to comply with the three interfaces.
+
+  "deposit" method：Downcasting with "as!" allows access to the states and methods defined in this smart contract. For details on downcasting, see "3. How to Create an NFT".
+  
+  "withdraw" method：This removes one NFT from the collection and returns it.
+  An error occurs during the transaction until it can be confirmed that it will be stored in other storage or destroyed. Therefore, it is said that Flow is designed to be safe in the sense that resources are never lost.
+  
+  "borrowNFT" method：Returns a reference to a resource. Since it is a reference, the resource is not moved and the code can be written safely.
+  In the Optional Reference implementation, a Breaking Change occurred here, as shown below.
+   
+   &self.ownedNFTs[id] as &NonFungibleToken.NFT
+  
+  was fine, but now it is
+  
+   (&self.ownedNFTs[id] as &NonFungibleToken.NFT?)!
+  
+  For more information on Optional References, please refer to the 17 Optional References section.
+  
+  "getIDs" method：Returns a list of NFT IDs.`,
   page32_3: ``,
   page32_4: ``,
   page32_5: ``,
-  page33_1: ``,
-  page33_2: ``,
-  page33_3: ``,
-  page33_4: ``,
+  page33_1: `Implement the createEmptyCollection method.`,
+  page33_2: `This contract is now compliant with the NonFungibleToken contract interface. Deploy it by clicking the "Deploy" button in the upper right corner.
+  If you get a message that you cannot deploy, reload your browser and try clicking the "Deploy" button again starting from 0x01.`,
+  page33_3: `Finally, we implement a method to generate this NFT, the createToken method. Since the "create" directive can only be written in a contract, this method must be implemented in the contract.`,
+  page33_4: `Deploy this by clicking the "Deploy" button in the upper right corner.`,
   page33_5: ``,
-  page34_1: ``,
-  page34_2: ``,
+  page34_1: `Finally, the entire NFT Smart Contract is as follows`,
+  page34_2: `The following GitHub URL has the full source code for the app that joined the Flowverse and Flow Ecosystem Network in July 2022. (Collection is used under the name Vault.)
+  This app did not use NFT, so there is no Contract Interface, but the resource interface is included because it is used heavily in access restrictions.
+  
+  URL: https://github.com/temt-ceo/tickets-on-flow/blob/main/cadence/Tickets.cdc
+  
+  I think Cadence is very friendly to game engineers because it looks surprisingly like C language.`,
   page34_3: ``,
   page34_4: ``,
   page34_5: ``,
-  page35_1: ``,
-  page35_2: ``,
-  page35_3: ``,
-  page35_4: ``,
+  page35_1: `Let's give NFT to other accounts.`,
+  page35_2: `Now let's give the created NFT to the user.`,
+  page35_3: `Click on the + to the right of "TRANSACTION TEMPLATES" in the red box, click on "New Transaction" that appears, and write the following source code in the space on the right.`,
+  page35_4: `Let's execute it from the "Send" button in the upper right corner. The Transaction Signer displayed in the upper right corner can be anyone, so let's execute it with the default value of 0x01 set.`,
   page35_5: ``,
-  page36_1: ``,
+  page36_1: `This transaction saves the resources of the NFT collection to the storage of the account. The path to the storage where this resource is stored is /storage/, which can only be accessed by the account itself. Therefore, we have created Public Capability so that anyone can access this information.
+  Public Capability is specified by the link method with a resource interface.
+  
+  AuthAccount.link<& resource name {resource interface}>(destination, target: resource location)
+  
+  The following example shows how to do this. Since a resource interface only allows access to the methods defined in the resource interface, here Capability, which only allows access to the methods defined in NonFungibleToken.CollectionPublic, is stored in the /public/ path of the storage.
+  
+  
+  The next step is to perform a Transaction to insert an NFT into the collection created in this account.`,
   page36_2: ``,
   page36_3: ``,
   page36_4: ``,
   page36_5: ``,
-  page37_1: ``,
-  page37_2: ``,
+  page37_1: `Let's execute it from the "Send" button in the upper right corner. Set 0x01, which has Collection, to the Transaction Signer displayed in the upper right corner.`,
+  page37_2: `This Transaction is getting a reference to a resource in the NFT collection.
+
+  This Transaction is authorized and executed by the owner of the collection, so we can go directly to the /storage/ path to see the resource.
+  
+  The next line takes the NFT created with the <- directive and stores it in the collection's resources in the next line.
+  
+  It's a little, lonely in terms of content, but we have now saved the NFT in the Collection. Next, let's create a system for a more practical game.`,
   page37_3: ``,
   page37_4: ``,
   page37_5: ``,
-  page38_1: ``,
-  page38_2: ``,
-  page38_3: ``,
-  page38_4: ``,
+  page38_1: `Let's make a real Dapps!`,
+  page38_2: `DApps to be created`,
+  page38_3: `We will create a system to notify users of blockchain updates in real time.
+  The technologies to be used are Flow Blockchain for the blockchain, AWS DynamoDB and AppSync for the cloud server, and AWS Amplify, which supports GraphQL, will be used to build the system. We will create a system with the following configuration diagram.`,
+  page38_4: `Specifically, the exchange of trading cards is stored on the blockchain. When the exchange occurs, an event is generated on the blockchain.
+  The event will be stored in DynamoDB and the user's application will be notified in real time.
+  
+  As mentioned in section 3.5, Amplify allows you to write the source code for the cloud server while writing the source code for the front-end, making development much more efficient.
+  Amplify of AWS and Firebase of GoogleCloud can combine back-end and front-end source code in one repository.
+  
+  We will use this Amplify mechanism to build a full-fledged application that can be built in less than an hour.`,
   page38_5: ``,
-  page39_1: ``,
-  page39_2: ``,
-  page39_3: ``,
-  page39_4: ``,
-  page39_5: ``,
-  page40_1: ``,
-  page40_2: ``,
-  page40_3: ``,
+  page39_1: `Building Amplify and Nuxt.js environment`,
+  page39_2: `First, build the part in the red box below in the configuration diagram.`,
+  page39_3: `I will proceed under the assumption that Node.js and AWS Amplify CLI are already installed.`,
+  page39_4: `For information on how to install Amplify CLI, please refer to the official AWS website.`,
+  page39_5: `If you wish to delete the Amplify system you have built, you can do so by executing the following command.`,
+  page40_1: `Create an IAM User to build Amplify. Execute the following command.`,
+  page40_2: `1. Web Blowser will start up, and sign in to AWS on the screen displayed.
+  After signing in is complete, return to the Terminal screen and press Enter.
+2. Select AWS Region on the Terminal screen (see image below).`,
+  page40_3: `3. Enter the name of the IAM user to be newly created. (flowEvents)`,
   page40_4: ``,
   page40_5: ``,
   page41_1: ``,
