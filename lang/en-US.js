@@ -4,33 +4,22 @@ export default {
   book_title3: 'Flow Dapp Complete Creation Manual',
   book_title4: 'Get a detailed reference on the smart contract language Cadence!!',
   book_title5: "Let's make the blockchain game development easier than ever with AppSync! 🎮",
-  page1_1: `Preface
-
-  What does blockchain app development look like?
+  page1_1: `What does blockchain app development look like?
   
+  The Flow Blockchain website says that it is developer friendly. This is true, and when you develop with Play Ground, you can share your source code with anyone, and if you share it on Flow's Discord, someone will respond to you right away. This is because Play Ground and the Flow Client Library (FCL) are developed with the developer in mind, and this developer support is one of Flow's most attractive features.
+
   Flow Blockchain has a wallet called Blocto, which makes it very easy to transfer Crypto Currency and create NFT wallets.
 
-  The ease of transferring money and the instant creation of wallets means that money and goods can be exchanged with people all over the world in no time. When I published this book, I can easily say, "I want to pay you an honorarium, so give me your Blocto wallet address," and the transaction actually takes about 5 seconds and is completely stress-free.
-
-  It's hard to find anything to stress about because Flow is an extremely secure, accident-free, and transparent blockchain.
-
-  The Flow Blockchain website says it is developer friendly. This is true, and when you develop on Play Ground, you can share your source code with anyone, and if you share it on Flow's Discord, someone will respond to you right away. This is because Play Ground and the Flow Client Library (FCL) are developed with developers in mind, and this developer support system is one of Flow's strengths.
-
-  Since it is the CTO of Dapper, the creator of Flow Blockchain, who submitted ERC721, Ethereum's NFT, the new features of the NFT will almost certainly become Flow's strength. NFT development using Flow Blockchain will likely accelerate in the future.
+  The ease of transferring money and the instant creation of wallets means that money and goods can be exchanged with people all over the world in no time at all. When I published this book, I could easily ask for the Blocto wallet address to pay for the book, and the "transaction" took about 5 seconds and was completely stress-free. It's hard to find anything to stress about because Flow is an extremely secure, accident-free, and transparent blockchain.
+  
+  Since it was the CTO of Dapper, the creator of Flow Blockchain, who submitted ERC721, Ethereum's NFT, the new features of the NFT will almost certainly become Flow's strength. NFT development using Flow Blockchain will likely accelerate in the future.
 
   However, building an NFT with Flow Blockchain is difficult for newcomers to understand how to implement, and the lack of books means that there is little information available for reference.
 
-  In particular, after Stable Cadence was released in June 2022, contracts before and after the Breaking Change are mixed up, and information income for them is easy to understand for those who have already developed them, but for those who want to learn Cadence for the first time, the hurdle is quite high.
+  In particular, after Stable Cadence is released in June 2022, contracts before and after the Breaking Change are mixed up, and information income for them is easy to understand for those who have already developed them, but for those who want to learn Cadence for the first time, the hurdle is quite high. However, it is a hurdle for those who want to learn Cadence for the first time.
 
-  This book describes how to write smart contracts using Cadence and the steps to actually release a game. Flow Blockchain around the game is a very attractive platform. The ability to exchange NFTs of any value with anyone in the world, or to pay in Crypto Currency, and the very high speed of the process itself, allows developers to build any Blockchain system they want on top of their own ideas. We will explain in an easy-to-understand manner where beginners are likely to get stuck, and we will work with you to get past the initial obstacle of creating an NFT, so we hope you will pick up this book, discover the joy of creating a blockchain application called Dapp, and build a new system in this world. I hope you will take this book and discover the joy of creating a blockchain app called Dapp and build a new system in this world.  
-  
-  I will explain in an easy-to-understand manner where beginners are likely to get stuck, and we will work with you to get past the initial obstacle of creating an NFT, so I hope you will pick up this book, discover the joy of creating a blockchain application called Dapp, and build a new system in this world.
-  `,
-  page1_2: `  I would like to thank Chris, Dapper Asia Gaming Division Strategy Officer, for the opportunity to publish this book.
-  I would also like to thank Layne, Community Manager and Product Manager, for her end-to-end support in the execution of this book project.
-  Thanks to Vishal, Flow Core Developer, for supervising the writing in the Flow Blockchain and Cadence references. I would like to take this opportunity to thank them.
-
-  Takashi Tahara`,
+  This book describes how to write smart contracts using Cadence and the steps to actually release a game. Flow around the game Blockchain is a very attractive platform. The ability to exchange NFTs of value with people all over the world, or to pay in Crypto Currency, and the very high speed of the process itself, allows developers to build any Blockchain system they want on top of their own ideas. We will explain in an easy-to-understand manner where beginners are likely to get stuck, and we will work with you to get past the initial obstacle of creating an NFT, so we hope you will pick up this book, discover the joy of creating a blockchain application called Dapp, and build a new system in this world. I hope you will take this book and discover the joy of creating a blockchain application called Dapp and build a new system in this world.`,
+  page1_2: ``,
   page1_3: ``,
   page1_4: ``,
   page1_5: `Getting Started with Cadence`,
@@ -280,7 +269,7 @@ export default {
   page21_3: `Naturally, this process can only be performed by the account that owns the storage itself.
   Therefore, the AuthAccount, which is the object authorized by the storage owner, plays the most important role in the transaction.
   
-  There is another role, "Capability," which can be used to perform other actions, such as depositing NFTs into storage for other accounts." Capability" is defined using the resource interface. See 6 Resource Interface for more information on resource interfaces. This book is explained in the development flow, so please refer to the reference in Chapter 8 for more details.`,
+  There is another role, "Capability," which can be used to perform other actions, such as depositing NFTs into storage for other accounts." Capability" is defined using the resource interface. See 7.6 Resource Interface for more information on resource interfaces. This book is explained in the development flow, so please refer to the reference in Chapter 8 for more details.`,
   page21_4: ``,
   page21_5: ``,
   page22_1: `NFT Standard`,
@@ -308,7 +297,7 @@ export default {
   page24_1: `This is called an interface and lists the methods and states that the contract must implement.
 
   There are two types of interfaces: contract interfaces and resource interfaces.`,
-  page24_2: `The contract interface lists items that the smart contract must conform to, while the resource interface lists items that the resource must conform to. For resource interfaces, see also 6 Resource Interface.
+  page24_2: `The contract interface lists items that the smart contract must conform to, while the resource interface lists items that the resource must conform to. For resource interfaces, see also 7.6 Resource Interface.
 
   This interface is the NFT standard that the Flow core team has come up with, and it is considered to be the interface that a resource must conform to in order to be implemented as an NFT.
   
@@ -331,7 +320,7 @@ export default {
   page25_4: `Two resources ： NFT, Collection
   `,
   page25_5: `If we prepare a contract that implements only these features, we can call it an NFT.
-  The NFT resource is the body that contains the NFT-specific information, and the Collection is the object that stores these resources. Thanks to this object, it is possible to have multiple NFTs with one path to the account's storage. (See section 3 How to Create an NFT for more information.`,
+  The NFT resource is the body that contains the NFT-specific information, and the Collection is the object that stores these resources. Thanks to this object, it is possible to have multiple NFTs with one path to the account's storage. (See section 7.3 How to Create an NFT for more information.`,
   page26_1: `The resource interface INFT defines the methods and other information that an NFT resource must comply with.
 
   The Provider, Receiver, and CollectionPublic resource interfaces define methods for Collection resources to comply with.
@@ -348,7 +337,7 @@ export default {
   
   Since the Collection is the outermost part of the resources held by an account when viewed on the blockchain, it is possible to securely hold resources by preparing Public Capability and Private Capability, so it is recommended to prepare interfaces corresponding to these two types. Therefore, it is important to prepare the corresponding interfaces.
   
-  Incidentally, resource holders are usually granted full execution rights to resources. (Resource holders do not need Capability when transferring their Resources. See 7 Private Capabilities for more information.)`,
+  Incidentally, resource holders are usually granted full execution rights to resources. (Resource holders do not need Capability when transferring their Resources. See 7.7 Private Capabilities for more information.)`,
   page26_2: ``,
   page26_3: ``,
   page26_4: ``,
@@ -394,7 +383,7 @@ export default {
   page32_1: `Next, the necessary logic is added to the collection resource to comply with the resource interface. Add the following in red below.`,
   page32_2: `All of its methods must be implemented to comply with the three interfaces.
 
-  "deposit" method：Downcasting with "as!" allows access to the states and methods defined in this smart contract. For details on downcasting, see "3. How to Create an NFT".
+  "deposit" method：Downcasting with "as!" allows access to the states and methods defined in this smart contract. For details on downcasting, see "7.3. How to Create an NFT".
   
   "withdraw" method：This removes one NFT from the collection and returns it.
   An error occurs during the transaction until it can be confirmed that it will be stored in other storage or destroyed. Therefore, it is said that Flow is designed to be safe in the sense that resources are never lost.
@@ -408,7 +397,7 @@ export default {
   
    (&self.ownedNFTs[id] as &NonFungibleToken.NFT?)!
   
-  For more information on Optional References, please refer to the 17 Optional References section.
+  For more information on Optional References, please refer to the 7.17 Optional References section.
   
   "getIDs" method：Returns a list of NFT IDs.`,
   page32_3: ``,
@@ -511,7 +500,7 @@ export default {
   page44_5: ``,
   page45_1: `Create aws-exports.js`,
   page45_2: `Execute the following command to create a configuration file for the Nuxt application to connect with Amplify.`,
-  page45_3: `The default settings should be fine, so type "Enter" and the Amplify command will start the process. Since this deploy process takes a little time, let's proceed to the next section, 7.5 Connecting Nuxt application with AppSync.
+  page45_3: `The default settings should be fine, so type "Enter" and the Amplify command will start the process. Since this deploy process takes a little time, let's proceed to the next section, 6.5 Connecting Nuxt application with AppSync.
   The configuration file, aws-exports.js, which is used to connect the Nuxt app to Amplify, is created just before the deployment is started. The aws-exports.js file will be created under the src folder, but the location of the file will change depending on the configuration values.`,
   page45_4: ``,
   page45_5: ``,
@@ -1363,13 +1352,38 @@ export default {
   page192_3: ``,
   page192_4: ``,
   page192_5: ``,
-  page193_1: ``,
+  page193_1: `  I would like to thank Chris, Dapper Asia Gaming Division Strategy Officer, for the opportunity to publish this book.
+  I would also like to thank Layne, Community Manager and Product Manager, for her end-to-end support in the execution of this book project.
+  Thanks to Vishal, Flow Core Developer, for supervising the writing in the Flow Blockchain and Cadence references. I would like to take this opportunity to thank them.
+
+  Takashi Tahara`,
   page193_2: ``,
   page193_3: ``,
   page193_4: ``,
   page193_5: ``,
-  page194_1: ``,
-  page194_2: ``,
+  page194_1: `Have you ever had so much fun developing software?
+
+  I think Steven Jobs was such a great man because he enjoyed developing new products so much.
+  
+  Engineers enjoy software development because it has the potential to do things that they could not do on their own, and because software gives them the potential to generate a lot of profit.
+  
+  I think that is the appeal of smart contracts. Once smart contracts are running on the blockchain, it is very rewarding because they will be used all over the world, regardless of what you think.
+  
+  Yes, the world is the stage for smart contracts. It is possible to do business in places where there are no credit cards, and with the Internet, nothing else is needed.
+  
+  If Steven Jobs were around today, he would be thrilled.
+  
+  The book is published on kindle so it can be sold worldwide. But that is because it is provided by a company called Amazon. Isn't this exciting because there is a possibility that you can make this if you program it yourself?
+  
+  I think the reason there are so many scams in the web3 world is because it is still a new technology.
+  Tomorrow there could be a new Stephen Jobs.
+  Flow Blockchain has a secure wallet. And the technical team that created Flow Blockchain wants to work together to create a world where a more attractive Stephen Jobs is exciting.
+  What you create with smart contracts is up to the developer, but I think every developer is concerned about the convenience of the secure wallet that Flow boasts, and they will be happy to discuss that with you.
+  I think we can put ourselves out there more and show the world that together we can make the wallet easier to use. If more people around the world think so, we can do better.
+  I am sure that Steven Jobs must be envious of today's technology in the afterlife. I am sure he must be envious of this life, that I am not here to see such exciting developments.`,
+  page194_2: `   I would like to thank Chris, Dapper Asia Gaming Division Strategy Officer, for the opportunity to publish this book.
+  I would also like to thank Layne, Community Manager and Product Manager, for her end-to-end support in the execution of this book project.
+  Thanks to Vishal, Flow Core Developer, for supervising the writing in the Flow Blockchain and Cadence references. I would like to take this opportunity to thank them.`,
   page194_3: ``,
   page194_4: ``,
   page194_5: ``,
