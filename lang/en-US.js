@@ -839,7 +839,7 @@ export default {
   page105_2: `If you have not yet registered an account with Blocto, enter your email address in the Email field and click the Register button.
   If you already have an account, enter your email address and sign in.`,
   page105_3: `Display the wallet address of the user`,
-  page105_4: `Add the following sentence to the third line of pages/index.vue. Then login with your Blocto wallet. You will see the wallet address as follows`,
+  page105_4: `Add the following sentence to the third line of pages/index.vue. Then sign-in with your Blocto wallet. You will see the wallet address as follows`,
   page105_5: `The user's wallet address is the value of user?addr obtained by the fcl.currentUser.subscribe method.`,
   page106_1: `Log out of the Blocto wallet`,
   page106_2: `Add a logout button to line 8 of pages/index.vue. Do the following`,
@@ -942,7 +942,7 @@ export default {
   page121_3: `Return to the VSCode editor. Create a folder named "cadence" in the project root; create the transactions.js file under it. Then enter the source code as shown below.`,
   page121_4: ``,
   page121_5: ``,
-  page122_1: `Copy and paste the contents of 7.17.1 between lines 2 and 3 of this file. Do the following`,
+  page122_1: `Copy and paste the contents of 7.18.1 between lines 2 and 3 of this file. Do the following`,
   page122_2: ``,
   page122_3: ``,
   page122_4: ``,
