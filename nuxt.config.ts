@@ -11,4 +11,5 @@ export default defineNuxtConfig({
           'window.global': {}
         }
     },
+    builder: 'webpack',
 })
