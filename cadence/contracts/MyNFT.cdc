@@ -1,6 +1,6 @@
    import NonFungibleToken from 0x631e88ae7f1d7c20
 
-   pub contract MyNFT: NonFungibleToken {
+   pub contract MyNFTv2: NonFungibleToken {
 
      pub var totalSupply: UInt64
 
@@ -22,10 +22,10 @@
      pub resource NFT: NonFungibleToken.INFT {
        pub let id: UInt64
        init (nickname: String, imagepath: String, addr: Address) {
-         self.id = MyNFT.totalSupply
-         MyNFT.totalSupply = MyNFT.totalSupply + 1
+         self.id = MyNFTv2.totalSupply
+         MyNFTv2.totalSupply = MyNFTv2.totalSupply + 1
          let nft1stInfo = NFT1stStruct(nickname: nickname, imagepath: imagepath)
-         MyNFT.nft1stInfos[addr] = [nft1stInfo]
+         MyNFTv2.nft1stInfos[addr] = [nft1stInfo]
        }
      }
 
@@ -35,7 +35,7 @@
        pub var ownedNFTs: @{UInt64: NonFungibleToken.NFT}
 
        pub fun deposit(token: @NonFungibleToken.NFT) {
-         let downCastedToken <- token as! @MyNFT.NFT
+         let downCastedToken <- token as! @MyNFTv2.NFT
          emit Deposit(id: downCastedToken.id, to: self.owner?.address)
          self.ownedNFTs[downCastedToken.id] <-! downCastedToken
        }
@@ -66,7 +66,7 @@
        }
      }
 
-     pub fun createToken(nickname: String, imagepath: String, addr: Address): @MyNFT.NFT {
+     pub fun createToken(nickname: String, imagepath: String, addr: Address): @MyNFTv2.NFT {
        return <- create NFT(nickname: nickname, imagepath: imagepath, addr: addr)
      }
 
