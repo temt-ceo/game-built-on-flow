@@ -8,12 +8,24 @@
      pub event Withdraw(id: UInt64, from: Address?)
      pub event Deposit(id: UInt64, to: Address?)
 
+     pub let nft1stInfos: {Address: [NFT1stStruct]}
+
+     pub struct NFT1stStruct {
+       pub let nickname: String
+       pub let imagepath: String
+       init(nickname: String, imagepath: String) {
+         self.nickname = nickname
+         self.imagepath = imagepath
+       }
+     }
 
      pub resource NFT: NonFungibleToken.INFT {
        pub let id: UInt64
-       init () {
+       init (nickname: String, imagepath: String, addr: Address) {
          self.id = MyNFT.totalSupply
          MyNFT.totalSupply = MyNFT.totalSupply + 1
+         let nft1stInfo = NFT1stStruct(nickname: nickname, imagepath: imagepath)
+         MyNFT.nft1stInfos[addr] = [nft1stInfo]
        }
      }
 
@@ -54,8 +66,8 @@
        }
      }
 
-     pub fun createToken(): @MyNFT.NFT {
-       return <- create NFT()
+     pub fun createToken(nickname: String, imagepath: String, addr: Address): @MyNFT.NFT {
+       return <- create NFT(nickname: nickname, imagepath: imagepath, addr: addr)
      }
 
      pub fun createEmptyCollection(): @Collection {
@@ -65,5 +77,6 @@
 
      init () {
        self.totalSupply = 0
+       self.nft1stInfos = {}
      }
    }

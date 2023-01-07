@@ -1,25 +1,20 @@
 <template>
   <div class="flex">
     <div>
+      <h2>Hello! {{ address }}</h2>
       <h2>GraphQL App</h2>
-      <h3>Hello! {{ address }}</h3>
       <p><label>Name :</label><input v-model="name" /></p>
       <p><label>Description :</label><input v-model="description" /></p>
       <p><button @click="createTodo">Create</button></p>
-      <p>
-        <button @click="flowWalletLogin">Wallet Log In</button>
-        <button @click="flowWalletLogout">Wallet Log Out</button>
-      </p>
-      <img src="/img/knight.jpeg" />
+      <p><button @click="flowWalletSignIn">Wallet Sign In</button><button @click="flowWalletSignOut">Wallet Sign Out</button></p>
+      <p><button @click="requestFirstNFT">Request First NFT</button></p>
     </div>
     <div>
-      <div><button @click="flowWalletLogin">Wallet Log In</button></div>
-      <div><button @click="flowWalletLogout">Wallet Log Out</button></div>
-      <div><button @click="flowWalletLogin">Wallet Log In</button></div>
-      <div><button @click="flowWalletLogin">Wallet Log In</button></div>
       <ul>
         <li v-for="todo in todos" :key="todo.id">
-          {{ todo.name }} : {{ todo.description }}
+          {{ todo.flowEvent.name }} To: {{ todo.flowEvent.data.data.to }}<br>
+          Amount: <span>{{ todo.flowEvent.data.data.amount }}</span>
+          $FLOW at {{ todo.flowEvent.data.datetime }}
         </li>
       </ul>
     </div>
@@ -40,6 +35,12 @@ button {
   padding: 8px;
   margin-right: 8px;
 }
+li {
+  margin: 20px;
+}
+li > span {
+  color: red;
+}
 </style>
 
 <script>
@@ -47,7 +48,7 @@ import { Auth, API } from 'aws-amplify'
 import { createTodo } from '~/src/graphql/mutations'
 import { listTodos } from '~/src/graphql/queries'
 import { onCreateTodo } from '~/src/graphql/subscriptions'
-
+import FlowTransactions from '~/cadence/transactions'
 export default {
   data() {
     return {
@@ -55,6 +56,7 @@ export default {
       description: '',
       todos: [],
       walletUser: {},
+      address: '',
     }
   },
   async created() {
@@ -65,25 +67,41 @@ export default {
     const session = await Auth.userSession(currentAuthUser);
 
     if (!session?.isValid()) {
-      console.error('セッションが無効です!')
+      console.error('セッションが無効です。')
     };
     this.getTodos()
     this.subscribe()
   },
   methods: {
+    async requestFirstNFT () {
+      if (!this.walletUser?.addr) {
+        alert('Please sign in a Flow Wallet.')
+        return
+      } else {
+        const transactionId = await this.$fcl.mutate({
+          cadence: FlowTransactions.setupNFTResourceForNFTClearingHouse,
+          args: (arg, t) => [
+          ],
+          proposer: this.$fcl.authz,
+          payer: this.$fcl.authz,
+          authorizations: [this.$fcl.authz],
+          limit: 999
+        })
+        console.log(`TransactionId: ${transactionId}`)
+      }
+    },
     setupWalletInfo (user) {
       this.walletUser = user
-
       if (this.walletUser?.addr) {
         this.address = this.walletUser?.addr
       }
     },
-
-    async flowWalletLogin () {
+    async flowWalletSignIn () {
       await this.$fcl.authenticate()
     },
-    async flowWalletLogout () {
+    async flowWalletSignOut () {
       await this.$fcl.unauthenticate()
+      this.address = ''
     },
     async createTodo() {
       const { name, description } = this
@@ -106,17 +124,29 @@ export default {
         query: listTodos,
       }).then((todos) => {
         this.todos = todos.data.listTodos.items
+        this.todos.forEach((todo) => {
+          todo.flowEvent.data = JSON.parse(todo.flowEvent.data)
+          const dateObj = new Date(todo.flowEvent.data.blockTimestamp)
+          todo.flowEvent.data.datetime =
+            dateObj.getFullYear() + '/' + (dateObj.getMonth() + 1) + '/' +
+            dateObj.getDate() + ' ' + dateObj.getHours() + ':' +
+            dateObj.getMinutes() + ':' + dateObj.getSeconds()
+          console.log(todo.flowEvent.data)
+        })
       }).catch((err) => {
         console.log('Error:', err)
       })
     },
     subscribe() {
-      console.log('subscribe start.')
       API.graphql({ query: onCreateTodo }).subscribe({
         next: (eventData) => {
-          console.log('Data Added..', eventData)
           const todo = eventData.value.data.onCreateTodo
-          if (this.todos.some((item) => item.name === todo.name)) return // remove duplications
+          todo.flowEvent.data = JSON.parse(todo.flowEvent.data)
+          const dateObj = new Date(todo.flowEvent.data.blockTimestamp)
+          todo.flowEvent.data.datetime =
+            dateObj.getFullYear() + '/' + (dateObj.getMonth() + 1) + '/' +
+            dateObj.getDate() + ' ' + dateObj.getHours() + ':' +
+            dateObj.getMinutes() + ':' + dateObj.getSeconds()
           this.todos = [...this.todos, todo]
         },
       })
