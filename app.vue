@@ -11,3 +11,4 @@ const auth = useAuthenticator()
     </Authenticator>
   </div>
 </template>
+

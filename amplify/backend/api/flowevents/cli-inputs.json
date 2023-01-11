@@ -1,18 +1,22 @@
 {
   "version": 1,
   "serviceConfiguration": {
-    "apiName": "flowgamebuiltonflow",
+    "apiName": "flowevents",
     "serviceName": "AppSync",
     "defaultAuthType": {
       "mode": "AMAZON_COGNITO_USER_POOLS",
-      "cognitoUserPoolId": "authflowgamebuiltonflowe743edd2"
+      "cognitoUserPoolId": "authflowevents26abbf01"
     },
+    "conflictResolution": {},
     "additionalAuthTypes": [
       {
         "mode": "API_KEY",
         "expirationTime": 7,
-        "apiKeyExpirationDate": "2022-12-20T06:34:42.019Z",
+        "apiKeyExpirationDate": "2023-01-04T05:38:12.295Z",
         "keyDescription": ""
+      },
+      {
+        "mode": "AWS_IAM"
       }
     ]
   }

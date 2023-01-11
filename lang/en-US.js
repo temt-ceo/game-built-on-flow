@@ -448,7 +448,7 @@ export default {
   page37_3: ``,
   page37_4: ``,
   page37_5: ``,
-  page38_1: `Let's make a real Dapps!`,
+  page38_1: `Let's make a full-fledged Dapps!`,
   page38_2: `DApps to be created`,
   page38_3: `We will create a system to notify users of blockchain updates in real time.
   The technologies to be used are Flow Blockchain for the blockchain, AWS DynamoDB and AppSync for the cloud server, and AWS Amplify, which supports GraphQL, will be used to build the system. We will create a system with the following configuration diagram.`,
@@ -613,19 +613,31 @@ export default {
   page60_5: ``,
   page61_1: `Get an Event from the Flow Blockchain`,
   page61_2: `Let's use this GraphQL's Todo Schema  and Lambda Function to get events from the Flow Blockchain and display them on the localhost:3000 screen at the same time.`,
-  page61_3: ``,
+  page61_3: `Make the following changes to /amplify/backend/function/cronBatchForEvents/src/index.js`,
   page61_4: ``,
   page61_5: ``,
-  page62_1: ``,
-  page62_2: ``,
-  page62_3: ``,
-  page62_4: ``,
-  page62_5: ``,
-  page63_1: ``,
-  page63_2: ``,
-  page63_3: ``,
+  page62_1: `Import FCL (Flow Client Library) for index.js of the Lambda Function. This is the change in line 9 above. At this time, it is necessary to add "@onflow/fcl" to package.json because it will cause an error if it does not exist.
+  Execute the following command on the Terminal.`,
+  page62_2: `Configure the FCL to connect to mainnet. That is the change in lines 16~18.
+  Add a flowEvent to createTodo in Mutation. This is the change in lines 45-48.
+  Here, as a provisional implementation, we receive the event notification when the TokenDeposited event of the mainnet's FlowToken smart contract is issued. This is the additional part of lines 62 to 87.
+  This part will be changed when the smart contract is actually implemented, but the changes at that time will be minor.
+  Finally, we add the obtained flowEvent to the Mutation variables. This is the part to be added on line 102.`,
+  page62_3: `Next, we want to add flowEvents to the GraphQL Mutation operation, so we modify the GraphQL schema.
+
+  Make the following changes to /amplify/backend/api/flowevents/schema.graphql.`,
+  page62_4: `If you change schema.graphql in this way, when you run the \`amplify push\` command, the screen will ask if you also want to change src/graphql/mutations.js and src/graphql/query.js. will be displayed on the screen. 
+  If you enter "Y" at this time, flowEvents will be sent to the front end from the time the next deployment completion.
+  
+  Now, let's execute the \`amplify push\` command. Execute the following command.`,
+  page62_5: `Enter "Y" when the question appears on the screen.`,
+  page63_1: `Finally, let's modify index.vue to display Flow Blockchain event information on the screen. Modify the part of the red frame in the figure below.`,
+  page63_2: `If you look at localhost:3000 in your web browser after saving the changes, you should see the following`,
+  page63_3: `Using Amplify, AppSync, and Nuxt3, a real-time blockchain app that can easily acquire Flow Blockchain events and display them on the screen was created.
+  Moreover, the source code is integrated into the front-end side and there is only one repository.
+  
+  Next, instead of retrieving the \`latestBlock.height\` every time in the Lambda Function, let's store it in the Database and retrieve only the difference from the next time.`,
   page63_4: ``,
-  page63_5: ``,
   page64_1: ``,
   page64_2: `Configuration for accessing DynamoDB from Lambda Function`,
   page64_3: `Next, set up a Policy to access DynamoDB from Lambda Function.
@@ -654,8 +666,9 @@ export default {
   page68_4: ``,
   page68_5: ``,
   page69_1: `Enter a policy name in the "Name" field and click the "Create Policy" button in the lower right corner.`,
-  page69_2: ``,
-  page69_3: ``,
+  page69_2: `Now that we are ready to access DynamoDB from the Lambda Function, we will implement additional things to the Lambda Function.
+  First, we will add the npm package. Execute the following command in the Terminal.`,
+  page69_3: `Make additional implementations to the Lambda Function. Make the changes in the red box below to /amplify/backend/function/cronBatchForEvents/src/index.js.`,
   page69_4: ``,
   page69_5: ``,
   page70_1: ``,
@@ -810,8 +823,9 @@ export default {
   page99_5: ``,
   page100_1: `Setting up a connection between Nuxt.js and Flow Blockchain`,
   page100_2: `Execute the following command on the Terminal.`,
-  page100_3: `Configure Nuxt.js to connect to the Flow Blockchain. Create the flow.client.js file under the plugins folder as follows`,
-  page100_4: ``,
+  page100_3: `The rollup-plugin-node-polyfills and "process" are to deal with Nuxt3 errors, and may no longer be necessary depending on the version of Nuxt3.
+  After installing the npm package, you need to run \`npm run dev\` again.`,
+  page100_4: `Configure Nuxt.js to connect to the Flow Blockchain. Create the flow.client.js file under the plugins folder as follows`,
   page100_5: ``,
   page101_1: `Enter the following code`,
   page101_2: `This code can be found on the webpage at the following URL
@@ -845,7 +859,9 @@ export default {
   page106_2: `Add a logout button to line 8 of pages/index.vue. Do the following`,
   page106_3: `The fcl.unauthenticate method is executed in the flowWalletLogout method. `,
   page106_4: ``,
-  page106_5: ``,
+  page106_5: `Once here, display the Cadence Playground web page in your web browser.
+  How to display the Playground web page is explained in 4.3.
+  If you have not deployed the NonFungibleToken and MyNFT smart contracts in 0x01 and 0x02, please go back to 5.3 and 5.4 to deploy these smart contracts.`,
   page107_1: `Create a place to exchange NFTs `,
   page107_2: `Now let's implement a smart contract for the place NFTs can be exchanged. 
 
@@ -887,8 +903,9 @@ export default {
   page110_5: ``,
   page111_1: `Smart contracts where NFTs are exchanged`,
   page111_2: `Implement a smart contract for the place NFTs can be exchanged.`,
-  page111_3: `Create a forSale object to manage the listing, a Capability to withdraw NFTs and a Capability to deposit FLOWs. Add the red parts.`,
-  page111_4: ``,
+  page111_3: `Have you successfully deployed the smart contract from 0x01 to 0x04? 
+  If not, try reloading the web page or deleting unnecessary comments in the smart contract and press the deploy button again. Finally, we will create a smart contract for the NFT ClearingHouse at 0x05. Enter the following code into Playground.`,
+  page111_4: `Create a forSale object to manage the listing, a Capability to withdraw NFTs and a Capability to deposit FLOWs. Add the red parts.`,
   page111_5: ``,
   page112_1: `The NFTs in the clearinghouse are still in the possession of the original owner. When the exchange is completed, the NFT needs to be retrieved from the account storage of the previous owner. The smart contract needs to have the Capability of retrieving the NFT from the account storage of the previous owner.
   Also, it needs to have the Capability of depositing the FLOW token in exchange for the NFTs.`,
@@ -917,16 +934,39 @@ export default {
   page116_3: ``,
   page116_4: ``,
   page116_5: ``,
-  page117_1: `Create a transaction file for the NFT clearinghouse (Part 1)`,
+  page117_1: `Create a transaction file for the NFT exchange (Part 1)`,
   page117_2: `Create a transaction file that stores the smart contract's resources in the account's storage. Confirm this works with Play Ground.`,
-  page117_3: ``,
+  page117_3: `Creating transactions is a core part of blockchain game development. Engineers will want to carefully create this part of the game to make it appealing.
+  This is where PlayGround really comes into its own. As anyone who has done Solidify development knows, it can be surprisingly nerve-wracking.
+  
+  But if you want to develop games, you need to be able to devise source code for hours on end. With Playground, you can do that. If you think of something new, you can try it out right away, and the results will come back to you immediately. You can try things out all week long without getting tired. For some of you, Cadence is the first smart contract language you've used, but the environment is designed so that developers can focus solely on development, which, as the website says, is the hallmark of Flow Blockchain. 
+  
+  Moreover, the content being developed in the Playground can be shared via URL, and even if the shared person edits on that URL, the edits are not affected at all by the person who shared the original URL. And the URL will be completely different, so two people can develop the same smart contract while sharing the current development status at all times. `,
   page117_4: ``,
   page117_5: ``,
-  page118_1: ``,
-  page118_2: ``,
-  page118_3: ``,
-  page118_4: ``,
-  page118_5: ``,
+  page118_1: `Create a transaction in Play Ground and check its operation.`,
+  page118_2: `Now let's create a transaction.
+
+  If we create a game with NFT, we need a \`collection resource\` to keep the NFT in. This is already implemented in the MyNFT smart contract.
+  
+  The first transaction to create is
+  
+  Step 1: Put the \`collection resource\` of the MyNFT smart contract into the storage of the user's account.
+  Step 2: Create the Capability required by MyNFT's smart contract.
+  Step 3: Put the NFT ClearingHouse's smart contract resources into the user's account storage.
+  Step 4: Create the Capability required by the NFT ClearingHouse's smart contracts.
+  Step 5: Create one NFT and put it in the user's collection.
+  
+  Create a transaction that does all five of these things at once. The reason we do them all at once is because we only need to approve them once on the wallet; if we split the transaction into two, three, we need to approve them two or three times.`,
+  page118_3: `Create a "Mint First NFT" transaction on Playground as shown in the following image.
+  You can create a new transaction template by clicking on the + icon next to TRANSACTION TEMPLATES as shown in the blue circle. You can rename the transaction by clicking on the pencil symbol.`,
+  page118_4: `The code is written here as follows.
+  Note that since Playground is still a new tool, it may occasionally become unstable. If this happens, try reloading the web page or deleting comments and start deploying again. 
+  In particular, even if the import ... from 0x01 part is commented out, Playground will try to read the smart contract inside. The reason why 0x05 is imported first in the following code is because an error occurred due to the import order at this time of Playground.`,
+  page118_5: `In Step 3, we create a \`private capability\`, which is a powerful permission that the account holder can have of the smart contract stored in Step 1.
+  The reason this is necessary is that we need to pull this NFT out of storage if someone purchases it on the NFT exchange.
+  The FlowTokenVault in Step 4 is for depositing the FLOW tokens into your account storage that you get in exchange for the NFT.`,
+  page118_6: `When you have finished writing the code, press the send button. If the log is displayed as shown in the red frame in the image above, it is a success.`,
   page119_1: ``,
   page119_2: ``,
   page119_3: ``,
@@ -937,12 +977,12 @@ export default {
   page120_3: ``,
   page120_4: ``,
   page120_5: ``,
-  page121_1: `Create a transaction file for the NFT exchange (Part 2)`,
-  page121_2: `Open Terminal, navigate to the project root, and execute the following command`,
-  page121_3: `Return to the VSCode editor. Create a folder named "cadence" in the project root; create the transactions.js file under it. Then enter the source code as shown below.`,
+  page121_1: ``,
+  page121_2: ``,
+  page121_3: ``,
   page121_4: ``,
   page121_5: ``,
-  page122_1: `Copy and paste the contents of 7.18.1 between lines 2 and 3 of this file. Do the following`,
+  page122_1: ``,
   page122_2: ``,
   page122_3: ``,
   page122_4: ``,
@@ -953,9 +993,9 @@ export default {
   
   It is more important to run a blockchain emulator on your computer before deploying to the testnet to ensure confidentiality of the source code. In this document, we first explained how to develop on Play Ground, so the method of launching the emulator is omitted since it is already not very useful in terms of confidentiality. (This is because the same screen will be displayed even if you open the URL of Play Ground of what you deployed smart contract in another browser. ).`,
   page123_3: `Deploy to testnet on flow-view-source.com`,
-  page123_4: `Access the URL https://flow-view-source.com/ with a web browser.
+  page123_4: `Even if you cannot deploy with this method, you can certainly deploy with the method in 6.19.2, so you may execute the method in 6.19.2 from the beginning.`,
+  page123_5: `Access the URL https://flow-view-source.com/ with a web browser.
   You will then see a screen similar to the one below.`,
-  page123_5: ``,
   page124_1: `Now enter 0x01 in the Account text box as shown in the red frame. Then click the GO button in the blue frame.
 
   Then the following screen will appear.`,
@@ -977,13 +1017,12 @@ export default {
   Next, make sure Terminal is moved onto the root folder of your project and run the command \`flow init\`.
   
   A flow.json file will be created in the root folder of the project. Open the file in VSCode. You should see something like the following`,
-  page126_3: `Execute the following command on Terminal to create a Private Key.`,
-  page126_4: ``,
-  page126_5: ``,
-  page127_1: `The following is then displayed.`,
-  page127_2: `Go to the URL below this line that appears. This website will create a Flow account for you based on the Public Key. (The private key should never be made public.)
-
-  Then, click the CREATE ACCOUNT button on the screen.`,
+  page126_3: `Next, create a Private Key by executing the following command in Terminal.`,
+  page126_4: `The following is then displayed.`,
+  page126_5: `Next, create a Flow Blockchain testnet account.
+  Go to https://testnet-faucet.onflow.org. A screen will appear as follows`,
+  page127_1: `Enter the "Public Key" that has just been output to Terminal in the red frame of this image.`,
+  page127_2: `Then, click the CREATE ACCOUNT button on the screen.`,
   page127_3: `An account address will then be created. Press the Copy button to copy it.`,
   page127_4: ``,
   page127_5: ``,
@@ -995,118 +1034,157 @@ export default {
   page128_3: ``,
   page128_4: ``,
   page128_5: ``,
-  page129_1: `Copy the MyNFT source code deployed at 0x02 in PlayGround and paste it into MyNFT.cdc. Also change the NonFungbleToken address to 0x631e88ae7f1d7c20.
-  Since multiple contracts can be deployed at once, create a .cdc file for the NFTClearingHouse smart contract deployed at 0x04 as well.
-  
-  Set the path to the smart contract file you just created in the contracts: {} location in flow.json as shown in the red frame in the figure.`,
-  page129_2: `Then, set the name of the contract to be deployed in the "deployments: {}" field as shown in the blue box in the figure.`,
+  page129_1: `Copy the MyNFT source code deployed at 0x02 in PlayGround and paste it into MyNFT.cdc.`,
+  page129_2: `After pasting the codes, click on the red box on the left side of VSCode.
+  Then a screen for adding Extentions will appear, and type "Cadence" in the search box as shown in the image. Install the topmost Extension displayed. MyNFT.cdc will then be colored according to the Cadence syntax.`,
   page129_3: ``,
   page129_4: ``,
   page129_5: ``,
-  page130_1: `Then, execute the following command on Terminal.`,
-  page130_2: `After deployment is complete, verify that the contract has been deployed by going to https://flow-view-source.com/testnet/account/(YOUR ACCOUNT).
+  page130_1: `Change the address in the red box on the first line to 0x631e88ae7f1d7c20.
+  This address 0x631e88ae7f1d7c20 is the address of the account where NonFungibleToken is deployed on the testnet.
+  https://developers.flow.com/flow/core-contracts/non-fungible-token
+  It is written in the URL above.`,
+  page130_2: `Then create the NFTClearingHouse.cdc file for the NFTClearingHouse smart contract deployed to 0x04 as well. 
 
-
-
-  For the NFTClearingHouse contract, import the MyNFT contract with the same address. If you want to import a contract with the same address, the import can be written as a relative path as shown below, which will automatically be replaced by the address when deploying with the flow command.`,
+  The address for the FungibleToken can be found at https://developers.flow.com/flow/core-contracts/fungible-token and the address for the FlowToken can be found at https://developers.flow.com/flow /core-contracts/flow-token.
+  
+  When importing smart contracts that are deployed in the same location, you can write them with relative paths as shown in the red box below. If you write in a relative path as shown below, the path will be automatically replaced by the address when deploying with the flow command.`,
   page130_3: ``,
   page130_4: ``,
   page130_5: ``,
-  page131_1: ``,
-  page131_2: ``,
-  page131_3: ``,
+  page131_1: "Add `contracts` and `deployments` to flow.json.",
+  page131_2: "Set the path of the smart contract file you just created in `contracts`.",
+  page131_3: `Next, set the name of the smart contract to be deployed in the "deployments" field. `,
   page131_4: ``,
   page131_5: ``,
-  page132_1: ``,
-  page132_2: ``,
+  page132_1: `Next, execute the following command on the Terminal.`,
+  page132_2: `After deployment is complete, please go to https://flow-view-source.com/testnet/account/(YOUR ACCOUNT) and confirm that the smart contract has been deployed.
+  If the following is displayed, deployment is complete.`,
   page132_3: ``,
   page132_4: ``,
   page132_5: ``,
-  page133_1: ``,
-  page133_2: ``,
-  page133_3: ``,
+  page133_1: `Create a transaction file for the NFT exchange (Part 2)`,
+  page133_2: `Return to the VSCode editor. Create the file transactions.js under the cadence folder in the project root. Then enter the source code as follows`,
+  page133_3: `Copy and paste the contents of 6.18.2 between lines 2 and 3 of this file.`,
   page133_4: ``,
   page133_5: ``,
-  page134_1: ``,
-  page134_2: ``,
-  page134_3: ``,
+  page134_1: `Change the import portion at the top as shown in the red frame below.`,
+  page134_2: `The account address on lines 3 and 5 is the address of the testnet account you created, which appears at flow-view-source.com.`,
+  page134_3: `Change pages/index.vue as follows`,
   page134_4: ``,
   page134_5: ``,
-  page135_1: ``,
-  page135_2: ``,
-  page135_3: ``,
+  page135_1: `Change Package Builder from vite to webpack`,
+  page135_2: `Nuxt3 is developed based on Vue3, which uses "vite" as its default package builder. 
+  Since vite is not very compatible with fcl, we will change the package builder from vite to webpack.`,
+  page135_3: `Next, modify the nuxt.config.ts file as follows`,
   page135_4: ``,
   page135_5: ``,
-  page136_1: ``,
-  page136_2: ``,
-  page136_3: ``,
+  page136_1: `The localhost:3000 is displayed on a web browser as follows.`,
+  page136_2: `Click on the "Request First NFT" button indicated by the red frame.`,
+  page136_3: `A screen like this will appear, so press the "Approve" button. Then, after a short time, the transaction ID will appear on the "Console". Copy the transaction ID in the red frame.`,
   page136_4: ``,
   page136_5: ``,
-  page137_1: ``,
-  page137_2: ``,
+  page137_1: `View https://testnet.flowscan.org in your web browser.
+
+  Enter the transaction ID in the red box in the figure below and press Enter.`,
+  page137_2: `If you see the word SEALED as shown below, it means that Step 1 to Step 5 of the "transaction" have been successfully executed and the first NFT has been successfully stored in your wallet's storage.`,
   page137_3: ``,
   page137_4: ``,
   page137_5: ``,
-  page138_1: ``,
-  page138_2: ``,
+  page138_1: `Adding functionality to smart contracts`,
+  page138_2: `Add a few features to the MyNFT smart contract.
+
+  The reason is that this NFT is based on the MyNFT smart contract created in section 5.4, but it only conforms to the NonFungibleToken Standard, and only has an id. This is too simple, so let's add the path to the image used in the card game and the username of the owner that we want to display in the exchange to the smart contract.
+  
+  Ideally, this information should be managed in the NFT resource and be available via the resolveView and getViews methods, but if you want to make this as simple as possible, there is a simpler way.
+  
+  This method is to manage the information in the form of Struct directly in the smart contract.`,
   page138_3: ``,
   page138_4: ``,
   page138_5: ``,
-  page139_1: ``,
-  page139_2: ``,
+  page139_1: `Add the following implementation to the MyNFT smart contract deployed at 0x02 on Playground.`,
+  page139_2: `Deploy this by clicking the "Deploy" button in the upper right corner.`,
   page139_3: ``,
   page139_4: ``,
   page139_5: ``,
-  page140_1: ``,
-  page140_2: ``,
-  page140_3: ``,
+  page140_1: `In this state, create a script as shown in the red box below. Then click on the "Execute" button in the upper right corner.
+  You can get the information of nft1stInfos that you just added.`,
+  page140_2: `Variables and objects declared in pub directly in the contract can be read from anywhere.
+  You can see that "value" is empty.`,
+  page140_3: `Next, change the transaction that creates the NFT as shown in the red box below.`,
   page140_4: ``,
   page140_5: ``,
-  page141_1: ``,
-  page141_2: ``,
-  page141_3: ``,
+  page141_1: `In this state, enter some strings in the "nickname" and "imagepath" fields displayed in the upper right corner and click on the "Send" button. When you run the script again, you will see the following information in the log.`,
+  page141_2: `This time the value is not empty, but the address of the account with 0x01 is shown as owning one NFT.
+
+  Let's actually implement this: open VSCode and create the scripts.js file under the cadence folder in the project root. Then enter the source code as follows`,
+  page141_3: `Then make the same changes to contracts/MyNFT.cdc and transactions.js that you made in Playground.`,
   page141_4: ``,
   page141_5: ``,
-  page142_1: ``,
-  page142_2: ``,
-  page142_3: ``,
-  page142_4: ``,
+  page142_1: `Update Smart Contracts`,
+  page142_2: "If you want to update the smart contract, there is a dedicated `flow` command, so execute the following command on the Terminal.",
+  page142_3: `However, the following error message will be displayed at this time.`,
+  page142_4: `We were able to re-deploy many times on Playground, but testnet and mainnet cannot be redeployed many times in the same way. There are various requirements. (Since any change to the smart contract would undermine the advantage of blockchain.) One such case is when a State is added: I added a State called \`nft1stInfos\` to MyNFT, so we could not re-deploy on Testnet.
+
+  Testnet is almost identical to mainnet, so this requirement strictly applies. However, during development, we may change the smart contract in various ways. So what to do is to change the name of the smart contract to accommodate this.`,
   page142_5: ``,
-  page143_1: ``,
-  page143_2: ``,
+  page143_1: `In VSCode, press Command + F to display the search box. Then, let MyNFT replace with MyNFTv2 as shown in the following image. Press the area circled in red below to change everything.`,
+  page143_2: `Modify NFTClearingHouse.cdc, transactions.js, and scripts.js in the same way.
+
+  Also change the contents of "contracts" and "deployments" in flow.json. Change them as follows`,
   page143_3: ``,
   page143_4: ``,
   page143_5: ``,
-  page144_1: ``,
-  page144_2: ``,
+  page144_1: `Execute the following command on the Terminal.`,
+  page144_2: `After deployment is complete, go to https://flow-view-source.com/testnet/account/(YOUR ACCOUNT) and confirm that the contract has been deployed.
+  If the following message is displayed, deployment is complete.`,
   page144_3: ``,
   page144_4: ``,
   page144_5: ``,
-  page145_1: ``,
-  page145_2: ``,
-  page145_3: ``,
-  page145_4: ``,
+  page145_1: `Store NFT information in a smart contract`,
+  page145_2: `Change pages/index.vue as shown in the red box below.`,
+  page145_3: `\`this.$fcl.mutate\` executes a transaction.
+  \`this.$fcl.query\` reads the blockchain smart contract information.
+  Transaction execution requires the approval of an approver.`,
+  page145_4: `Now let's see it in action.
+  With the wallet logged in, the screen initially appears as follows: enter your NFT type and nickname. Then click on the button indicated by the red frame.`,
   page145_5: ``,
-  page146_1: ``,
-  page146_2: ``,
+  page146_1: 'The requestFirstNFT method is executed by pressing the button, and when the process is executed up to `this.$fcl.mutate` on line 110, the following popup is displayed and the process is interrupted. At this point, click the "Approve" button on the wallet to continue the process.',
+  page146_2: `After the blockchain transaction is processed, the screen changes to the one below. The NFT image path is read from the blockchain and the NFT image is displayed on the screen.`,
   page146_3: ``,
   page146_4: ``,
   page146_5: ``,
-  page147_1: ``,
-  page147_2: ``,
-  page147_3: ``,
+  page147_1: `Blockchain game operations and revenue`,
+  page147_2: `If you have read this far, you now know how to make a blockchain game. What do you think? You may have thought that the implementation itself is not difficult.
+  I would like to go a little sideways here and discuss the management of NFT games.
+  By putting card parameters into the blockchain and making that a feature of the card game, it is possible to appeal to users that card abilities cannot be easily changed, even by the management. At the same time, if the rules are also incorporated into the blockchain as transactions, the operator can control the game balance in various ways. However, when you look at it this way, do you think that the only advantage of the blockchain is its charm? 
+  The appeal of blockchain games is not limited to that. The advantage is that it is easy to generate revenue. The rules for the blockchain can be set in various ways, and the "Cadence" smart contract language makes it possible to create a very profitable structure for the operators.
+  
+  Inside the smart contract, only the operator can earn money. It is not difficult to do so. As long as there are people who play the game, they will follow the rules because they have decided to do so in the smart contract. I worked in the gaming industry myself, so I know how big the community is too. There are cosplayers, topics are discussed on Twitter, blogs are actively written, and various discussions are held about games. It is difficult for engineers alone to create a system where only the operator can make money. This book is also sold all over the world on Amazon's Kindle framework, and Amazon has invested a large amount of money in it, which has allowed it to be sold on such a foundation. With the smart contract language "Cadence," this foundation can be built by engineers alone. No banks or credit cards are needed, and as long as you have the Internet, a good engineer can create a system to generate revenue from all over the world with just programming.
+  I will explain the part only the operator can earn money later, but the fact that you can create this foundation without initial investment is a very big attraction.`,
+  page147_3: `The Blocto wallet allows you to purchase FLOW, the native token of Flow Blockchain, and also comes with a set of NFT wallets. The operating company is a Taiwanese company and has relatively good business access.`,
   page147_4: ``,
   page147_5: ``,
-  page148_1: ``,
-  page148_2: ``,
-  page148_3: ``,
-  page148_4: ``,
-  page148_5: ``,
-  page149_1: ``,
-  page149_2: ``,
-  page149_3: ``,
-  page149_4: ``,
-  page149_5: ``,
+  page148_1: `Show $FLOW in possession.`,
+  page148_2: `Here's how to show $FLOW in possession.`,
+  page148_3: "The writing `this.$fcl.send` is a bit old. `this.$fcl.query` used in 6.23 is the newer way of writing.",
+  page148_4: `Using FLOW as payment`,
+  page148_5: `An example of using FLOW as payment is as follows`,
+  page149_1: `This is the source code for an app called Tickets Onchain that actually uses $FLOW for payment.`,
+  page149_2: `The FlowTokenVault is the Vault that manages the FLOW for the account of the operator of this game; the DispenserFlowTokenVault is the Vault of the user of this game.`,
+  page149_3: `Transfer of the right to manage and operate a blockchain system`,
+  page149_4: `Operating a blockchain system can be conveniently done with Blocto. This can be done by transferring privileges from the account that deployed the smart contract to the account created in the Blocto wallet. Here is how to do it
+
+  Transfer the Private Capability to another account, and the other account will use the Capability to operate the blockchain system.`,
+  page149_5: `Please refer also to 7.7 Private Capability`,
+  page149_6: `Transaction file for the remaining`,
+  page149_7: `I have digressed from the 6.24 section, but if you know the implementation so far, the rest of the NFT exchange implementation should be easy, so I will only post the transactional part.`,
+  page149_8: `Post NFTs on the NFT ClearingHouse:`,
+  page149_9: `Cancel NFT listing on the NFT ClearingHouse`,
+  page149_10: `Acquire items listed on the NFT ClearingHouse`,
+  page149_11: `Buy NFT`,
+  page149_12: `URL of the Playground implemented this time:`,
+  page149_13: `You can change it as you like.`,
   page150_1: `How to declare an Variables`,
   page150_2: `Normal types cannot contain nil (Null).
   There is an init method in the smart contract, and variables are always initialized here.`,

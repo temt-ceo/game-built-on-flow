@@ -1,8 +1,29 @@
 export default {
     get1stMints: `
-    import MyNFT from 0x9e447fb949c3f1b6
-    pub fun main(): {Address: [MyNFT.NFT1stStruct]} {
-        return MyNFT.nft1stInfos
+    import MyNFTv2 from 0x9e447fb949c3f1b6
+    pub fun main(): {Address: [MyNFTv2.NFT1stStruct]} {
+        return MyNFTv2.nft1stInfos
+    }
+    `,
+    getOnsaleNFTs: `
+    import MyNFTv2 from 0x9e447fb949c3f1b6
+    import NonFungibleToken from 0x631e88ae7f1d7c20
+    import NFTClearingHousev2 from 0x9e447fb949c3f1b6
+
+    pub fun main(account: Address): {UInt64: UFix64} {
+
+        let saleCollectionCap = getAccount(account).getCapability(/public/MySaleCollectionv2)
+                    .borrow<&NFTClearingHousev2.SaleCollection{NFTClearingHousev2.SaleCollectionPublic}>()
+                            ?? panic("Could not borrow the user's SaleCollection")
+
+        let saleIDs = saleCollectionCap.getIDs()
+
+        let returnVals: {UInt64: UFix64} = {}
+        for saleID in saleIDs {
+            let price = saleCollectionCap.getPrice(id: saleID)
+            returnVals.insert(key: saleID, price)
+        }
+        return returnVals
     }
     `
 }

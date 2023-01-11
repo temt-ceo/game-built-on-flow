@@ -1,6 +1,6 @@
 {
   "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "{\"createdOn\":\"Mac\",\"createdBy\":\"Amplify\",\"createdWith\":\"10.5.1\",\"stackType\":\"function-Lambda\",\"metadata\":{}}",
+  "Description": "Lambda Function resource stack creation using Amplify CLI",
   "Parameters": {
     "CloudWatchRule": {
       "Type": "String",
@@ -15,6 +15,18 @@
     },
     "s3Key": {
       "Type": "String"
+    },
+    "apifloweventsGraphQLAPIIdOutput": {
+      "Type": "String",
+      "Default": "apifloweventsGraphQLAPIIdOutput"
+    },
+    "apifloweventsGraphQLAPIEndpointOutput": {
+      "Type": "String",
+      "Default": "apifloweventsGraphQLAPIEndpointOutput"
+    },
+    "apifloweventsGraphQLAPIKeyOutput": {
+      "Type": "String",
+      "Default": "apifloweventsGraphQLAPIKeyOutput"
     }
   },
   "Conditions": {
@@ -69,6 +81,15 @@
             },
             "REGION": {
               "Ref": "AWS::Region"
+            },
+            "API_FLOWEVENTS_GRAPHQLAPIIDOUTPUT": {
+              "Ref": "apifloweventsGraphQLAPIIdOutput"
+            },
+            "API_FLOWEVENTS_GRAPHQLAPIENDPOINTOUTPUT": {
+              "Ref": "apifloweventsGraphQLAPIEndpointOutput"
+            },
+            "API_FLOWEVENTS_GRAPHQLAPIKEYOUTPUT": {
+              "Ref": "apifloweventsGraphQLAPIKeyOutput"
             }
           }
         },
@@ -89,12 +110,12 @@
         "RoleName": {
           "Fn::If": [
             "ShouldNotCreateEnvResources",
-            "flowgamebuiltonflowLambdaRole587d59b5",
+            "floweventsLambdaRolea6e7e572",
             {
               "Fn::Join": [
                 "",
                 [
-                  "flowgamebuiltonflowLambdaRole587d59b5",
+                  "floweventsLambdaRolea6e7e572",
                   "-",
                   {
                     "Ref": "env"
@@ -160,6 +181,73 @@
                   }
                 ]
               }
+            }
+          ]
+        }
+      }
+    },
+    "AmplifyResourcesPolicy": {
+      "DependsOn": [
+        "LambdaExecutionRole"
+      ],
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName": "amplify-lambda-execution-policy",
+        "Roles": [
+          {
+            "Ref": "LambdaExecutionRole"
+          }
+        ],
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": [
+                "appsync:GraphQL"
+              ],
+              "Resource": [
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:appsync:",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId"
+                      },
+                      ":apis/",
+                      {
+                        "Ref": "apifloweventsGraphQLAPIIdOutput"
+                      },
+                      "/types/Query/*"
+                    ]
+                  ]
+                },
+                {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "arn:aws:appsync:",
+                      {
+                        "Ref": "AWS::Region"
+                      },
+                      ":",
+                      {
+                        "Ref": "AWS::AccountId"
+                      },
+                      ":apis/",
+                      {
+                        "Ref": "apifloweventsGraphQLAPIIdOutput"
+                      },
+                      "/types/Mutation/*"
+                    ]
+                  ]
+                }
+              ]
             }
           ]
         }

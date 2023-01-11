@@ -6,4 +6,10 @@ type Todo @model @auth(rules: [{ allow: private }]) {
   id: ID!
   name: String!
   description: String
+  flowEvent: FlowEvent
+}
+
+type FlowEvent {
+  name: String
+  data: String
 }
