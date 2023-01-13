@@ -2,9 +2,10 @@ export default {
   book_title1: "You can build a blockchain app in a day! You'll learn practical Cadence programming! The definitive Cadence reference !",
   book_title2: 'With Nuxt3 and Amplify a thorough and detailed explanation, let building a Blockchain Game begin!',
   book_title3: 'Flow Dapp Complete Creation Manual',
-  book_title4: 'Get a detailed reference on the smart contract language Cadence!!',
+  book_title4: 'Get a detailed reference on Cadence, the smart contract language !!',
   book_title5: "Let's make the blockchain game development easier than ever with AppSync! 🎮",
-  page1_1: `What does blockchain app development look like?
+  page1_1: `
+  What does blockchain app development look like?
   
   The Flow Blockchain website says that it is developer friendly. This is true, and when you develop with Play Ground, you can share your source code with anyone, and if you share it on Flow's Discord, someone will respond to you right away. This is because Play Ground and the Flow Client Library (FCL) are developed with the developer in mind, and this developer support is one of Flow's most attractive features.
 
@@ -12,13 +13,13 @@ export default {
 
   The ease of transferring money and the instant creation of wallets means that money and goods can be exchanged with people all over the world in no time at all. When I published this book, I could easily ask for the Blocto wallet address to pay for the book, and the "transaction" took about 5 seconds and was completely stress-free. It's hard to find anything to stress about because Flow is an extremely secure, accident-free, and transparent blockchain.
   
-  Since it was the CTO of Dapper, the creator of Flow Blockchain, who submitted ERC721, Ethereum's NFT, the new features of the NFT will almost certainly become Flow's strength. NFT development using Flow Blockchain will likely accelerate in the future.
+  Since it was the CTO of Dapper, the creator of Flow Blockchain, who submitted ERC721, Ethereum's NFT, the new features of the NFT will almost certainly become Flow's strength. 
 
   However, building an NFT with Flow Blockchain is difficult for newcomers to understand how to implement, and the lack of books means that there is little information available for reference.
 
-  In particular, after Stable Cadence is released in June 2022, contracts before and after the Breaking Change are mixed up, and information income for them is easy to understand for those who have already developed them, but for those who want to learn Cadence for the first time, the hurdle is quite high. However, it is a hurdle for those who want to learn Cadence for the first time.
+  In particular, after Stable Cadence is released in June 2022, smart contracts before and after the Breaking Change are mixed up, and obtaining information for them is easy to understand for those who have already developed them, but for those who want to learn Cadence for the first time, the hurdle is quite high.
 
-  This book describes how to write smart contracts using Cadence and the steps to actually release a game. Flow around the game Blockchain is a very attractive platform. The ability to exchange NFTs of value with people all over the world, or to pay in Crypto Currency, and the very high speed of the process itself, allows developers to build any Blockchain system they want on top of their own ideas. We will explain in an easy-to-understand manner where beginners are likely to get stuck, and we will work with you to get past the initial obstacle of creating an NFT, so we hope you will pick up this book, discover the joy of creating a blockchain application called Dapp, and build a new system in this world. I hope you will take this book and discover the joy of creating a blockchain application called Dapp and build a new system in this world.`,
+  This book describes how to write smart contracts using Cadence and the steps to actually release a game. "Flow Blockchain" around the game is a very attractive platform. The ability to exchange NFTs of value with people all over the world, or to pay in Crypto Currency, and the very high speed of the process itself, allows developers to build any blockchain system they want on top of their own ideas. We will explain in an easy-to-understand manner where beginners are likely to get stuck, and we will work with you to get past the initial obstacle of creating an NFT, so we hope you will pick up this book, discover the joy of creating a blockchain application called Dapp, and build a new system in this world.`,
   page1_2: ``,
   page1_3: ``,
   page1_4: ``,
@@ -35,14 +36,14 @@ export default {
 
   (1) Smart contract itself inside the blockchain
   (2) Transaction part that makes changes to the smart contract
-  (3) The part that obtains or changes  information inside the smart contract from a library in JavaScript
+  (3) The part that obtains or modifies information about the smart contract using a JavaScript library
 
   Flow Blockchain uses Cadence as its smart contract language, while Ethereum and Polygon use Solidity. And this is where these smart contract languages work and how they work.`,
   page2_3: `In the case of Cadence, the Smart Contract Language of Flow, the library used in (3) is a JavaScript library called FCL (Flow Client Library).
 
   In the case of Solidity, the library used in (3) is a JavaScript library such as web3.js.
   
-  Then, each of them passes a transaction to the blockchain, which writes the blockchain modification process. This process is the movement of (2).
+  Then, each of them passes a script or transaction to the blockchain, which writes the modifications to the blockchain. This process is the movement of (2).
   
   In the case of Cadence, the transaction calls the methods of the smart contract, and passes arguments to indicate how it should be changed. However, the calling process can be changed flexibly.
   
@@ -57,7 +58,7 @@ export default {
   In Solidity, all of (2) is built into the smart contract. Changes require deployment, which takes time and sometimes costs money.
   Cadence allows you to write code in Cadence to handle (2) inside the call, so you don't have to be nervous about creating a design that can handle the changes.
   
-  That said, Cadence also does not reduce security, since a transaction cannot be executed without calling a smart contract method.  
+  That said, Cadence also does not reduce security, since a transaction cannot be executed without calling a smart contract method.
   `,
   page2_4: ``,
   page2_5: ``,
