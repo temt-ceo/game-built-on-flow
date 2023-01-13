@@ -56,7 +56,7 @@ export default {
   Therefore, designing in the Solidity world takes time.
   
   In Solidity, all of (2) is built into the smart contract. Changes require deployment, which takes time and sometimes costs money.
-  Cadence allows you to write code in Cadence to handle (2) inside the call, so you don't have to be nervous about creating a design that can handle the changes.
+  Cadence allows you to write code later in Cadence to handle (2) inside the call, so you don't have to be nervous about designing.
   
   That said, Cadence also does not reduce security, since a transaction cannot be executed without calling a smart contract method.
   `,
@@ -138,7 +138,7 @@ export default {
   If an individual wants to manage his/her own security, he/she can use Blocto's Non Custodial wallet, for example.`,
   page7_3: ``,
   page7_4: `Why Flow Blockchain does not use metamasks`,
-  page7_5: `  This is because, first of all, it is difficult for the general public to use the system. Some people may say that they need to manage their own wallet keys, but if that is the case, they will not play the game.
+  page7_5: `  This is because, first of all, it is difficult for the general public to use the system. Some people may say that they need to manage their own wallet keys, but if that is the case, majority of them will not play the game.
   The developers of Flow Blockchain were the developers of a game called Crypto Kitties, so they wanted to make a blockchain that was easy to use for the general public.
 
   The second reason is security. To make security strong, a metamask that is independent of any blockchain is not a good idea because Flow Blockchain users might lose their assets in a wallet.
@@ -173,17 +173,15 @@ export default {
   page9_5: ``,
   page10_1: `Let's do development in Cadence!`,
   page10_2: `To write Cadence`,
-  page10_3: `Prepare a personal computer.
-  You will also need software called an editor that allows you to write programs and software that allows you to execute commands such as downloading software via the Internet.
-  For the former, we will use software called VSCode in this manual.
-  For the latter, on a Mac, software called Terminal is installed by default.
-  For Windows, VSCode has a function that performs the same role as Terminal.
+  page10_3: `Let's get a computer ready.
+  You will also need software called an editor that allows you to write programs, and software that allows you to execute commands such as downloading software via the Internet.
+  For the former, we will use software called VSCode in this manual. For the latter, on a Mac, software called Terminal is already installed by default. For Windows, VSCode has a function that performs the same role as Terminal.
   
   Anyone with an Internet environment can write smart contracts and deploy them on the blockchain.`,
   page10_4: ``,
   page10_5: ``,
   page11_1: `Prepare your development environment`,
-  page11_2: `The instructions for launching each of these software programs are as follows.
+  page11_2: `The instructions for preparing each of these software programs are as follows.
 
   Download and install VSCode from the following URL according to the OS of your computer.
   URL: https://code.visualstudio.com/download`,
@@ -214,8 +212,13 @@ export default {
   page13_4: `This completes the preparation of the computer environment.`,
   page13_5: ``,
   page14_1: `Let's write Hello, World in Cadence!`,
-  page14_2: `The Cadence Playground web page will appear. Select the 0x01 link on the far left.`,
-  page14_3: `0x01 refers to 0x01's account.
+  page14_2: `Now let's write some Hello, World code and run it.
+
+  This can actually be tried in the browser as well. Open the following URL in your browser and click on the Flow Playground link.
+
+  URL: https://developers.flow.com/cadence/tutorial/02-hello-world`,
+  page14_3: `The Cadence Playground web page will appear. Select the 0x01 link on the left.`,
+  page14_4: `0x01 refers to 0x01's account.
 
   This screen shows the smart contract deployed by 0x01.
   
@@ -224,7 +227,6 @@ export default {
   In fact, there is a web page where you can check this smart contract code, and the number of FLOW tokens you hold is also shown on that screen. You can think of your account as having a place to store resources such as tokens and a place to hold deployed smart contracts.
   
   *Deploy: placing on the blockchain`,
-  page14_4: ``,
   page14_5: ``,
   page15_1: `After clicking 0x01, your web browser should display the following screen.`,
   page15_2: `Indicated by the red box is the contract deployed by 0x01. By referring to this contract, other accounts can obtain information on this contract. (Play Ground allows only one deployment, but it is possible to deploy multiple contracts with a single account.)
@@ -241,8 +243,8 @@ export default {
   page16_4: `You will see the following on the screen.`,
   page16_5: ``,
   page17_1: `Let's write the code here as follows`,
-  page17_2: `The hello method of the HelloWorld smart contract for the 0x01 account is called.`,
-  page17_3: `Click the Execute button in the upper right corner of the screen.`,
+  page17_2: ``,
+  page17_3: `Click the Execute button in the upper right corner of this screen.`,
   page17_4: `Then you will see the following in the area circled in blue.`,
   page17_5: `You now have your first blockchain app, HelloWorld.
 
@@ -255,29 +257,32 @@ export default {
   page18_5: ``,
   page19_1: `You will see the following on the screen.`,
   page19_2: `Let's write the code here as follows. The part in red is the part to be added.`,
-  page19_3: `In this state, try pressing the Send button in the upper right corner. If the message "Goodbye, My Smart Contract!" appears at the bottom of the screen, you have succeeded.`,
+  page19_3: `In this state, try pressing the Send button in the upper right corner. If the message "Goodbye, My Smart Contract!" appears at the bottom of this screen, you have succeeded.`,
   page19_4: `Now we have made changes to the smart contract on the blockchain.
 
   Next, let's get into more serious development.`,
   page19_5: ``,
   page20_1: `To create software in Cadence`,
-  page20_2: `The Transaction of blockchain is carried out with the approval of the account. In the previous transaction, this is the following part. This prepare method has an argument of type AuthAccount, which is the object of the account passed as an argument when it is authorized in the wallet.`,
-  page20_3: `This AuthAccount object is used to perform changes to the smart contract information. Otherwise, anyone can modify the smart contract.`,
-  page20_4: ``,
+  page20_2: `To create blockchain software, it is necessary to be able to change values on the blockchain. This process itself is called a "transaction".
+  I showed you a simple example of a transaction, but in fact, anyone can change this. That means that anyone can change my smart contract in the wallet.
+  I would like to make sure that only I can change the smart contracts that I have.`,
+  page20_3: `Blockchain "transactions" are made with the approval of the account. In the previous "transaction", the source code looked like this. `,
+  page20_4: `This prepare method has an argument of type AuthAccount, which is passed as an argument when the transaction is authorized with the wallet. This AuthAccount object is used to perform changes to the smart contract information. 
+  Otherwise, anyone can modify the smart contract.`,
   page20_5: ``,
-  page21_1: `prepare method using AuthAccount`,
-  page21_2: `In most cases, the actual transaction is executed using an AuthAccount, as shown below. In the following, the AuthAccount, i.e., the authorizer of the transaction, has obtained a reference to the Collection resource from the MyNFTCollection smart contract in its own storage.`,
+  page21_1: `Execute transaction prepare method using AuthAccount variable`,
+  page21_2: `In most cases, the actual transaction is executed using an AuthAccount, as shown below. In the following, the AuthAccount, i.e., the authorizer of the transaction, has obtained a reference to the Collection resource from the MyNFTCollection smart contract from its own storage.`,
   page21_3: `Naturally, this process can only be performed by the account that owns the storage itself.
   Therefore, the AuthAccount, which is the object authorized by the storage owner, plays the most important role in the transaction.
   
-  There is another role, "Capability," which can be used to perform other actions, such as depositing NFTs into storage for other accounts." Capability" is defined using the resource interface. See 7.6 Resource Interface for more information on resource interfaces. This book is explained in the development flow, so please refer to the reference in Chapter 8 for more details.`,
+  There is another role, "Capability," which can be used to perform other actions, such as depositing NFTs into storage for other accounts. "Capability" is defined using the resource interface. See 7.6 Resource Interface for more information on resource interfaces. This book is explained in the development flow, so please refer to the reference in Chapter 7 for more details.`,
   page21_4: ``,
   page21_5: ``,
   page22_1: `NFT Standard`,
   page22_2: `Next, let's create an NFT contract.
-  When the Cadence Playground web page appears, click the 0x01 on the left side of the screen.
+  View the Cadence Playground web page, click the 0x01 on the left side of the screen. (If you find it difficult during the process, please refer to 4.3 and the reference at the end of this document as appropriate. )
   
-  (If you find it difficult during the process, please refer to the reference at the end of this document as appropriate. )
+  URL: https://play.flow.com/ae2f2a83-6698-4e03-93cf-70d35627e28e
   `,
   page22_3: `After clicking 0x01, your web browser should display the following screen.`,
   page22_4: ``,
@@ -1158,11 +1163,11 @@ export default {
   page147_1: `Blockchain game operations and revenue`,
   page147_2: `If you have read this far, you now know how to make a blockchain game. What do you think? You may have thought that the implementation itself is not difficult.
   I would like to go a little sideways here and discuss the management of NFT games.
-  By putting card parameters into the blockchain and making that a feature of the card game, it is possible to appeal to users that card abilities cannot be easily changed, even by the management. At the same time, if the rules are also incorporated into the blockchain as transactions, the operator can control the game balance in various ways. However, when you look at it this way, do you think that the only advantage of the blockchain is its charm? 
+  By putting card parameters into the blockchain and making that a feature of the card game, it is possible to appeal to users that card abilities cannot be easily changed, even by the management. At the same time, if the rules are also incorporated into the blockchain as transactions, the operator can control the game balance in various ways. However, when you look at it this way, do you think that the only advantage of the blockchain is this? 
   The appeal of blockchain games is not limited to that. The advantage is that it is easy to generate revenue. The rules for the blockchain can be set in various ways, and the "Cadence" smart contract language makes it possible to create a very profitable structure for the operators.
   
-  Inside the smart contract, only the operator can earn money. It is not difficult to do so. As long as there are people who play the game, they will follow the rules because they have decided to do so in the smart contract. I worked in the gaming industry myself, so I know how big the community is too. There are cosplayers, topics are discussed on Twitter, blogs are actively written, and various discussions are held about games. It is difficult for engineers alone to create a system where only the operator can make money. This book is also sold all over the world on Amazon's Kindle framework, and Amazon has invested a large amount of money in it, which has allowed it to be sold on such a foundation. With the smart contract language "Cadence," this foundation can be built by engineers alone. No banks or credit cards are needed, and as long as you have the Internet, a good engineer can create a system to generate revenue from all over the world with just programming.
-  I will explain the part only the operator can earn money later, but the fact that you can create this foundation without initial investment is a very big attraction.`,
+  Inside the smart contract, only the operator can earn money is not difficult to do so. As long as there are people who play the game, they will follow the rules because they have decided to do so in the smart contract. I worked in the gaming industry myself, so I know how big the community is. There are cosplayers, and topics are discussed on Twitter, blogs are actively written, and various discussions are held about games. It is difficult for engineers alone to create a system where only the operator can make money. This book is also sold all over the world on Amazon's network, and Amazon has invested a large amount of money in it, which has allowed you to sell on such a foundation. With the smart contract language "Cadence," this foundation can be built by engineers alone. No banks or credit cards are needed, and as long as you have the Internet, a good engineer can create a system to generate revenue from all over the world with just programming.
+  I will explain the part the operator can earn money later, but the fact that you can create this foundation without initial investment is a great attraction.`,
   page147_3: `The Blocto wallet allows you to purchase FLOW, the native token of Flow Blockchain, and also comes with a set of NFT wallets. The operating company is a Taiwanese company and has relatively good business access.`,
   page147_4: ``,
   page147_5: ``,
@@ -1452,14 +1457,14 @@ export default {
   
   If Steven Jobs were around today, he would be thrilled.
   
-  The book is published on kindle so it can be sold worldwide. But that is because it is provided by a company called Amazon. Isn't this exciting because there is a possibility that you can make this if you program it yourself?
+  This book is published on kindle so it can be sold worldwide. But that is because it is provided by a company called Amazon. Isn't this exciting if there is a possibility that you can make this if you program it?
   
   I think the reason there are so many scams in the web3 world is because it is still a new technology.
   Tomorrow there could be a new Stephen Jobs.
-  Flow Blockchain has a secure wallet. And the technical team that created Flow Blockchain wants to work together to create a world where a more attractive Stephen Jobs is exciting.
-  What you create with smart contracts is up to the developer, but I think every developer is concerned about the convenience of the secure wallet that Flow boasts, and they will be happy to discuss that with you.
+  Flow Blockchain has a secure wallet. And the technical team that created Flow Blockchain wants to work together to create a world where a new Stephen Jobs is exciting.
+  What you create with smart contracts is up to the developer, but I think every developer is concerned about the convenience of the secure wallet that Flow boasts, and they will be happy to discuss about this with you.
   I think we can put ourselves out there more and show the world that together we can make the wallet easier to use. If more people around the world think so, we can do better.
-  I am sure that Steven Jobs must be envious of today's technology in the afterlife. I am sure he must be envious of this life, that I am not here to see such exciting developments.`,
+  I am sure that Steven Jobs must be envious of today's technology in the afterlife. I am sure he must be envious of this life, that he is not here to see such exciting developments.`,
   page194_2: `   I would like to thank Chris, Dapper Asia Gaming Division Strategy Officer, for the opportunity to publish this book.
   I would also like to thank Layne, Community Manager and Product Manager, for her end-to-end support in the execution of this book project.
   Thanks to Vishal, Flow Core Developer, for supervising the writing in the Flow Blockchain and Cadence references. I would like to take this opportunity to thank them.`,
