@@ -417,11 +417,11 @@ export default {
   page33_5: ``,
   page34_1: `Finally, the entire NFT Smart Contract is as follows`,
   page34_2: `The following GitHub URL has the full source code for the app that joined the Flowverse and Flow Ecosystem Network in July 2022. (Collection is used under the name Vault.)
-  This app did not use NFT, so there is no Contract Interface, but the resource interface is included because it is used heavily in access restrictions.
-  
+  This app did not use NFT, so there is no Contract Interface, but the resource interface is used heavily in access restrictions.
+    
   URL: https://github.com/temt-ceo/tickets-on-flow/blob/main/cadence/Tickets.cdc
-  
-  I think Cadence is very friendly to game engineers because it looks surprisingly like C language.`,
+    
+  I think Cadence is very friendly to game engineers because it looks surprisingly like C++ language.`,
   page34_3: ``,
   page34_4: ``,
   page34_5: ``,
@@ -1465,9 +1465,15 @@ export default {
   What you create with smart contracts is up to the developer, but I think every developer is concerned about the convenience of the secure wallet that Flow boasts, and they will be happy to discuss about this with you.
   I think we can put ourselves out there more and show the world that together we can make the wallet easier to use. If more people around the world think so, we can do better.
   I am sure that Steven Jobs must be envious of today's technology in the afterlife. I am sure he must be envious of this life, that he is not here to see such exciting developments.`,
-  page194_2: `   I would like to thank Chris, Dapper Asia Gaming Division Strategy Officer, for the opportunity to publish this book.
+  page194_2: `I would like to thank Chris, Dapper Asia Gaming Division Strategy Officer, for the opportunity to publish this book.
+
   I would also like to thank Layne, Community Manager and Product Manager, for her end-to-end support in the execution of this book project.
-  Thanks to Vishal, Flow Core Developer, for supervising the writing in the Flow Blockchain and Cadence references. I would like to take this opportunity to thank them.`,
+  
+  Thanks to Vishal, Flow Core Developer, for supervising the writing in the  Cadence references. I would like to take this opportunity to thank them.
+  
+  I would like to say a big thunks to Jacob Tucker, the founder of Emerald City. I and he had same ambitions in spreading the word about the wonders of Flow.
+  
+  And thank you all Flow Team.`,
   page194_3: ``,
   page194_4: ``,
   page194_5: ``,
