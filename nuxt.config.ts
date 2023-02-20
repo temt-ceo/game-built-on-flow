@@ -6,10 +6,17 @@ export default defineNuxtConfig({
         util: 'rollup-plugin-node-polyfills/polyfills/util',
         stream: 'rollup-plugin-node-polyfills/polyfills/stream',
     },
+    css: [
+        'vuetify/lib/styles/main.sass',
+        '@mdi/font/css/materialdesignicons.min.css',
+    ],
     vite: {
         define: {
           'window.global': {}
         }
+    },
+    build: {
+        transpile: ['vuetify']
     },
     builder: 'webpack',
 })

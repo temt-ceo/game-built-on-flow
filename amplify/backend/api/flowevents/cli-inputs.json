@@ -11,9 +11,9 @@
     "additionalAuthTypes": [
       {
         "mode": "API_KEY",
-        "expirationTime": 7,
-        "apiKeyExpirationDate": "2023-01-04T05:38:12.295Z",
-        "keyDescription": ""
+        "expirationTime": 365,
+        "apiKeyExpirationDate": "2024-02-18T01:17:49.639Z",
+        "keyDescription": "To create a game for Hackathon"
       },
       {
         "mode": "AWS_IAM"

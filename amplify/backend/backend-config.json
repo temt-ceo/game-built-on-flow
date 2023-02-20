@@ -24,9 +24,9 @@
             {
               "authenticationType": "API_KEY",
               "apiKeyConfig": {
-                "apiKeyExpirationDays": 7,
-                "apiKeyExpirationDate": "2023-01-04T05:38:12.295Z",
-                "description": ""
+                "apiKeyExpirationDays": 365,
+                "apiKeyExpirationDate": "2024-02-18T01:17:49.639Z",
+                "description": "To create a game for Hackathon"
               }
             },
             {
@@ -64,7 +64,7 @@
     }
   },
   "function": {
-    "cronBatchForEvents": {
+    "hackathon": {
       "build": true,
       "providerPlugin": "awscloudformation",
       "service": "Lambda",

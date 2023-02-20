@@ -18,7 +18,7 @@ export type AmplifyDependentResourcesAttributes = {
         }
     },
     "function": {
-        "cronBatchForEvents": {
+        "hackathon": {
             "Name": "string",
             "Arn": "string",
             "Region": "string",

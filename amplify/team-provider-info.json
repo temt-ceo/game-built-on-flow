@@ -25,5 +25,34 @@
         }
       }
     }
+  },
+  "hackathon": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-flowgamebuiltonflow-hackathon-101121-authRole",
+      "UnauthRoleArn": "arn:aws:iam::827938411447:role/amplify-flowgamebuiltonflow-hackathon-101121-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::827938411447:role/amplify-flowgamebuiltonflow-hackathon-101121-authRole",
+      "Region": "ap-northeast-1",
+      "DeploymentBucketName": "amplify-flowgamebuiltonflow-hackathon-101121-deployment",
+      "UnauthRoleName": "amplify-flowgamebuiltonflow-hackathon-101121-unauthRole",
+      "StackName": "amplify-flowgamebuiltonflow-hackathon-101121",
+      "StackId": "arn:aws:cloudformation:ap-northeast-1:827938411447:stack/amplify-flowgamebuiltonflow-hackathon-101121/28e26900-af29-11ed-afcd-0a36dc3ae5e9",
+      "AmplifyAppId": "d30ykgv18mjkyv"
+    },
+    "categories": {
+      "auth": {
+        "flowevents26abbf01": {}
+      },
+      "function": {
+        "flowevents": {},
+        "flowevents26abbf01": {},
+        "hackathon": {
+          "deploymentBucketName": "amplify-flowgamebuiltonflow-hackathon-101121-deployment",
+          "s3Key": "amplify-builds/hackathon-414e413635486e773557-build.zip"
+        }
+      },
+      "api": {
+        "flowevents": {}
+      }
+    }
   }
 }

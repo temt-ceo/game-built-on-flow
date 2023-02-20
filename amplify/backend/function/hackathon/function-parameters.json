@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "api": {
+      "flowevents": [
+        "Query",
+        "Mutation"
+      ]
+    }
+  },
+  "lambdaLayers": []
+}

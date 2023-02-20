@@ -1,42 +1,33 @@
-# Nuxt 3 Minimal Starter
+# Code Of Joker on the Blockchain!!!!
 
-Look at the [Nuxt 3 documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+Can you believe it? My most favorite game is now live on the blockchain.<br>
+Play fee is just 0.505FLOW (0.005FLOW is used for network usage), and surprisingly if you won on the game, you can get 1.0FLOW!<br>
+Wow, you can become literally a pro-gamer! You can live with just gaming everyday!<br>
+The one game is about 5~6 minutes. So if you won the game continually an hour, you can get about 5FLOW! WoHoo!<br>
+This is the homage to the SEGA’s game, Code Of Joker which run 2013-7-11 - 2019-7-11.<br>
+The game system is very similar to v1.0.0 of Code Of Joker. (But majority are not implemented, of course.)<br>
+If you don’t know COJ, please take a look at well-played game’s YouTube 👇<br>
+https://m.youtube.com/watch?v=tYioSA10Ckc<br>
 
-## Setup
+# Extending the ecosystem
 
-Make sure to install the dependencies:
-
-```bash
-# yarn
-yarn install
-
-# npm
-npm install
-
-# pnpm
-pnpm install --shamefully-hoist
-```
-
-## Development Server
-
-Start the development server on http://localhost:3000
-
-```bash
-npm run dev
-```
-
-## Production
-
-Build the application for production:
-
-```bash
-npm run build
-```
-
-Locally preview production build:
-
-```bash
-npm run preview
-```
-
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+Day 1: Matching with opponents is done using blockchain<br>
+LinkedIn article(EN): <br>
+LinkedIn article(JP): <br><br>
+Day 2: <br>
+LinkedIn article(EN): <br>
+LinkedIn article(JP): <br><br>
+Day 3: <br>
+LinkedIn article(EN): <br>
+LinkedIn article(JP): <br><br>
+Day 4: <br>
+LinkedIn article(EN): <br>
+LinkedIn article(JP): <br><br>
+Day 5: <br>
+LinkedIn article(EN): <br>
+LinkedIn article(JP): <br><br>
+Day 6: <br>
+LinkedIn article(EN): <br>
+LinkedIn article(JP): <br><br>
+<br>
+And .. new book titled "How to create a game on Flow Blockchain" will be published within months!<br>
