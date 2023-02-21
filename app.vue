@@ -58,11 +58,9 @@ const auth = useAuthenticator()
                   <v-window-item value="en">
                     Welcome. My name is Actis. I am here to support you and your agents. Your mission as agents is to keep cyberspace safe. Your role is to infiltrate the cyberspace, Arcana, and fight off hackers and others who try to destroy the cyberspace Arcana. Register your agent name and register on the Flow Blockchain to infiltrate Arcana. If you are matched with other opponents, the game will switch to battle mode. I will support you and you will have to use your abilities to fight them off to keep Arkana safe. <br><br>
                     (CODE-Of-Flow is an homage to SEGA's "Code Of Joker")
-                    <div>
+                    <div><br><br><br><br>
                       If you don't know Code Of Joker👇<br>
                       <a href="https://m.youtube.com/watch?v=tYioSA10Ckc">https://m.youtube.com/watch?v=tYioSA10Ckc</a><br>
-                      Tutorial👇<br>
-                      <a href="https://www.youtube.com/watch?v=zKBCmXlFOLU">https://www.youtube.com/watch?v=zKBCmXlFOLU</a>
                     </div>
                   </v-window-item>
 
@@ -71,11 +69,9 @@ const auth = useAuthenticator()
                     あなたのエージェント名を登録し、アルカナに潜入する為、Flow Blockchain 上で登録を行ってください。貴方達以外の対立する組織とマッチングした場合はバトルモードに切り替わります。
                     私はサポートに回りますので、貴方は能力を発揮してアルカナの安全を守るため相手を撃退して下さい。<br><br>
                     (このCODE-Of-FlowはSEGAの”Code Of Joker”をオマージュしたゲームです)
-                    <div>
+                    <div><br><br><br><br>
                       Code Of Joker👇<br>
                       <a href="https://m.youtube.com/watch?v=tYioSA10Ckc">https://m.youtube.com/watch?v=tYioSA10Ckc</a><br>
-                      チュートリアル👇<br>
-                      <a href="https://www.youtube.com/watch?v=zKBCmXlFOLU">https://www.youtube.com/watch?v=zKBCmXlFOLU</a>
                     </div>
                   </v-window-item>
                 </v-window>
