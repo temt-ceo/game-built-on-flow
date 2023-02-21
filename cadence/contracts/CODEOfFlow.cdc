@@ -1,6 +1,7 @@
 pub contract CodeOfFlowDay1 {
 
   // Events
+  pub event PlayerRegistered(player_id: UInt32)
   pub event WaitingTheMatch(player_id: UInt32)
   pub event GameStart(first: UInt32, second: UInt32)
   pub event GameResult(first: UInt32, second: UInt32, winner: UInt32)
@@ -18,7 +19,7 @@ pub contract CodeOfFlowDay1 {
   priv let battleInfo: {UInt32: BattleStruct}
   priv var matchingLimits: [UFix64]
   priv var matchingPlayers: [UInt32]
-  priv let onMatchList: {UInt32: UInt32}
+  priv let playerList: {UInt32: String}
 
   // [Struct] CardStruct
   pub struct CardStruct {
@@ -31,13 +32,19 @@ pub contract CodeOfFlowDay1 {
   // [Struct] BattleStruct
   pub struct BattleStruct {
     pub var turn: UInt8
-    init() {
+    pub let is_first: Bool
+    pub let opponent: UInt32
+
+    init(is_first: Bool, opponent: UInt32) {
       self.turn = 1
+      self.is_first = is_first
+      self.opponent = opponent
     }
   }
 
   // [Interface] IPlayerPublic
   pub resource interface IPlayerPublic {
+    pub fun get_current_status(): AnyStruct
   }
 
   // [Interface] IPlayerPrivate
@@ -55,9 +62,17 @@ pub contract CodeOfFlowDay1 {
     priv var lastTimeBattled: UFix64?
     priv var lastTimeMatching: UFix64?
 
+
+    pub fun get_current_status(): AnyStruct {
+      if let info = CodeOfFlowDay1.battleInfo[self.player_id] {
+        return info
+      }
+      return self.lastTimeMatching
+    }
+
     pub fun matching_start() {
       pre {
-        self.lastTimeMatching == nil || self.lastTimeMatching! >= getCurrentBlock().timestamp + 60.0 : "still matching."
+        self.lastTimeMatching == nil || self.lastTimeMatching! <= getCurrentBlock().timestamp + 60.0 : "Still matching."
       }
       var counter = 0
       var outdated = -1
@@ -80,14 +95,24 @@ pub contract CodeOfFlowDay1 {
 
       if CodeOfFlowDay1.matchingLimits.length >= 1 {
         // Pick the opponent from still matching players.
-        CodeOfFlowDay1.matchingLimits.removeLast()
+        let time = CodeOfFlowDay1.matchingLimits.removeLast()
         let opponent = CodeOfFlowDay1.matchingPlayers.removeLast()
+
+        var is_first = false
+        // Decides which is first
+        if (CodeOfFlowDay1.matchingLimits.length % 2 == 1) {
+          is_first = true
+        }
+        CodeOfFlowDay1.battleInfo[self.player_id] = BattleStruct(is_first: is_first, opponent: opponent)
+        CodeOfFlowDay1.battleInfo[opponent] = BattleStruct(is_first: !is_first, opponent: self.player_id)
+
         emit GameStart(first: opponent, second: self.player_id)
         self.onMatch = opponent
         self.lastTimeMatching = nil
       } else {
         // Put player_id in the matching list.
         self.lastTimeMatching = current_time
+        emit WaitingTheMatch(player_id: self.player_id)
         CodeOfFlowDay1.matchingLimits.append(current_time + 60.0)
         CodeOfFlowDay1.matchingPlayers.append(self.player_id)
       }
@@ -103,6 +128,8 @@ pub contract CodeOfFlowDay1 {
       self.onMatch = nil
       self.lastTimeBattled = nil
       self.lastTimeMatching = nil
+      CodeOfFlowDay1.playerList[self.player_id] = nickname
+      emit PlayerRegistered(player_id: self.player_id)
     }
   }
 
@@ -119,7 +146,7 @@ pub contract CodeOfFlowDay1 {
     self.battleInfo = {}
     self.matchingLimits = []
     self.matchingPlayers = []
-    self.onMatchList = {}
+    self.playerList = {}
   }
 }
  
