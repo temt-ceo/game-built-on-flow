@@ -15,50 +15,77 @@
           <div style="padding: 0 20px;">
             You will infiltrate Arcana.<br>
             Your mission is to search for the enemy and keep Arcana safe.<br>
+            <br>
           </div>
           <div v-if="!address" style="padding: 0 20px;">
             To fight the enemy and earn rewards, you register your battle record information in the blockchain.<br>
             Connect to the blockchain and register your information on the blockchain.
           </div>
-          <div v-if="address" style="padding: 0 20px;">
+          <div v-if="address && registered" style="padding: 0 20px;">
             Press the matching button below.
           </div>
+          <div v-if="address && !registered" style="padding: 0 20px;">
+            Player information has not yet been created on the blockchain.<br>Please press the Create Player button below.
+          </div>
+          <div v-if="matchingTimeup">
+            タイムアップしました。もう一度マッチングボタンを押してください。
+          </div>
+          <!-- <v-dialog
+            v-model="loadingDialog"
+            transition="dialog-top-transition"
+            width="auto"
+            loading
+            loading-text="Loading... Please wait"
+          >
+              <v-card>
+                <v-toolbar
+                  color="primary"
+                  title="Creating Player Info.."
+                ></v-toolbar>
+                <v-card-text>
+                  <div class="text-h6 pa-12">Loading... Please wait</div>
+                </v-card-text>
+              </v-card>
+          </v-dialog> -->
           <p>
             <span style="margin: 20px auto; display: block; width: 130px;">
               <v-btn v-if="!address" prepend-icon="mdi-vuetify" @click="flowWalletSignIn">
                 CONNECT
               </v-btn>
-              <div v-if="address" class="text-center">
-                <v-btn
-                  :disabled="matchingDialog"
-                  :loading="matchingDialog"
-                  color="purple-darken-2"
-                  prepend-icon="mdi-vuetify"
-                  @click="matching"
-                >
-                Matching
-                </v-btn>
-                <v-dialog
-                  v-model="matchingDialog"
-                  :scrim="false"
-                  persistent
-                  width="auto"
-                >
-                  <v-card
-                    color="primary"
-                  >
-                    <v-card-text>
-                      Please stand by
-                      <v-progress-linear
-                        indeterminate
-                        color="white"
-                        class="mb-0"
-                      ></v-progress-linear>
-                    </v-card-text>
-                  </v-card>
-                </v-dialog>
-              </div>
             </span>
+            <span style="margin: 20px auto; display: block; width: 170px;">
+              <v-btn v-if="address && !registered" prepend-icon="mdi-vuetify" @click="createPlayer">
+                Create Player
+              </v-btn>
+            </span>
+            <div v-if="address && registered" class="text-center">
+              <v-btn
+                :disabled="matchingDialog"
+                :loading="matchingDialog"
+                color="purple-darken-2"
+                prepend-icon="mdi-vuetify"
+                @click="playerMatching"
+              >
+              Matching
+              </v-btn>
+              <div v-if="matchingDialog" class="v-overlay v-overlay--active v-theme--light v-locale--is-ltr v-dialog v-overlay--scroll-blocked" aria-role="dialog" aria-modal="true" style="z-index: 2400;">
+                <div class="v-overlay__content" style="width: auto;">
+                  <div class="v-card v-theme--light bg-primary v-card--density-default v-card--variant-elevated">
+                    <div class="v-card__loader"><div class="v-progress-linear v-theme--light" role="progressbar" aria-hidden="true" aria-valuemin="0" aria-valuemax="100" style="top: 0px; height: 0px; --v-progress-linear-height:2px; left: 50%; transform: translateX(-50%);">
+                      <div class="v-progress-linear__background" style="width: 100%;"></div><div class="v-progress-linear__indeterminate"><div class="v-progress-linear__indeterminate long"></div><div class="v-progress-linear__indeterminate short"></div>
+                    </div>
+                    </div>
+                  </div>
+                  <div class="v-card-text"> Please stand by <div class="v-progress-linear v-progress-linear--active v-theme--light mb-0" role="progressbar" aria-hidden="false" aria-valuemin="0" aria-valuemax="100" style="top: 0px; height: 4px; --v-progress-linear-height:4px; left: 50%; transform: translateX(-50%);">
+                    <div class="v-progress-linear__background bg-white" style="width: 100%;"></div>
+                    <div class="v-progress-linear__indeterminate">
+                      <div class="v-progress-linear__indeterminate long bg-white"></div>
+                      <div class="v-progress-linear__indeterminate short bg-white"></div>
+                    </div></div></div><span class="v-card__underlay"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </p>
           <v-timeline align="start">
             <v-timeline-item
@@ -194,17 +221,15 @@
           </div>
         </div>
 
-        <div v-if="false">
+        <div>
           <h2>Hello! {{ attrs.player.username }}</h2>
           <p v-if="address && hasNFT">
             <h3>Hi {{ nickname }}</h3>
-            <img :src="imagepath" />
-            <h3>Your NFT</h3>
             <div><button v-if="!showClearingHouse" @click="showClearingHouse = true">Show Clearing House</button></div>
             <div><button v-if="showClearingHouse" @click="showClearingHouse = false">Close Clearing House</button></div>
             <div><button @click="sellNFT = false">Sell at the NFT exchange</button></div>
             
-            <div v-if="showClearingHouse">
+            <div v-if="false">
               <h3>Who's NFT do you buy?</h3>
               {{ nftSeller }} <button v-if="nftSeller !== ''" @click="showListings">Show</button>
               <div v-for="owner, addr in nftOwners" :key="addr" class="flex">
@@ -226,7 +251,7 @@
               </ul>
             </div>
           </p>
-          <p v-if="address && !hasNFT">
+          <p v-if="false">
             <img v-if="nftType === 'human'" src="/img/knight.jpeg" />
             <img v-if="nftType === 'animal'" src="/img/dog.jpeg" />
             <h3>Enter your nickname:</h3>
@@ -247,6 +272,9 @@
       <div v-if="onMatching === 3" class="remaining_time">
         TIME: {{ turn_timer }}
       </div>
+      <div v-if="onMatching === 2" class="remaining_time">
+        {{ matching_time_second }}
+      </div>
     </div>
   </div>
   <v-btn
@@ -258,7 +286,7 @@
     style="position: absolute; bottom: 40px; left: -5px;"
   ></v-btn>
   <v-row justify="center">
-    <v-dialog
+    <!-- <v-dialog
       v-model="marigan_dialog"
       transition="dialog-bottom-transition"
       width="auto"
@@ -358,7 +386,7 @@
           </v-btn>
         </v-card-actions>
       </v-card>
-    </v-dialog>
+    </v-dialog> -->
   </v-row>
 </template>
 <script>
@@ -369,10 +397,13 @@ import FlowTransactions from '~/cadence/transactions'
 import FlowScripts from '~/cadence/scripts'
 import { useAttrs } from 'vue'
 import { collapseTextChangeRangesAcrossMultipleVersions } from 'typescript'
+import { ConsoleLogger } from '@aws-amplify/core'
 export default {
   data() {
     return {
       walletUser: {},
+      loadingDialog: false,
+      registered: null,
       newEventAlertChip: false,
       newEventAlert: '',
       onMatching: 1,
@@ -393,6 +424,8 @@ export default {
         // },
       ],
       matchingDialog: false,
+      matchingTimeup: false,
+      matching_time_second: '',
       marigan_time_second: 5,
       marigan_time_millisecond_1: 0,
       marigan_time_millisecond_2: 0,
@@ -504,39 +537,6 @@ export default {
         },
       ]
     },
-    async matching () {
-      this.matchingDialog = true
-      this.onMatching = 2
-      // const audio = document.getElementById("audio1");
-      // audio.play();
-      // const video1 = document.getElementById("video1");
-      // video1.play();
-      // setTimeout(() => {
-        this.onMatching = 3
-        setTimeout(() => {
-          this.marigan_dialog = true
-          let counter = 0
-          const stopTimer1 = setInterval(() => {
-            counter += 50
-            this.marigan_time_second = Math.floor((5000 - counter) / 1000)
-            if (counter % 100 === 0) {
-              this.marigan_time_millisecond_1 = counter % 1000 / 100
-              this.marigan_time_millisecond_2 = 0
-            } else {
-              this.marigan_time_millisecond_2 = 5
-            }
-            if (this.marigan_time_second === 0) {
-              this.marigan_time_millisecond_2 = 0
-              clearInterval(stopTimer1)
-              setTimeout(() => {
-                this.marigan_dialog = false
-                this.countdown()
-              }, 300)
-            }
-          }, 50)
-        }, 1000)
-      // }, 17000)
-    },
     marigan (n) {
       if (this.marigan_cards.length > this.marigan_count) {
         this.marigan_count++
@@ -605,28 +605,7 @@ export default {
     async sellNFT () {
       const ret = window.prompt('Please enter the price as it will be sold at the NFT exchange.')
     },
-    async requestFirstNFT () {
-      if (!this.walletUser?.addr) {
-        alert('Please sign in a Flow Wallet.')
-        return
-      } else {
-        const imagepath = this.nftType === 'human' ? '/img/knight.jpeg' : '/img/dog.jpeg'
-        const transactionId = await this.$fcl.mutate({
-          cadence: FlowTransactions.setupNFTResourceForNFTClearingHouse,
-          args: (arg, t) => [
-            arg(this.nickname, t.String),
-            arg(imagepath, t.String),
-          ],
-          proposer: this.$fcl.authz,
-          payer: this.$fcl.authz,
-          authorizations: [this.$fcl.authz],
-          limit: 999
-        })
-        console.log(`TransactionId: ${transactionId}`)
-        this.checkTransactionComplete()
-      }
-    },
-    setupWalletInfo (user) {
+    async setupWalletInfo (user) {
       this.walletUser = user
       if (this.walletUser?.addr) {
         this.address = this.walletUser?.addr
@@ -647,27 +626,139 @@ export default {
             message: 'Matching Standby'
           }
         ]
+        const ret = await this.isRegistered()
+        this.registered = ret !== null
       }
     },
-    async get1stNFTs() {
+    async isRegistered() {
         const result = await this.$fcl.query({
-          cadence: FlowScripts.get1stMints,
+          cadence: FlowScripts.isRegistered,
           args: (arg, t) => [
+            arg(this.address, t.Address)
           ]
         })
-        if (result[this.address]) {
-          this.hasNFT = true
-          this.imagepath = result[this.address][0].imagepath
-        } else {
-          this.hasNFT = false
-        }
-        this.nftOwners = result
-        return this.hasNFT
+        return result
     },
-    checkTransactionComplete () {
+    async createPlayer () {
+      if (!this.walletUser?.addr) {
+        alert('Please sign in a Flow Wallet.')
+        return
+      } else {
+        const transactionId = await this.$fcl.mutate({
+          cadence: FlowTransactions.createPlayer,
+          args: (arg, t) => [
+            arg(this.attrs.player.username, t.String),
+          ],
+          proposer: this.$fcl.authz,
+          payer: this.$fcl.authz,
+          authorizations: [this.$fcl.authz],
+          limit: 999
+        })
+        this.loadingDialog = true
+        console.log(`TransactionId: ${transactionId}`)
+        this.checkTransactionComplete('createPlayer')
+      }
+    },
+    async playerMatching () {
+      if (!this.walletUser?.addr) {
+        alert('Please sign in a Flow Wallet.')
+        return
+      } else {
+        this.matchingTimeup = false
+        const transactionId = await this.$fcl.mutate({
+          cadence: FlowTransactions.matchingStart,
+          args: (arg, t) => [
+          ],
+          proposer: this.$fcl.authz,
+          payer: this.$fcl.authz,
+          authorizations: [this.$fcl.authz],
+          limit: 999
+        })
+        this.matchingDialog = true
+        console.log(`TransactionId: ${transactionId}`)
+        this.matchingDialog = true
+        let counter = 60
+        const stopTimer1 = setInterval(() => {
+          counter -= 1
+          this.matching_time_second = counter < 10 ? '0' + counter.toString(): counter.toString()
+          if (counter === 0) {
+            clearInterval(stopTimer1)
+          }
+        }, 1000)
+        setTimeout(() => {
+          this.checkTransactionComplete('matchingStart')
+        }, 7000) // トランザクション完了までは古い情報が返るので。
+      }
+    },
+    matchingSuccess () {
+      this.onMatching = 2
+      const audio = document.getElementById("audio1");
+      audio.play();
+      const video1 = document.getElementById("video1");
+      video1.play();
+      setTimeout(() => {
+        this.onMatching = 3
+        setTimeout(() => {
+          this.marigan_dialog = true
+          let counter = 0
+          const stopTimer1 = setInterval(() => {
+            counter += 50
+            this.marigan_time_second = Math.floor((5000 - counter) / 1000)
+            if (counter % 100 === 0) {
+              this.marigan_time_millisecond_1 = counter % 1000 / 100
+              this.marigan_time_millisecond_2 = 0
+            } else {
+              this.marigan_time_millisecond_2 = 5
+            }
+            if (this.marigan_time_second === 0) {
+              this.marigan_time_millisecond_2 = 0
+              clearInterval(stopTimer1)
+              setTimeout(() => {
+                this.marigan_dialog = false
+                this.countdown()
+              }, 300)
+            }
+          }, 50)
+        }, 1000)
+      }, 17000)
+    },
+    async getCurrentStatus() {
+        const result = await this.$fcl.query({
+          cadence: FlowScripts.getCurrentStatus,
+          args: (arg, t) => [
+            arg(this.address, t.Address)
+          ]
+        })
+        return result
+    },
+    checkTransactionComplete (transactionName) {
       const timerID = setInterval(async () => {
-        const result = await this.get1stNFTs()
-        if (result) {
+        if (transactionName === 'createPlayer') {
+          const result = await this.isRegistered()
+          if (result) {
+            this.loadingDialog = false
+            this.registered = true
+            clearInterval(timerID)
+          }
+        } else if (transactionName === 'matchingStart') {
+          const result = await this.getCurrentStatus()
+          if (result) {
+            if (!isNaN(parseFloat(result))) {
+              let matchingTime = parseFloat(result)
+              let d = new Date()
+              if (d.getTime() / 1000 - matchingTime > 60) {
+                if (d.getTime() / 1000 - matchingTime > 100) return // 古い情報。
+                this.matchingTimeup = true
+                this.matchingDialog = false
+              }
+
+            } else {
+              this.matchingSuccess()
+            }
+            clearInterval(timerID)
+          }
+
+        } else {
           clearInterval(timerID)
         }
       }, 3000)

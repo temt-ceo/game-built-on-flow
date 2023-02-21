@@ -5,7 +5,7 @@ const auth = useAuthenticator()
 </script>top-screen
 <template>
   <div>
-    <authenticator :initial-state="'signup'" :social-provider="['facebook', 'google']" variation="modal">
+    <authenticator variation="modal">
       <template v-slot="{ user }">
         <nav
           class="navbar header has-shadow"
@@ -23,78 +23,59 @@ const auth = useAuthenticator()
         </section>
       </template >
 
-    <template v-slot:sign-in-header>
-      <h1><img src="/img/CODE_Of_Flow.png" style="height: 30px;" /></h1>
-    </template >
+      <template v-slot:sign-in-header>
+        <h1><img src="/img/CODE_Of_Flow.png" style="height: 30px;" /></h1>
+      </template >
 
-    <template v-slot:sign-up-header>
-      <h1>
-        <img src="/img/CODE_Of_Flow.png" style="height: 30px;" />
-        <v-dialog
-          transition="dialog-top-transition"
-          width="auto"
-        >
-          <template v-slot:activator="{ props }">
-            <v-btn
-              color="red-darken-4"
-              v-bind="props"
-            >Mission Description</v-btn>
-          </template>
-          <template v-slot:default="{ isActive }">
-            <v-card>
-              <v-tabs
-                v-model="mission_tab"
-                bg-color="red-darken-3"
-              >
-                <v-tab value="en">EN</v-tab>
-                <v-tab value="ja">JP</v-tab>
-              </v-tabs>
-              <v-toolbar
-                color="red-darken-4"
-                title="Mission Description"
-              ></v-toolbar>
-              <v-card-text>
-                <v-window v-model="mission_tab">
-                  <v-window-item value="en">
-                    Welcome. My name is Actis. I am here to support you and your agents. Your mission as agents is to keep cyberspace safe. Your role is to infiltrate the cyberspace, Arcana, and fight off hackers and others who try to destroy the cyberspace Arcana. Register your agent name and register on the Flow Blockchain to infiltrate Arcana. If you are matched with other opponents, the game will switch to battle mode. I will support you and you will have to use your abilities to fight them off to keep Arkana safe. <br><br>
-                    (CODE-Of-Flow is an homage to SEGA's "Code Of Joker")
-                    <div><br><br><br><br>
-                      If you don't know Code Of Joker👇<br>
-                      <a href="https://m.youtube.com/watch?v=tYioSA10Ckc">https://m.youtube.com/watch?v=tYioSA10Ckc</a><br>
-                    </div>
-                  </v-window-item>
+      <template v-slot:sign-up-header>
+        <h1>
+          <img src="/img/CODE_Of_Flow.png" style="height: 30px;" />
+          <!-- DIALOG BUTTON -->
+          <v-btn
+            color="red-darken-4"
+            @click="showDialog = true"
+          >Mission Description</v-btn>
+          <!-- DIALOG START -->
+          <div v-if="showDialog" class="v-overlay v-overlay--active v-theme--light v-locale--is-ltr v-dialog v-overlay--scroll-blocked" aria-role="dialog" aria-modal="true" style="z-index: 2400;">
+            <div class="v-overlay__content" style="width: auto;">
+              <div class="v-card v-theme--light bg-primary v-card--density-default v-card--variant-elevated">
+                <div class="v-card__loader"><div class="v-progress-linear v-theme--light" role="progressbar" aria-hidden="true" aria-valuemin="0" aria-valuemax="100" style="top: 0px; height: 0px; --v-progress-linear-height:2px; left: 50%; transform: translateX(-50%);">
+                  <div class="v-progress-linear__background" style="width: 100%;"></div><div class="v-progress-linear__indeterminate"><div class="v-progress-linear__indeterminate long"></div><div class="v-progress-linear__indeterminate short"></div>
+                </div>
+                </div>
+              </div>
+              <div class="v-card-text" style="font-size: 14px;">
+                  Welcome. My name is Actis. I am here to support you and your agents. Your mission as agents is to keep cyberspace safe. Your role is to infiltrate the cyberspace, Arcana, and fight off hackers and others who try to destroy the cyberspace Arcana. Register your agent name and register on the Flow Blockchain to infiltrate Arcana. If you are matched with other opponents, the game will switch to battle mode. I will support you and you will have to use your abilities to fight them off to keep Arkana safe. <br><br>
+                  (CODE-Of-Flow is an homage to SEGA's "Code Of Joker")
+                  <div><br><br><br><br>
+                    If you don't know Code Of Joker👇<br>
+                    <a href="https://m.youtube.com/watch?v=tYioSA10Ckc">https://m.youtube.com/watch?v=tYioSA10Ckc</a><br>
+                  </div>
+                  <v-btn
+                    variant="text"
+                    @click="showDialog = false"
+                  >Close</v-btn>
 
-                  <v-window-item value="ja">
-                    ようこそ。私の名前はアクティス。貴方達エージェントのサポートを致します。貴方達エージェントの使命はサイバー空間の安全を保つ事です。貴方達の役割はサイバー空間、アルカナに潜入し、ハッカーなどサイバー空間アルカナを壊そうとする連中を撃退する事です。
-                    あなたのエージェント名を登録し、アルカナに潜入する為、Flow Blockchain 上で登録を行ってください。貴方達以外の対立する組織とマッチングした場合はバトルモードに切り替わります。
-                    私はサポートに回りますので、貴方は能力を発揮してアルカナの安全を守るため相手を撃退して下さい。<br><br>
-                    (このCODE-Of-FlowはSEGAの”Code Of Joker”をオマージュしたゲームです)
-                    <div><br><br><br><br>
-                      Code Of Joker👇<br>
-                      <a href="https://m.youtube.com/watch?v=tYioSA10Ckc">https://m.youtube.com/watch?v=tYioSA10Ckc</a><br>
-                    </div>
-                  </v-window-item>
-                </v-window>
-              </v-card-text>
-              <v-card-actions class="justify-end">
-                <v-btn
-                  variant="text"
-                  @click="isActive.value = false"
-                >Close</v-btn>
-              </v-card-actions>
-            </v-card>
-          </template>
-        </v-dialog>
-      </h1>
-    </template >
+                <div class="v-progress-linear v-progress-linear--active v-theme--light mb-0" role="progressbar" aria-hidden="false" aria-valuemin="0" aria-valuemax="100" style="top: 0px; height: 4px; --v-progress-linear-height:4px; left: 50%; transform: translateX(-50%);">
+                <div class="v-progress-linear__background bg-white" style="width: 100%;"></div>
+                <div class="v-progress-linear__indeterminate">
+                  <div class="v-progress-linear__indeterminate long bg-white"></div>
+                  <div class="v-progress-linear__indeterminate short bg-white"></div>
+                </div></div></div><span class="v-card__underlay"></span>
+              </div>
+            </div>
+          </div>
+          <!-- DIALOG SEND -->
+        </h1>
+      </template >
 
-    <template v-slot:sign-in-footer>
-    </template >
+      <template v-slot:sign-in-footer>
+      </template >
 
-    <template v-slot:sign-up-footer>
-    </template >
-  </Authenticator>
-</div>
+      <template v-slot:sign-up-footer>
+      </template >
+    </Authenticator>
+  </div>
 </template>
 <script>
 import { Auth, API } from 'aws-amplify'
@@ -107,6 +88,7 @@ export default {
   data() {
     return {
       mission_tab: 'en',
+      showDialog: false
     }
   },
   methods: {

@@ -6,7 +6,7 @@ fcl.config({
     "discovery.wallet": "https://fcl-discovery.onflow.org/testnet/authn",
     "app.detail.title": "Sample App", 
     "app.detail.icon": "https://fcl-discovery.onflow.org/images/blocto.png", 
-    "0xmyAddr": "0x631e88ae7f1d7c20" 
+    '0xCOF': '0x9e447fb949c3f1b6' // The account address where the smart contract lives
 })
 
 export default defineNuxtPlugin((nuxtApp) => {
