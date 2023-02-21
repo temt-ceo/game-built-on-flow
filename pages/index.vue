@@ -87,7 +87,7 @@
 
         <audio id="audio1" src="/audio/coj_music_matching.mp3"></audio>
         <audio id="audio2" src="/audio/coj_music_on_battle.mp3"></audio>
-        <video v-if="onMatching <= 2" id="video1" style="width: 100vw; min-height: 100%;" controls="controls">
+        <video v-if="onMatching <= 2" v-show="onMatching === 2" id="video1" style="width: 100vw; min-height: 100%;" controls="controls">
           <source src="/video/coj_matching_movie.mov">
         </video>
         <div v-if="onMatching === 3" class="main-screen">
@@ -726,6 +726,7 @@ export default {
   width: 100%;
   min-height: 400px;
   color: #FF4081;
+  padding-top: 40px;
   background-image: url(https://cdn.vuetifyjs.com/images/backgrounds/bg-2.jpg);
   background-repeat: repeat;
 }

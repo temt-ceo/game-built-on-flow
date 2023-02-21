@@ -152,6 +152,7 @@ h6 {
   -ms-flex-negative: 0;
   flex-shrink: 0;
   min-height: 2.25rem;
+  z-index: 999;
 }
 
 .sign-out {
@@ -251,6 +252,11 @@ h6 {
 }
 @media screen and (min-width: 700px) {
   body {
+    background-image: url(https://cdn.vuetifyjs.com/images/backgrounds/bg-2.jpg);
+    background-repeat: repeat;
+  }
+
+  body > div {
     background-image: url('/img/453d816d7d25d5a4aa075a8c64c79818.jpg');
     background-repeat: repeat-x;
     animation: bg 45s linear infinite;
@@ -267,6 +273,11 @@ h6 {
 }
 @media screen and (max-width: 700px) {
   body {
+    background-image: url(https://cdn.vuetifyjs.com/images/backgrounds/bg-2.jpg);
+    background-repeat: repeat;
+  }
+
+  body > div {
     background-image: url('/img/453d816d7d25d5a4aa075a8c64c79818.jpg');
     background-repeat: repeat;
     animation: bg_sp 80s linear infinite;
