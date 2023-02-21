@@ -1,4 +1,10 @@
 export default {
+    isPlayerHasRegistered: `
+    import CodeOfFlowDay1 from 0xCOF
+    pub fun main(address: Address): &CodeOfFlowDay1.Player{CodeOfFlowDay1.IPlayerPublic}? {
+        return getAccount(address).getCapability<&CodeOfFlowDay1.Player{CodeOfFlowDay1.IPlayerPublic}>(CodeOfFlowDay1.PlayerPublicPath).borrow()
+    }
+    `,
     get1stMints: `
     import MyNFTv2 from 0x9e447fb949c3f1b6
     pub fun main(): {Address: [MyNFTv2.NFT1stStruct]} {

@@ -194,7 +194,7 @@
           </div>
         </div>
 
-        <div v-if="false">
+        <div>
           <h2>Hello! {{ attrs.player.username }}</h2>
           <p v-if="address && hasNFT">
             <h3>Hi {{ nickname }}</h3>
