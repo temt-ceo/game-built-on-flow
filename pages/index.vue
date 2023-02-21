@@ -225,13 +225,11 @@
           <h2>Hello! {{ attrs.player.username }}</h2>
           <p v-if="address && hasNFT">
             <h3>Hi {{ nickname }}</h3>
-            <img :src="imagepath" />
-            <h3>Your NFT</h3>
             <div><button v-if="!showClearingHouse" @click="showClearingHouse = true">Show Clearing House</button></div>
             <div><button v-if="showClearingHouse" @click="showClearingHouse = false">Close Clearing House</button></div>
             <div><button @click="sellNFT = false">Sell at the NFT exchange</button></div>
             
-            <div v-if="showClearingHouse">
+            <div v-if="false">
               <h3>Who's NFT do you buy?</h3>
               {{ nftSeller }} <button v-if="nftSeller !== ''" @click="showListings">Show</button>
               <div v-for="owner, addr in nftOwners" :key="addr" class="flex">
@@ -253,7 +251,7 @@
               </ul>
             </div>
           </p>
-          <p v-if="address && !hasNFT">
+          <p v-if="false">
             <img v-if="nftType === 'human'" src="/img/knight.jpeg" />
             <img v-if="nftType === 'animal'" src="/img/dog.jpeg" />
             <h3>Enter your nickname:</h3>
