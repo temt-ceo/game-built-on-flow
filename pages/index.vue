@@ -286,55 +286,41 @@
     style="position: absolute; bottom: 40px; left: -5px;"
   ></v-btn>
   <v-row justify="center">
-    <!-- <v-dialog
-      v-model="marigan_dialog"
-      transition="dialog-bottom-transition"
-      width="auto"
-    >
-      <template v-slot:default="{ isActive }">
-        <v-card>
-          <v-toolbar
-            color="primary"
-            title="Do you want to redraw the card?"
-          ></v-toolbar>
-          <v-card-text>
-            <div class="text-h2 pa-12" style="padding: 25px !important">
-              0{{ marigan_time_second }}"<span style="margin-right:35px">{{ marigan_time_millisecond_1 }}{{ marigan_time_millisecond_2 }}</span>
-              <span class="marigan_buttons">
-                <v-btn
-                  icon="mdi-thumb-up"
-                  color="error"
-                  @click="marigan_dialog = false"
-                  style="margin: 0 25px;"
-                >No</v-btn>
-                <v-btn
-                  icon="mdi-thumb-up"
-                  color="success"
-                  @click="marigan"
-                  style="margin: 0 25px;"
-                >YES</v-btn>
-              </span>
-            </div>
-            <div>
-              <v-row>
-                <v-col
-                  v-for="n in marigan_cards[marigan_count].length"
-                  cols="2.5"
-                >
-                  <span style="opacity: 0">{{ marigan_cards[marigan_count] }}</span>
-                  <v-img
-                    :src="`/img/cards/card_${marigan_cards[marigan_count][n-1]}.jpeg`"
-                    aspect-ratio="0.65"
-                    cover
-                  ></v-img>
-                </v-col>
-              </v-row>
-
-            </div>
-          </v-card-text>
-        </v-card>
-      </template>
-    </v-dialog>
+    <div v-if="marigan_dialog" class="v-overlay v-overlay--active v-theme--light v-locale--is-ltr v-dialog v-overlay--scroll-blocked" aria-role="dialog" aria-modal="true" style="z-index: 2400;"><div class="v-overlay__scrim"></div><div class="v-overlay__content" style="width: auto;"><div class="v-card v-theme--light v-card--density-default v-card--variant-elevated"><!----><div class="v-card__loader"><div class="v-progress-linear v-theme--light" role="progressbar" aria-hidden="true" aria-valuemin="0" aria-valuemax="100" style="top: 0px; height: 0px; --v-progress-linear-height:2px; left: 50%; transform: translateX(-50%);"><!----><div class="v-progress-linear__background" style="width: 100%;"></div><div class="v-progress-linear__indeterminate"><div class="v-progress-linear__indeterminate long"></div><div class="v-progress-linear__indeterminate short"></div></div><!----></div></div><!----><!----><header class="v-toolbar v-toolbar--density-default bg-primary v-theme--light"><!----><div class="v-toolbar__content" style="height: 64px;"><!----><div class="v-toolbar-title">
+      <div class="v-toolbar-title__placeholder">Do you want to redraw the card?<!----></div></div><!----><!----></div><!----></header><div class="v-card-text">
+        <div class="text-h2 pa-12" style="padding: 25px !important;">
+          0{{ marigan_time_second }}"<span style="margin-right:35px">{{ marigan_time_millisecond_1 }}{{ marigan_time_millisecond_2 }}</span>
+        <span class="marigan_buttons">
+        <v-btn
+          icon="mdi-thumb-up"
+          color="error"
+          @click="marigan_dialog = false"
+          style="margin: 0 25px;"
+        >No</v-btn>
+        <v-btn
+          icon="mdi-thumb-up"
+          color="success"
+          @click="marigan"
+          style="margin: 0 25px;"
+        >YES</v-btn>
+        </span></div>
+        <div>
+          <v-row>
+            <v-col
+              v-for="n in marigan_cards[marigan_count].length"
+              cols="2.5"
+            >
+              <span style="opacity: 0">{{ marigan_cards[marigan_count] }}</span>
+              <v-img
+                :src="`/img/cards/card_${marigan_cards[marigan_count][n-1]}.jpeg`"
+                aspect-ratio="0.65"
+                cover
+              ></v-img>
+            </v-col>
+          </v-row>
+        </div>
+      </div><!----><!----><span class="v-card__underlay"></span>
+    </div></div></div>
     <v-dialog
       v-model="show_battle_dialog"
       persistent
@@ -386,7 +372,7 @@
           </v-btn>
         </v-card-actions>
       </v-card>
-    </v-dialog> -->
+    </v-dialog>
   </v-row>
 </template>
 <script>
@@ -430,7 +416,7 @@ export default {
       marigan_time_millisecond_1: 0,
       marigan_time_millisecond_2: 0,
       marigan_dialog: false,
-      marigan_cards: [[1, 18, 20, 3], [3, 4, 4, 5], [5, 6, 6, 7], [6, 2, 7, 8]],
+      marigan_cards: [],
       marigan_count: 0,
       turn_timer: 60,
       your_life: 7,
@@ -439,7 +425,7 @@ export default {
       enemy_cp: 2,
       your_deck: 36,
       enemy_deck: 36,
-      your_hand: {1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7},
+      your_hand: {},
       enemy_hand: 7,
       triggers_boxes: 4,
       your_triggers: {1: 1, 2: 2, 3: null, 4: null},
@@ -508,7 +494,6 @@ export default {
   },
   async created() {
     this.$fcl.currentUser.subscribe(this.setupWalletInfo)
-
     // Amplify Auth
     const currentAuthUser = await Auth.currentAuthenticatedUser();
     const session = await Auth.userSession(currentAuthUser);
@@ -628,6 +613,7 @@ export default {
         ]
         const ret = await this.isRegistered()
         this.registered = ret !== null
+        await this.checkTransactionComplete('watchCurrentStatus')
       }
     },
     async isRegistered() {
@@ -690,16 +676,21 @@ export default {
         }, 7000) // トランザクション完了までは古い情報が返るので。
       }
     },
-    matchingSuccess () {
+    async matchingSuccess () {
       this.onMatching = 2
-      const audio = document.getElementById("audio1");
-      audio.play();
-      const video1 = document.getElementById("video1");
-      video1.play();
-      setTimeout(() => {
+      // const audio = document.getElementById("audio1");
+      // audio.play();
+      // const video1 = document.getElementById("video1");
+      // video1.play();
+      // setTimeout(() => {
         this.onMatching = 3
         setTimeout(() => {
           this.marigan_dialog = true
+          // ハンドの初期値
+          this.your_hand[1] = this.marigan_cards[0][0]
+          this.your_hand[2] = this.marigan_cards[0][1]
+          this.your_hand[3] = this.marigan_cards[0][2]
+          this.your_hand[4] = this.marigan_cards[0][3]
           let counter = 0
           const stopTimer1 = setInterval(() => {
             counter += 50
@@ -719,8 +710,10 @@ export default {
               }, 300)
             }
           }, 50)
-        }, 1000)
-      }, 17000)
+        }, 4000)
+        // }, 1000)
+      // }, 17000)
+      this.marigan_cards = await this.get_marigan_cards()
     },
     async getCurrentStatus() {
         const result = await this.$fcl.query({
@@ -731,17 +724,28 @@ export default {
         })
         return result
     },
+    async get_marigan_cards() {
+        const result = await this.$fcl.query({
+          cadence: FlowScripts.getMariganCards,
+          args: (arg, t) => [
+            arg(this.address, t.Address)
+          ]
+        })
+        return result
+    },
     checkTransactionComplete (transactionName) {
       const timerID = setInterval(async () => {
         if (transactionName === 'createPlayer') {
           const result = await this.isRegistered()
+          console.log(transactionName, result)
           if (result) {
             this.loadingDialog = false
             this.registered = true
             clearInterval(timerID)
           }
-        } else if (transactionName === 'matchingStart') {
+        } else if (transactionName === 'matchingStart' || transactionName === 'watchCurrentStatus') {
           const result = await this.getCurrentStatus()
+          console.log(transactionName, result)
           if (result) {
             if (!isNaN(parseFloat(result))) {
               let matchingTime = parseFloat(result)
@@ -751,9 +755,18 @@ export default {
                 this.matchingTimeup = true
                 this.matchingDialog = false
               }
-
-            } else {
-              this.matchingSuccess()
+            } else if (result.game_started === false) {
+              // リロード対策
+              if (transactionName === 'matchingStart') {
+                this.matchingSuccess()
+              } else {
+                this.onMatching = 3
+                this.marigan_cards = await this.get_marigan_cards()
+                this.your_hand[1] = this.marigan_cards[0][0]
+                this.your_hand[2] = this.marigan_cards[0][1]
+                this.your_hand[3] = this.marigan_cards[0][2]
+                this.your_hand[4] = this.marigan_cards[0][3]
+              }
             }
             clearInterval(timerID)
           }

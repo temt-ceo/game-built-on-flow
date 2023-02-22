@@ -150,6 +150,7 @@ pub contract CodeOfFlowDay2 {
   // [Interface] IPlayerPublic
   pub resource interface IPlayerPublic {
     pub fun get_current_status(): AnyStruct
+    pub fun get_marigan_cards(): [[UInt16]]
   }
 
   // [Interface] IPlayerPrivate
