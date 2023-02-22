@@ -57,11 +57,13 @@ const auth = useAuthenticator()
                   >Close</v-btn>
 
                 <div class="v-progress-linear v-progress-linear--active v-theme--light mb-0" role="progressbar" aria-hidden="false" aria-valuemin="0" aria-valuemax="100" style="top: 0px; height: 4px; --v-progress-linear-height:4px; left: 50%; transform: translateX(-50%);">
-                <div class="v-progress-linear__background bg-white" style="width: 100%;"></div>
-                <div class="v-progress-linear__indeterminate">
-                  <div class="v-progress-linear__indeterminate long bg-white"></div>
-                  <div class="v-progress-linear__indeterminate short bg-white"></div>
-                </div></div></div><span class="v-card__underlay"></span>
+                  <div class="v-progress-linear__background bg-white" style="width: 100%;"></div>
+                  <div class="v-progress-linear__indeterminate">
+                    <div class="v-progress-linear__indeterminate long bg-white"></div>
+                    <div class="v-progress-linear__indeterminate short bg-white"></div>
+                  </div>
+                </div>
+                </div><span class="v-card__underlay"></span>
               </div>
             </div>
           </div>
