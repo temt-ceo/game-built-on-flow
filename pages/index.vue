@@ -252,8 +252,8 @@
       </div>
     </div>
     <div class="header-bar">
-      <div v-if="onMatching === 3" class="remaining_time">
-        TIME: {{ turn_timer }}
+      <div v-if="onMatching === 3 && game_started === true" class="remaining_time">
+        {{ current_turn }} | TIME: {{ turn_timer }}
       </div>
       <div v-if="onMatching === 1" class="macthing_time">
         {{ matching_time_second }}
@@ -265,7 +265,7 @@
     class="ma-1"
     color="success"
     icon="mdi-gavel"
-    @click="show_game_start_dialog = true"
+    @click="show_game_dialog = true"
     style="position: absolute; bottom: 40px; left: -5px;"
   ></v-btn>
   <v-btn
@@ -340,20 +340,41 @@
         </v-btn>
       </v-card>
     </div></div>
-    <div v-if="show_game_start_dialog" class="v-overlay v-overlay--active v-theme--light v-locale--is-ltr v-dialog v-overlay--scroll-blocked" aria-role="dialog" aria-modal="true" style="z-index: 2400;"><div class="v-overlay__content" style="width: auto;">
-      <div style="width: 400px; padding: 35px; background-color: white; border-radius: 20px; margin: 0 auto;">
-        To start a game, click Game Start button
+    <div v-if="show_game_dialog" class="v-overlay v-overlay--active v-theme--light v-locale--is-ltr v-dialog v-overlay--scroll-blocked" aria-role="dialog" aria-modal="true" style="z-index: 2400;"><div class="v-overlay__content" style="width: auto;">
+      <div style="width: 400px; padding: 35px; background-color: #9C27B0; color: white; border-radius: 20px; margin: 0 auto;">
+
+        {{ battleDialogText }}
+        <v-card-text style="font-size: 15px;">
+          {{ battleDialogText2 }}
+        </v-card-text>
         <v-btn
+          v-if="!game_started"
           color="success"
           @click="gameStart"
           style="margin-top: 30px; width: 100%;"
         >
-        Game Start
+          Game Start
+        </v-btn>
+        <v-btn
+          v-if="game_started"
+          :loading="customLoading"
+          :disabled="customLoading"
+          size="x-large"
+          color="info"
+          @click="turnChange"
+          style="margin: 0 auto; display: block;"
+        >
+          Yes
+          <template v-slot:loader>
+            <span class="custom-loader">
+              <v-icon light>mdi-cached</v-icon>
+            </span>
+          </template>
         </v-btn>
       </div>
     </div></div>
     <div v-if="show_battle_dialog" class="v-overlay v-overlay--active v-theme--light v-locale--is-ltr v-dialog v-overlay--scroll-blocked" aria-role="dialog" aria-modal="true" style="z-index: 2400;"><div class="v-overlay__content" style="width: auto;">
-      <v-card>
+      <v-card :color="'deep-purple'">
         <v-card-title class="text-h5">
           <div class="dialog_title" v-if="!enemyAttack && display_card_type === 1">
             Do you put this card on the FIELD?
@@ -366,7 +387,7 @@
           </div>
         </v-card-title>
         <v-img
-          v-if="enemyAttack"
+          v-if="enemyAttack && selected_card_id != null"
           :src="`/img/cards/card_${selected_card_id}.jpeg`"
           aspect-ratio="0.65"
           cover
@@ -374,28 +395,32 @@
           style="width: 250px; margin: 0 auto;"
         ></v-img>
         <v-img
-          v-if="!enemyAttack"
+          v-if="!enemyAttack && selected_card_id != null"
           :src="`/img/cards/card_${selected_card_id}.jpeg`"
           aspect-ratio="0.65"
           cover
           style="width: 250px; margin: 0 auto;"
         ></v-img>
-        <v-card-text>Let Google help apps determine location. This means sending anonymous location data to Google, even when no apps are running.</v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn
             color="green-darken-1"
-            variant="text"
+            size="x-large"
             @click="show_battle_dialog = false"
           >
             No
           </v-btn>
           <v-btn
-            color="green-darken-1"
-            variant="text"
+            size="x-large"
+            color="info"
             @click="cardMoveDecided"
           >
             Yes
+            <template v-slot:loader>
+              <span class="custom-loader">
+                <v-icon light>mdi-cached</v-icon>
+              </span>
+            </template>
           </v-btn>
         </v-card-actions>
       </v-card>
@@ -449,7 +474,10 @@ export default {
       game_started: false,
       turn_timer: 60,
       opponent: null,
+      turn: null,
       is_first: null,
+      is_first_turn: null,
+      last_time_turnend: null,
       matched_time: null,
       your_life: 7,
       opponent_life: 7,
@@ -467,12 +495,22 @@ export default {
       your_dead_cards: [],
       opponent_dead_cards: [],
       selected_card_id: null,
+      current_turn: '',
       display_cardinfo: '',
       display_card_type: null,
       display_card_position: null,
-      show_game_start_dialog: false,
+      attacked_cards: {'0': 0}, // 空だとTransactionがバリデーションエラーを吐くため
+      used_card: {'0': 0}, // 空だとTransactionがバリデーションエラーを吐くため
+      show_game_dialog: false,
       show_battle_dialog: false,
+      customLoading: false,
+      battleDialogText: '',
+      battleDialogText2: '',
+      show_game_dialog: false,
+      turnChangeActionDone: false,
+      show_turn_change_dialog: {1: [false, false], 2: [false, false], 3: [false, false], 4: [false, false], 5: [false, false], 6: [false, false], 7: [false, false], 8: [false, false], 9: [false, false], 10: [false, false]},
       card_information: {},
+      stopCountdownTimer: null,
       enemyAttack: false,
       address: '',
       hasNFT: false,
@@ -537,17 +575,17 @@ export default {
       }
     },
     countdown() {
-      this.turn_timer = 60
-      const stopTimer2 = setInterval(() => {
+      this.stopCountdownTimer = setInterval(() => {
         this.turn_timer -= 1
         if (this.turn_timer === 0) {
-          clearInterval(stopTimer2)
+          clearInterval(this.stopCountdownTimer)
+          this.stopCountdownTimer = null
         }
       }, 1000)
     },
     async gameStart() {
-
-      this.show_game_start_dialog = false
+      this.battleDialogText = 'To start a game, click Game Start button'
+      this.show_game_dialog = false
       const arg1 = [this.your_hand[1], this.your_hand[2], this.your_hand[3], this.your_hand[4]]
       const transactionId = await this.$fcl.mutate({
         cadence: FlowTransactions.gameStart,
@@ -582,7 +620,33 @@ export default {
         this.show_battle_dialog = true
       }
     },
+    async turnChange() {
+      this.customLoading = true
+      setTimeout(() => (this.customLoading = false), 5000)
+      console.log(this.attacked_cards, this.used_card, 777)
+      const transactionId = await this.$fcl.mutate({
+        cadence: FlowTransactions.turnChange,
+        args: (arg, t) => [
+          arg(this.attacked_cards, t.Dictionary({ key: t.UInt8, value: t.UInt16 })),
+          arg(this.used_card, t.Dictionary({ key: t.UInt8, value: t.UInt16 }))
+        ],
+        proposer: this.$fcl.authz,
+        payer: this.$fcl.authz,
+        authorizations: [this.$fcl.authz],
+        limit: 999
+      })
+      console.log(`TransactionId: ${transactionId}`)
+      this.battleDialogText = ''
+      this.battleDialogText2 = ''
+      this.show_game_dialog = false
+      this.turnChangeActionDone = true
+      this.loadingDialog = true
+      this.checkTransactionComplete('turnChange')
+    },
     async cardMoveDecided() {
+      this.customLoading = true
+      setTimeout(() => (this.customLoading = false), 5000)
+
       const card = this.card_information[this.selected_card_id]
       console.log('display_card_type', this.display_card_type, 'display_card_position', this.display_card_position, 'selected_card_id', this.selected_card_id, card)
       if (card) {
@@ -727,7 +791,8 @@ export default {
               clearInterval(stopTimer1)
               setTimeout(() => {
                 this.marigan_dialog = false
-                this.countdown()
+                // this.turn_timer = 60
+                // this.countdown()
               }, 300)
             }
           }, 50)
@@ -769,6 +834,11 @@ export default {
           ]
         })
         console.log('getMatchingLimits', result)
+        result.forEach((t) => {
+          const d = new Date(parseFloat(t) * 1000)
+          const n = new Date()
+          console.log((n.getTime() - d.getTime()) / 1000 + '秒前')
+        })
     },
     checkTransactionComplete (transactionName) {
       const func = async () => {
@@ -782,7 +852,7 @@ export default {
               this.registered = true
               clearInterval(timerID)
             }
-          } else if (transactionName === 'matchingStart' || transactionName === 'watchCurrentStatus' || transactionName === 'gameStart') {
+          } else if (transactionName === 'matchingStart' || transactionName === 'watchCurrentStatus' || transactionName === 'gameStart' || transactionName === 'turnChange') {
             const result = await this.getCurrentStatus()
             console.log(transactionName, result)
             if (result) {
@@ -824,8 +894,15 @@ export default {
                   }
                 // ゲーム開始済み
                 } else if (this.game_started === true) {
+                  if (transactionName === 'turnChange' && this.is_first_turn !== result.is_first_turn) {
+                    this.turnChangeActionDone = false
+                  }
+
                   this.onMatching = 3
+                  this.turn = result.turn
                   this.is_first = result.is_first
+                  this.is_first_turn = result.is_first_turn
+                  this.last_time_turnend = new Date(result.last_time_turnend * 1000)
                   this.matched_time = new Date(parseFloat(result.matched_time) * 1000)
                   this.opponent = result.opponent
                   this.your_life = parseInt(result.your_life)
@@ -838,6 +915,9 @@ export default {
                   this.opponent_hand = parseInt(result.opponent_hand)
                   this.opponent_field_unit = result.opponent_field_unit
                   this.opponent_trigger_cards = result.opponent_trigger_cards
+                  if (transactionName !== 'turnChange') {
+                    this.gameControl()
+                  }
                   if (transactionName === 'gameStart') {
                     this.loadingDialog = false
                     this.gameStartDialog = true
@@ -860,6 +940,29 @@ export default {
       }
       const timerID = setInterval(func, 3000)
       func()
+    },
+    gameControl () {
+      console.log('turn changed at:', this.last_time_turnend, 'player', this.is_first, this.is_first_turn)
+      const now = new Date()
+      this.current_turn = `Now Turn ${this.turn}, ${this.is_first === this.is_first_turn ? 'Your' : "Enemy's"} Turn`
+      const p = this.is_first_turn ? 0 : 1
+      const pastTime = ((now.getTime() / 1000) - (this.last_time_turnend.getTime() / 1000))
+      console.log(pastTime)
+      if (pastTime > 60) {
+        if (!this.show_game_dialog) {
+          this.turn_timer = '00'
+          this.battleDialogText = 'TIME UP'
+          this.battleDialogText2 = "Give the turn to the opponent's turn."
+          this.show_game_dialog = true
+        }
+      } else {
+        if (this.show_turn_change_dialog[this.turn][p] === false) {
+        }
+        if (this.stopCountdownTimer === null) {
+          this.turn_timer = parseInt(pastTime)
+          this.countdown()
+        }
+      }
     },
     async createTodo() {
       const { name, description } = this
@@ -992,7 +1095,7 @@ video {
 }
 
 .remaining_time {
-  width: 130px;
+  width: 300px;
   margin: 0 auto;
 }
 .macthing_time {
@@ -1096,6 +1199,18 @@ video {
   }
   100% {
     width: 250px;
+  }
+}
+.custom-loader {
+  animation: loader 1s infinite;
+  display: flex;
+}
+@keyframes loader {
+  from {
+    transform: rotate(0);
+  }
+  to {
+    transform: rotate(360deg);
   }
 }
 </style>
