@@ -206,6 +206,14 @@
 
         <div>
           <h2>Hello! {{ attrs.player.username }}</h2>
+          <div v-if="!registered" style="margin: 10px;">
+            Welcome. My name is Actis. I am here to support you and your agents. Your mission as agents is to keep cyberspace safe. Your role is to infiltrate the cyberspace, Arcana, and fight off hackers and others who try to destroy the cyberspace Arcana. Register your agent name and register on the Flow Blockchain to infiltrate Arcana. If you are matched with other opponents, the game will switch to battle mode. I will support you and you will have to use your abilities to fight them off to keep Arkana safe. <br><br>
+            (CODE-Of-Flow is an homage to SEGA's "Code Of Joker")
+            <div><br><br><br><br>
+              If you don't know Code Of Joker👇<br>
+              <a href="https://m.youtube.com/watch?v=tYioSA10Ckc">https://m.youtube.com/watch?v=tYioSA10Ckc</a><br>
+            </div>
+          </div>
           <p v-if="address && hasNFT">
             <h3>Hi {{ nickname }}</h3>
             <div><button v-if="!showClearingHouse" @click="showClearingHouse = true">Show Clearing House</button></div>
@@ -269,7 +277,29 @@
     style="position: absolute; bottom: 40px; left: -5px;"
   ></v-btn>
   <v-btn
-    v-if="game_started === true && onMatching === 3 && display_cardinfo !== '' && (this.display_card_type === 1 || this.display_card_type === 3)"
+    v-if="onMatching === 3"
+    class="ma-1"
+    color="red"
+    icon="mdi-cancel"
+    @click="show_surrendar_dialog = true"
+    style="position: absolute; top: 20px; left: -5px;"
+  ></v-btn>
+  <v-btn
+    v-if="is_first !== is_first_turn && turn_timer === '00' && onMatching === 3"
+    class="ma-1"
+    color="success"
+    icon="mdi-gavel"
+    @click="show_game_dialog = true"
+    style="position: absolute; bottom: 40px; left: -5px;"
+  ></v-btn>
+  <v-btn
+    v-if="
+      game_started === true &&
+      onMatching === 3 &&
+      display_cardinfo !== '' &&
+      (this.display_card_type === 1 || this.display_card_type === 3) &&
+      is_first === is_first_turn
+    "
     class="ma-1"
     color="purple"
     icon="mdi-call-split"
@@ -327,9 +357,10 @@
       </v-card>
     </div></div>
     <div v-if="gameStartDialog" class="v-overlay v-overlay--active v-theme--light v-locale--is-ltr v-dialog v-overlay--scroll-blocked" aria-role="dialog" aria-modal="true" style="z-index: 2400;"><div class="v-overlay__content" style="width: auto; height: 160px;">
-      <v-card color="light-blue">
-        <v-card-text color="light-blue">
+      <v-card color="deep-orange-accent-3">
+        <v-card-text color="deep-orange-accent-3">
           <div class="text-h6 pa-12">Game Start!</div>
+          <div class="text-h6 pa-12">{{ is_first ? 'YOUR TURN!' : 'ENEMY TURN' }}</div>
         </v-card-text>
         <v-btn
           color="success"
@@ -340,9 +371,53 @@
         </v-btn>
       </v-card>
     </div></div>
+    <div v-if="gameEndDialog" class="v-overlay v-overlay--active v-theme--light v-locale--is-ltr v-dialog v-overlay--scroll-blocked" aria-role="dialog" aria-modal="true" style="z-index: 2400;"><div class="v-overlay__content" style="width: auto; height: 290px;">
+      <v-card color="yellow-lighten-1">
+        <v-card-text color="yellow-lighten-1">
+          <div class="text-h6 pa-12">Your victory is confirmed!</div>
+        </v-card-text>
+        <v-btn
+          color="success"
+          @click="gameEndDialog = false; onMatching = 1"
+          style="margin: 0 auto 40px; width: 50%; display: block; "
+        >
+          OK
+        </v-btn>
+      </v-card>
+    </div></div>
+    <div v-if="show_surrendar_dialog" class="v-overlay v-overlay--active v-theme--light v-locale--is-ltr v-dialog v-overlay--scroll-blocked" aria-role="dialog" aria-modal="true" style="z-index: 9900;"><div class="v-overlay__content" style="width: auto; height: 360px;">
+      <v-card color="light-blue">
+        <v-card-text color="light-blue">
+          <div class="text-h6 pa-12">Do you want to surrender?</div>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            color="white"
+            size="x-large"
+            @click="show_surrendar_dialog = false"
+          >
+            No
+          </v-btn>
+          <v-btn
+            size="x-large"
+            color="red"
+            @click="surrendar"
+          >
+            Yes
+            <template v-slot:loader>
+              <span class="custom-loader">
+                <v-icon light>mdi-cached</v-icon>
+              </span>
+            </template>
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </div></div>
+
     <div v-if="show_game_dialog" class="v-overlay v-overlay--active v-theme--light v-locale--is-ltr v-dialog v-overlay--scroll-blocked" aria-role="dialog" aria-modal="true" style="z-index: 2400;"><div class="v-overlay__content" style="width: auto;">
       <div style="width: 400px; padding: 35px; background-color: #9C27B0; color: white; border-radius: 20px; margin: 0 auto;">
-
+        <div v-if=!battleDialogText>To start a game, click Game Start button</div>
         {{ battleDialogText }}
         <v-card-text style="font-size: 15px;">
           {{ battleDialogText2 }}
@@ -356,7 +431,23 @@
           Game Start
         </v-btn>
         <v-btn
-          v-if="game_started"
+          v-if="game_started && is_first !== is_first_turn"
+          :loading="customLoading"
+          :disabled="customLoading"
+          size="x-large"
+          color="info"
+          @click="claimWin"
+          style="margin: 0 auto; display: block;"
+        >
+          Yes
+          <template v-slot:loader>
+            <span class="custom-loader">
+              <v-icon light>mdi-cached</v-icon>
+            </span>
+          </template>
+        </v-btn>
+        <v-btn
+          v-if="game_started && is_first === is_first_turn"
           :loading="customLoading"
           :disabled="customLoading"
           size="x-large"
@@ -374,7 +465,7 @@
       </div>
     </div></div>
     <div v-if="show_battle_dialog" class="v-overlay v-overlay--active v-theme--light v-locale--is-ltr v-dialog v-overlay--scroll-blocked" aria-role="dialog" aria-modal="true" style="z-index: 2400;"><div class="v-overlay__content" style="width: auto;">
-      <v-card :color="'deep-purple'">
+      <v-card>
         <v-card-title class="text-h5">
           <div class="dialog_title" v-if="!enemyAttack && display_card_type === 1">
             Do you put this card on the FIELD?
@@ -440,8 +531,10 @@ export default {
   data() {
     return {
       walletUser: {},
+      watchCurrentStatusFlg: false,
       loadingDialog: false,
       gameStartDialog: false,
+      gameEndDialog: false,
       registered: null,
       newEventAlertChip: false,
       newEventAlert: '',
@@ -474,6 +567,8 @@ export default {
       game_started: false,
       turn_timer: 60,
       opponent: null,
+      your_score: [],
+      opponent_score: [],
       turn: null,
       is_first: null,
       is_first_turn: null,
@@ -499,14 +594,15 @@ export default {
       display_cardinfo: '',
       display_card_type: null,
       display_card_position: null,
-      attacked_cards: {'0': 0}, // 空だとTransactionがバリデーションエラーを吐くため
-      used_card: {'0': 0}, // 空だとTransactionがバリデーションエラーを吐くため
+      attacked_cards: {'A': 0}, // 空だとTransactionがバリデーションエラーを吐くため
+      used_card: {'A': 0}, // 空だとTransactionがバリデーションエラーを吐くため
       show_game_dialog: false,
       show_battle_dialog: false,
       customLoading: false,
       battleDialogText: '',
       battleDialogText2: '',
       show_game_dialog: false,
+      show_surrendar_dialog: false,
       turnChangeActionDone: false,
       show_turn_change_dialog: {1: [false, false], 2: [false, false], 3: [false, false], 4: [false, false], 5: [false, false], 6: [false, false], 7: [false, false], 8: [false, false], 9: [false, false], 10: [false, false]},
       card_information: {},
@@ -577,14 +673,14 @@ export default {
     countdown() {
       this.stopCountdownTimer = setInterval(() => {
         this.turn_timer -= 1
-        if (this.turn_timer === 0) {
+        if (this.turn_timer <= 0) {
+          this.turn_timer = '00'
           clearInterval(this.stopCountdownTimer)
           this.stopCountdownTimer = null
         }
       }, 1000)
     },
     async gameStart() {
-      this.battleDialogText = 'To start a game, click Game Start button'
       this.show_game_dialog = false
       const arg1 = [this.your_hand[1], this.your_hand[2], this.your_hand[3], this.your_hand[4]]
       const transactionId = await this.$fcl.mutate({
@@ -627,8 +723,8 @@ export default {
       const transactionId = await this.$fcl.mutate({
         cadence: FlowTransactions.turnChange,
         args: (arg, t) => [
-          arg(this.attacked_cards, t.Dictionary({ key: t.UInt8, value: t.UInt16 })),
-          arg(this.used_card, t.Dictionary({ key: t.UInt8, value: t.UInt16 }))
+          arg([], t.Dictionary({ key: t.String, value: t.UInt16 })),
+          arg([], t.Dictionary({ key: t.String, value: t.UInt16 }))
         ],
         proposer: this.$fcl.authz,
         payer: this.$fcl.authz,
@@ -636,12 +732,42 @@ export default {
         limit: 999
       })
       console.log(`TransactionId: ${transactionId}`)
-      this.battleDialogText = ''
-      this.battleDialogText2 = ''
       this.show_game_dialog = false
       this.turnChangeActionDone = true
       this.loadingDialog = true
       this.checkTransactionComplete('turnChange')
+    },
+    async claimWin() {
+      this.customLoading = true
+      setTimeout(() => (this.customLoading = false), 5000)
+      const transactionId = await this.$fcl.mutate({
+        cadence: FlowTransactions.claimWin,
+        args: (arg, t) => [
+        ],
+        proposer: this.$fcl.authz,
+        payer: this.$fcl.authz,
+        authorizations: [this.$fcl.authz],
+        limit: 999
+      })
+      console.log(`TransactionId: ${transactionId}`)
+      this.show_game_dialog = false
+      this.loadingDialog = true
+      this.checkTransactionComplete('claimWin')
+    },
+    async surrendar() {
+      const transactionId = await this.$fcl.mutate({
+        cadence: FlowTransactions.surrendar,
+        args: (arg, t) => [
+        ],
+        proposer: this.$fcl.authz,
+        payer: this.$fcl.authz,
+        authorizations: [this.$fcl.authz],
+        limit: 999
+      })
+      console.log(`TransactionId: ${transactionId}`)
+      this.show_surrendar_dialog = false
+      this.loadingDialog = true
+      this.checkTransactionComplete('surrendar')
     },
     async cardMoveDecided() {
       this.customLoading = true
@@ -652,7 +778,9 @@ export default {
       if (card) {
         switch (this.display_card_type) {
           case 1:
-            console.log('your_hand:', this.your_hand, 'opponent_field_unit:', this.opponent_field_unit)
+            console.log('your_hand:', this.your_hand, 'opponent_field_unit:', this.opponent_field_unit, this.display_card_position)
+            this.your_hand[display_card_position] = null
+
             // if (this.your_hand[this.display_card_position] === this.selected_card_id) {
             //   this.your_hand
             // }
@@ -695,11 +823,17 @@ export default {
             message: 'Matching Standby'
           }
         ]
-        this.checkTransactionComplete('watchCurrentStatus')
+        if (this.watchCurrentStatusFlg === false) {
+          this.checkTransactionComplete('watchCurrentStatus')
+          this.watchCurrentStatusFlg = true
+        }
         this.get_card_info()
         const ret = await this.isRegistered()
         this.registered = ret !== null
-        this.get_matching_limits() // DEBUG
+        if (this.registered) {
+          console.log('User:', ret)
+          await this.getPlayersScore()
+        }
       }
     },
     async isRegistered() {
@@ -772,10 +906,10 @@ export default {
         setTimeout(() => {
           this.marigan_dialog = true
           // ハンドの初期値
-          this.your_hand[1] = this.marigan_cards[0][0]
-          this.your_hand[2] = this.marigan_cards[0][1]
-          this.your_hand[3] = this.marigan_cards[0][2]
-          this.your_hand[4] = this.marigan_cards[0][3]
+          this.your_hand['1'] = this.marigan_cards[0][0]
+          this.your_hand['2'] = this.marigan_cards[0][1]
+          this.your_hand['3'] = this.marigan_cards[0][2]
+          this.your_hand['4'] = this.marigan_cards[0][3]
           let counter = 0
           const stopTimer1 = setInterval(() => {
             counter += 50
@@ -799,6 +933,22 @@ export default {
         }, 1000)
       }, 17000)
       this.marigan_cards = await this.get_marigan_cards()
+      await this.getPlayersScore()
+    },
+    async getPlayersScore() {
+        const result = await this.$fcl.query({
+          cadence: FlowScripts.getPlayersScore,
+          args: (arg, t) => [
+            arg(this.address, t.Address)
+          ]
+        })
+        console.log('SCORE:', result)
+        if (result && result.length === 1) {
+          this.your_score = result[0]
+        } else if(result && result.length === 2) {
+          this.your_score = result[0]
+          this.opponent_score = result[0]
+        }
     },
     async getCurrentStatus() {
         const result = await this.$fcl.query({
@@ -833,7 +983,7 @@ export default {
           args: (arg, t) => [
           ]
         })
-        console.log('getMatchingLimits', result)
+        console.log(result)
         result.forEach((t) => {
           const d = new Date(parseFloat(t) * 1000)
           const n = new Date()
@@ -851,8 +1001,16 @@ export default {
               this.loadingDialog = false
               this.registered = true
               clearInterval(timerID)
+              await this.getPlayersScore()
             }
-          } else if (transactionName === 'matchingStart' || transactionName === 'watchCurrentStatus' || transactionName === 'gameStart' || transactionName === 'turnChange') {
+          } else if (
+            transactionName === 'matchingStart' ||
+            transactionName === 'watchCurrentStatus' ||
+            transactionName === 'gameStart' ||
+            transactionName === 'turnChange' ||
+            transactionName === 'claimWin' ||
+            transactionName === 'surrendar'
+            ) {
             const result = await this.getCurrentStatus()
             console.log(transactionName, result)
             if (result) {
@@ -880,14 +1038,16 @@ export default {
                 if (this.game_started === false && (transactionName === 'matchingStart' || transactionName === 'watchCurrentStatus')) {
                   if (transactionName === 'matchingStart') {
                     this.matchingSuccess()
-                  // リロード対策
                   } else {
-                    this.onMatching = 3
-                    this.marigan_cards = await this.get_marigan_cards()
-                    this.your_hand[1] = this.marigan_cards[0][0]
-                    this.your_hand[2] = this.marigan_cards[0][1]
-                    this.your_hand[3] = this.marigan_cards[0][2]
-                    this.your_hand[4] = this.marigan_cards[0][3]
+                    // リロード対策
+                    if (this.onMatching != 2) {
+                      this.onMatching = 3
+                      this.marigan_cards = await this.get_marigan_cards()
+                      this.your_hand['1'] = !this.your_hand['1'] ? this.marigan_cards[0][0] : this.your_hand['1']
+                      this.your_hand['2'] = !this.your_hand['2'] ? this.marigan_cards[0][1] : this.your_hand['2']
+                      this.your_hand['3'] = !this.your_hand['3'] ? this.marigan_cards[0][2] : this.your_hand['3']
+                      this.your_hand['4'] = !this.your_hand['4'] ? this.marigan_cards[0][3] : this.your_hand['4']
+                    }
                   }
                   if (transactionName !== 'watchCurrentStatus') {
                     clearInterval(timerID)
@@ -895,14 +1055,17 @@ export default {
                 // ゲーム開始済み
                 } else if (this.game_started === true) {
                   if (transactionName === 'turnChange' && this.is_first_turn !== result.is_first_turn) {
+                    this.battleDialogText = ''
+                    this.battleDialogText2 = ''
                     this.turnChangeActionDone = false
                   }
-
-                  this.onMatching = 3
+                  if (this.onMatching != 2) {
+                    this.onMatching = 3
+                  }
                   this.turn = result.turn
                   this.is_first = result.is_first
                   this.is_first_turn = result.is_first_turn
-                  this.last_time_turnend = new Date(result.last_time_turnend * 1000)
+                  this.last_time_turnend = new Date(parseFloat(result.last_time_turnend) * 1000)
                   this.matched_time = new Date(parseFloat(result.matched_time) * 1000)
                   this.opponent = result.opponent
                   this.your_life = parseInt(result.your_life)
@@ -920,7 +1083,7 @@ export default {
                   }
                   if (transactionName === 'gameStart') {
                     this.loadingDialog = false
-                    this.gameStartDialog = true
+                    this.gameStartDialog = true // (Game Start)
                     setTimeout(() => {
                       this.gameStartDialog = false
                     }, 2000)
@@ -930,6 +1093,16 @@ export default {
                   }
                 }
               }
+            } else {
+              if (transactionName === 'claimWin' || transactionName === 'surrendar') {
+                this.onMatching = 1
+              } else if (this.is_first_turn != this.is_first) {
+                this.gameEndDialog = true
+              }
+              this.show_game_dialog = false
+              this.show_battle_dialog = false
+              this.show_game_dialog = false
+              this.show_surrendar_dialog = false
             }
           } else {
             clearInterval(timerID)
@@ -942,15 +1115,16 @@ export default {
       func()
     },
     gameControl () {
-      console.log('turn changed at:', this.last_time_turnend, 'player', this.is_first, this.is_first_turn)
       const now = new Date()
       this.current_turn = `Now Turn ${this.turn}, ${this.is_first === this.is_first_turn ? 'Your' : "Enemy's"} Turn`
       const p = this.is_first_turn ? 0 : 1
-      const pastTime = ((now.getTime() / 1000) - (this.last_time_turnend.getTime() / 1000))
-      console.log(pastTime)
-      if (pastTime > 60) {
-        if (!this.show_game_dialog) {
-          this.turn_timer = '00'
+      const pastTime = 60 - ((now.getTime() / 1000) - (this.last_time_turnend.getTime() / 1000))
+      if (pastTime <= 0) {
+        this.turn_timer = '00'
+        if (this.is_first !== this.is_first_turn) {
+          this.battleDialogText = 'TIME UP'
+          this.battleDialogText2 = "Oppenent seems doesn't do any action in this turn. Claim the win of this game now!"
+        } else if (!this.show_game_dialog && this.turnChangeActionDone === false) {
           this.battleDialogText = 'TIME UP'
           this.battleDialogText2 = "Give the turn to the opponent's turn."
           this.show_game_dialog = true
@@ -1095,7 +1269,7 @@ video {
 }
 
 .remaining_time {
-  width: 300px;
+  width: 350px;
   margin: 0 auto;
 }
 .macthing_time {
