@@ -1,36 +1,44 @@
 export default {
     isRegistered: `
-    import CodeOfFlowDay2_4 from 0xCOF
-    pub fun main(address: Address): &CodeOfFlowDay2_4.Player{CodeOfFlowDay2_4.IPlayerPublic}? {
-        return getAccount(address).getCapability<&CodeOfFlowDay2_4.Player{CodeOfFlowDay2_4.IPlayerPublic}>(CodeOfFlowDay2_4.PlayerPublicPath).borrow()
+    import CodeOfFlowDay3_8 from 0xCOF
+    pub fun main(address: Address): &CodeOfFlowDay3_8.Player{CodeOfFlowDay3_8.IPlayerPublic}? {
+        return getAccount(address).getCapability<&CodeOfFlowDay3_8.Player{CodeOfFlowDay3_8.IPlayerPublic}>(CodeOfFlowDay3_8.PlayerPublicPath).borrow()
     }
     `,
     getCurrentStatus: `
-    import CodeOfFlowDay2_4 from 0xCOF
+    import CodeOfFlowDay3_8 from 0xCOF
     pub fun main(address: Address): AnyStruct {
-        let cap = getAccount(address).getCapability<&CodeOfFlowDay2_4.Player{CodeOfFlowDay2_4.IPlayerPublic}>(CodeOfFlowDay2_4.PlayerPublicPath).borrow()
+        let cap = getAccount(address).getCapability<&CodeOfFlowDay3_8.Player{CodeOfFlowDay3_8.IPlayerPublic}>(CodeOfFlowDay3_8.PlayerPublicPath).borrow()
           ?? panic("Doesn't have capability!")
         return cap.get_current_status()
     }
     `,
     getMariganCards: `
-    import CodeOfFlowDay2_4 from 0xCOF
+    import CodeOfFlowDay3_8 from 0xCOF
     pub fun main(address: Address): [[UInt16]] {
-        let cap = getAccount(address).getCapability<&CodeOfFlowDay2_4.Player{CodeOfFlowDay2_4.IPlayerPublic}>(CodeOfFlowDay2_4.PlayerPublicPath).borrow()
+        let cap = getAccount(address).getCapability<&CodeOfFlowDay3_8.Player{CodeOfFlowDay3_8.IPlayerPublic}>(CodeOfFlowDay3_8.PlayerPublicPath).borrow()
           ?? panic("Doesn't have capability!")
         return cap.get_marigan_cards()
     }
     `,
     getCardInfo: `
-    import CodeOfFlowDay2_4 from 0xCOF
-    pub fun main(): {UInt16: CodeOfFlowDay2_4.CardStruct} {
-        return CodeOfFlowDay2_4.getCardInfo()
+    import CodeOfFlowDay3_8 from 0xCOF
+    pub fun main(): {UInt16: CodeOfFlowDay3_8.CardStruct} {
+        return CodeOfFlowDay3_8.getCardInfo()
     }
     `,
     getMatchingLimits: `
-    import CodeOfFlowDay2_4 from 0xCOF
+    import CodeOfFlowDay3_8 from 0xCOF
     pub fun main(): [UFix64] {
-        return CodeOfFlowDay2_4.getMatchingLimits()
+        return CodeOfFlowDay3_8.getMatchingLimits()
+    }
+    `,
+    getPlayersScore: `
+    import CodeOfFlowDay3_8 from 0xCOF
+    pub fun main(address: Address): AnyStruct {
+        let cap = getAccount(address).getCapability<&CodeOfFlowDay3_8.Player{CodeOfFlowDay3_8.IPlayerPublic}>(CodeOfFlowDay3_8.PlayerPublicPath).borrow()
+          ?? panic("Doesn't have capability!")
+        return cap.get_players_score()
     }
     `,
 }
