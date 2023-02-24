@@ -105,7 +105,7 @@
             <div>
               <span>Opponent: LIFE {{ opponent_life }} <i v-for="i in opponent_life">🔹</i></span><br>
               <span style="padding-left:40px;">
-                CP 0{{ opponent_cp }}
+                CP <i style="color: white;">0{{ opponent_cp }}</i>
               </span><br>
               <span style="padding-left:40px;">
                 Dead: {{ opponent_dead_cards.length }}
@@ -127,7 +127,7 @@
             <div class="rival_cards">
               <v-row>
                 <v-col
-                  v-for="n in opponent_field_unit"
+                  v-for="n in 5"
                   cols="2.5"
                 >
                   <v-img
@@ -136,13 +136,17 @@
                     cover
                     @click="showCardInfo(opponent_field_unit[n], 4, n)"
                   ></v-img>
+                  <div style="position: absolute; bottom: 0px; font-size: 12px;">
+                    <v-icon v-if="opponent_field_unit_action[n] >= 1" color="green-accent-2" icon="mdi-shield-cross-outline"></v-icon>
+                    <v-icon v-if="opponent_field_unit_action[n] >= 2" color="white" icon="mdi-fencing" style="position: absolute; left: 18px;"></v-icon>
+                  </div>
                 </v-col>
               </v-row>
             </div>
             <div class="your_cards">
               <v-row>
                 <v-col
-                  v-for="n in your_field_unit"
+                  v-for="n in 5"
                   cols="2.5"
                 >
                   <v-img
@@ -151,6 +155,10 @@
                     cover
                     @click="showCardInfo(your_field_unit[n], 3, n)"
                   ></v-img>
+                  <div style="position: absolute; bottom: 0px; font-size: 12px;">
+                    <v-icon v-if="your_field_unit_action[n] >= 1" color="green-accent-2" icon="mdi-shield-cross-outline"></v-icon>
+                    <v-icon v-if="your_field_unit_action[n] >= 2" color="white" icon="mdi-fencing" style="position: absolute; left: 18px;"></v-icon>
+                  </div>
                 </v-col>
               </v-row>
             </div>
@@ -159,7 +167,7 @@
             <div style="width: 205px;">
               <span>You: LIFE {{ your_life }}  <i v-for="i in your_life">🔹</i></span><br>
               <span style="padding-left:40px;">
-                CP 0{{ your_cp }}
+                CP <i style="color: white;">0{{ your_cp }}</i>
               </span><br>
               <span style="padding-left:40px;">
                 Dead: {{ your_dead_cards.length }}
@@ -170,7 +178,7 @@
               Triger Zone
               <v-row>
                 <v-col
-                  v-for="n in your_trigger_cards"
+                  v-for="n in 4"
                   cols="3.5"
                 >
                   <v-img
@@ -198,9 +206,10 @@
               </v-col>
             </v-row>
           </div>
-          <div>
-            Card Information<br>
-            <span>{{ display_cardinfo }}</span>
+          <div style="max-width: 600px;">
+            Card Information: Cost: 
+            <span :style="selected_card_cost <= your_cp ? 'color:white;': 'color:red;'">{{ selected_card_cost }}</span><br>
+            <span :style="selected_card_cost <= your_cp ? 'color:white;': 'color:red;'">{{ display_cardinfo }}</span>
           </div>
         </div>
 
@@ -218,7 +227,6 @@
             <h3>Hi {{ nickname }}</h3>
             <div><button v-if="!showClearingHouse" @click="showClearingHouse = true">Show Clearing House</button></div>
             <div><button v-if="showClearingHouse" @click="showClearingHouse = false">Close Clearing House</button></div>
-            <div><button @click="sellNFT = false">Sell at the NFT exchange</button></div>
             
             <div v-if="false">
               <h3>Who's NFT do you buy?</h3>
@@ -269,14 +277,6 @@
     </div>
   </div>
   <v-btn
-    v-if="game_started === false && onMatching === 3"
-    class="ma-1"
-    color="success"
-    icon="mdi-gavel"
-    @click="show_game_dialog = true"
-    style="position: absolute; bottom: 40px; left: -5px;"
-  ></v-btn>
-  <v-btn
     v-if="onMatching === 3"
     class="ma-1"
     color="red"
@@ -296,9 +296,24 @@
     v-if="
       game_started === true &&
       onMatching === 3 &&
+      is_first === is_first_turn &&
+      turn_timer !== '00'
+    "
+    class="ma-1"
+    color="indigo"
+    icon="mdi-gavel"
+    @click="turnChange"
+    style="position: absolute; bottom: 180px; left: -5px;"
+  ></v-btn>
+  <v-btn
+    v-if="
+      game_started === true &&
+      onMatching === 3 &&
       display_cardinfo !== '' &&
       (this.display_card_type === 1 || this.display_card_type === 3) &&
-      is_first === is_first_turn
+      is_first === is_first_turn &&
+      turn_timer !== '00' &&
+      selected_card_cost <= your_cp
     "
     class="ma-1"
     color="purple"
@@ -467,8 +482,11 @@
     <div v-if="show_battle_dialog" class="v-overlay v-overlay--active v-theme--light v-locale--is-ltr v-dialog v-overlay--scroll-blocked" aria-role="dialog" aria-modal="true" style="z-index: 2400;"><div class="v-overlay__content" style="width: auto;">
       <v-card>
         <v-card-title class="text-h5">
-          <div class="dialog_title" v-if="!enemyAttack && display_card_type === 1">
+          <div class="dialog_title" v-if="!enemyAttack && display_card_type === 1 && selected_card_category === 0">
             Do you put this card on the FIELD?
+          </div>
+          <div class="dialog_title" v-if="!enemyAttack && display_card_type === 1 && (selected_card_category === 1 || selected_card_category === 2)">
+            Do you put this card on the Trigger Zone?
           </div>
           <div class="dialog_title" v-if="!enemyAttack && display_card_type === 3">
             Do you attack using this card?
@@ -589,19 +607,21 @@ export default {
       opponent_field_unit: {1: null, 2: null, 3: null, 4: null, 5: null},
       your_dead_cards: [],
       opponent_dead_cards: [],
+      your_field_unit_action: {},
+      opponent_field_unit_action: {},
       selected_card_id: null,
+      selected_card_cost: null,
+      selected_card_category: null,
       current_turn: '',
       display_cardinfo: '',
       display_card_type: null,
       display_card_position: null,
-      attacked_cards: {'A': 0}, // 空だとTransactionがバリデーションエラーを吐くため
-      used_card: {'A': 0}, // 空だとTransactionがバリデーションエラーを吐くため
       show_game_dialog: false,
       show_battle_dialog: false,
       customLoading: false,
       battleDialogText: '',
       battleDialogText2: '',
-      show_game_dialog: false,
+      game_start_done: false,
       show_surrendar_dialog: false,
       turnChangeActionDone: false,
       show_turn_change_dialog: {1: [false, false], 2: [false, false], 3: [false, false], 4: [false, false], 5: [false, false], 6: [false, false], 7: [false, false], 8: [false, false], 9: [false, false], 10: [false, false]},
@@ -670,15 +690,15 @@ export default {
         this.your_hand[4] = this.marigan_cards[this.marigan_count][3]
       }
     },
-    countdown() {
-      this.stopCountdownTimer = setInterval(() => {
-        this.turn_timer -= 1
-        if (this.turn_timer <= 0) {
-          this.turn_timer = '00'
-          clearInterval(this.stopCountdownTimer)
-          this.stopCountdownTimer = null
-        }
-      }, 1000)
+    countdown() { // DUBUG
+      // this.stopCountdownTimer = setInterval(() => {
+      //   this.turn_timer -= 1
+      //   if (this.turn_timer <= 0) {
+      //     this.turn_timer = '00'
+      //     clearInterval(this.stopCountdownTimer)
+      //     this.stopCountdownTimer = null
+      //   }
+      // }, 1000)
     },
     async gameStart() {
       this.show_game_dialog = false
@@ -701,41 +721,21 @@ export default {
       const d = this.card_information[card_id]
       let info = ''
       if (d) {
-        info = `Card ID: ${d.card_id} COST: ${d.cost}
-        BP: ${d.bp},
-        ■${d.skill.description}
-        `
+        info += d.bp > 0 ? `BP: ${d.bp}` : ''
+        info += ` ${d.skill.description}`
       }
+      console.log('CARD:', d)
       this.display_cardinfo = info
+      this.selected_card_cost = parseInt(d.cost)
+      this.selected_card_category = parseInt(d.category)
       this.selected_card_id = card_id
       this.display_card_type = display_card_type
       this.display_card_position = display_card_position
     },
     showBattleDialogWindow() {
-      if (this.display_card_type === 1 || this.display_card_type === 3) {
+      if ((this.display_card_type === 1 || this.display_card_type === 3) && this.is_first === this.is_first_turn && this.turn_timer !== '00') {
         this.show_battle_dialog = true
       }
-    },
-    async turnChange() {
-      this.customLoading = true
-      setTimeout(() => (this.customLoading = false), 5000)
-      console.log(this.attacked_cards, this.used_card, 777)
-      const transactionId = await this.$fcl.mutate({
-        cadence: FlowTransactions.turnChange,
-        args: (arg, t) => [
-          arg([], t.Dictionary({ key: t.String, value: t.UInt16 })),
-          arg([], t.Dictionary({ key: t.String, value: t.UInt16 }))
-        ],
-        proposer: this.$fcl.authz,
-        payer: this.$fcl.authz,
-        authorizations: [this.$fcl.authz],
-        limit: 999
-      })
-      console.log(`TransactionId: ${transactionId}`)
-      this.show_game_dialog = false
-      this.turnChangeActionDone = true
-      this.loadingDialog = true
-      this.checkTransactionComplete('turnChange')
     },
     async claimWin() {
       this.customLoading = true
@@ -769,27 +769,6 @@ export default {
       this.loadingDialog = true
       this.checkTransactionComplete('surrendar')
     },
-    async cardMoveDecided() {
-      this.customLoading = true
-      setTimeout(() => (this.customLoading = false), 5000)
-
-      const card = this.card_information[this.selected_card_id]
-      console.log('display_card_type', this.display_card_type, 'display_card_position', this.display_card_position, 'selected_card_id', this.selected_card_id, card)
-      if (card) {
-        switch (this.display_card_type) {
-          case 1:
-            console.log('your_hand:', this.your_hand, 'opponent_field_unit:', this.opponent_field_unit, this.display_card_position)
-            this.your_hand[display_card_position] = null
-
-            // if (this.your_hand[this.display_card_position] === this.selected_card_id) {
-            //   this.your_hand
-            // }
-            break
-          case 3:
-            break
-        }
-      }
-    },
     async showListings () {
       const result = await this.$fcl.query({
         cadence: FlowScripts.getOnsaleNFTs,
@@ -798,9 +777,6 @@ export default {
         ]
       })
       console.log(result)
-    },
-    async sellNFT () {
-      const ret = window.prompt('Please enter the price as it will be sold at the NFT exchange.')
     },
     async setupWalletInfo (user) {
       this.walletUser = user
@@ -925,12 +901,16 @@ export default {
               clearInterval(stopTimer1)
               setTimeout(() => {
                 this.marigan_dialog = false
-                // this.turn_timer = 60
-                // this.countdown()
               }, 300)
             }
           }, 50)
         }, 1000)
+        if (this.game_started === false && this.onMatching === 3) {
+          setTimeout(() => {
+            this.show_game_dialog = true
+            this.game_start_done = true
+          }, 7300)
+        }
       }, 17000)
       this.marigan_cards = await this.get_marigan_cards()
       await this.getPlayersScore()
@@ -1047,6 +1027,11 @@ export default {
                       this.your_hand['2'] = !this.your_hand['2'] ? this.marigan_cards[0][1] : this.your_hand['2']
                       this.your_hand['3'] = !this.your_hand['3'] ? this.marigan_cards[0][2] : this.your_hand['3']
                       this.your_hand['4'] = !this.your_hand['4'] ? this.marigan_cards[0][3] : this.your_hand['4']
+                      if (this.game_started === false && this.onMatching === 3 && this.game_start_done === false) {
+                        setTimeout(() => {
+                          this.show_game_dialog = true
+                        }, 1300)
+                      }
                     }
                   }
                   if (transactionName !== 'watchCurrentStatus') {
@@ -1062,22 +1047,27 @@ export default {
                   if (this.onMatching != 2) {
                     this.onMatching = 3
                   }
+                  // 自ターン時は更新せずあとで更新
+                  if (this.turn !== result.turn || this.is_first_turn !== result.is_first_turn || result.is_first !== result.is_first_turn) {
+                    this.your_life = parseInt(result.your_life)
+                    this.your_remain_deck = result.your_remain_deck?.length
+                    this.your_hand = result.your_hand
+                    this.your_field_unit = result.your_field_unit
+                    this.your_trigger_cards = result.your_trigger_cards
+                    this.your_field_unit_action = result.your_field_unit_action
+                    this.opponent_life = parseInt(result.opponent_life)
+                    this.opponent_remain_deck = result.opponent_remain_deck
+                    this.opponent_hand = parseInt(result.opponent_hand)
+                    this.opponent_field_unit = result.opponent_field_unit
+                    this.opponent_trigger_cards = result.opponent_trigger_cards
+                    this.opponent_field_unit_action = result.opponent_field_unit_action
+                  }
                   this.turn = result.turn
                   this.is_first = result.is_first
                   this.is_first_turn = result.is_first_turn
                   this.last_time_turnend = new Date(parseFloat(result.last_time_turnend) * 1000)
                   this.matched_time = new Date(parseFloat(result.matched_time) * 1000)
                   this.opponent = result.opponent
-                  this.your_life = parseInt(result.your_life)
-                  this.your_remain_deck = result.your_remain_deck?.length
-                  this.your_hand = result.your_hand
-                  this.your_field_unit = result.your_field_unit
-                  this.your_trigger_cards = result.your_trigger_cards
-                  this.opponent_life = parseInt(result.opponent_life)
-                  this.opponent_remain_deck = result.opponent_remain_deck
-                  this.opponent_hand = parseInt(result.opponent_hand)
-                  this.opponent_field_unit = result.opponent_field_unit
-                  this.opponent_trigger_cards = result.opponent_trigger_cards
                   if (transactionName !== 'turnChange') {
                     this.gameControl()
                   }
@@ -1101,7 +1091,6 @@ export default {
               }
               this.show_game_dialog = false
               this.show_battle_dialog = false
-              this.show_game_dialog = false
               this.show_surrendar_dialog = false
             }
           } else {
@@ -1120,14 +1109,14 @@ export default {
       const p = this.is_first_turn ? 0 : 1
       const pastTime = 60 - ((now.getTime() / 1000) - (this.last_time_turnend.getTime() / 1000))
       if (pastTime <= 0) {
-        this.turn_timer = '00'
+        // this.turn_timer = '00' // DUBUG
         if (this.is_first !== this.is_first_turn) {
           this.battleDialogText = 'TIME UP'
           this.battleDialogText2 = "Oppenent seems doesn't do any action in this turn. Claim the win of this game now!"
         } else if (!this.show_game_dialog && this.turnChangeActionDone === false) {
           this.battleDialogText = 'TIME UP'
           this.battleDialogText2 = "Give the turn to the opponent's turn."
-          this.show_game_dialog = true
+          // this.show_game_dialog = true // DEBUG
         }
       } else {
         if (this.show_turn_change_dialog[this.turn][p] === false) {
@@ -1135,6 +1124,121 @@ export default {
         if (this.stopCountdownTimer === null) {
           this.turn_timer = parseInt(pastTime)
           this.countdown()
+        }
+      }
+    },
+    async turnChange() {
+      this.customLoading = true
+      setTimeout(() => (this.customLoading = false), 5000)
+      const transactionId = await this.$fcl.mutate({
+        cadence: FlowTransactions.turnChange,
+        args: (arg, t) => [
+          arg([], Array(t.UInt8)),
+          arg([], t.Dictionary({ key: t.UInt8, value: t.UInt8 })),
+          arg([], t.Dictionary({ key: t.UInt8, value: t.UInt16 })),
+          arg([], t.Dictionary({ key: t.UInt8, value: Array(t.UInt16) }))
+        ],
+        proposer: this.$fcl.authz,
+        payer: this.$fcl.authz,
+        authorizations: [this.$fcl.authz],
+        limit: 999
+      })
+      console.log(`TransactionId: ${transactionId}`)
+      this.show_game_dialog = false
+      this.turnChangeActionDone = true
+      this.loadingDialog = true
+      this.checkTransactionComplete('turnChange')
+    },
+    async putCardOnTheField(field_position, card_id, used_intercept_card) {
+      this.customLoading = true
+      setTimeout(() => (this.customLoading = false), 5000)
+      const transactionId = await this.$fcl.mutate({
+        cadence: FlowTransactions.putCardOnField,
+        args: (arg, t) => [
+          arg([{key: field_position, value: card_id }], t.Dictionary({ key: t.UInt8, value: t.UInt16 })), // unit_card
+          arg([], t.Dictionary({ key: t.UInt8, value: t.UInt8 })), // enemy_skill_target
+          arg([{
+            key: 1, value: this.your_trigger_cards[1] || null,
+            key: 2, value: this.your_trigger_cards[2] || null,
+            key: 3, value: this.your_trigger_cards[4] || null,
+            key: 4, value: this.your_trigger_cards[4] || null,
+          }], t.Dictionary({ key: t.UInt8, value: t.UInt16 })), // trigger_cards
+          arg([], t.Dictionary(Array(t.UInt8))) // used_intercept_positions
+        ],
+        proposer: this.$fcl.authz,
+        payer: this.$fcl.authz,
+        authorizations: [this.$fcl.authz],
+        limit: 999
+      })
+      console.log(`TransactionId: ${transactionId}`)
+      this.show_game_dialog = false
+      this.turnChangeActionDone = true
+      this.loadingDialog = true
+      this.checkTransactionComplete('turnChange')
+    },
+    async cardMoveDecided() {
+      this.show_battle_dialog = false
+      const card = this.card_information[this.selected_card_id]
+      console.log('display_card_type', this.display_card_type, 'display_card_position', this.display_card_position, 'selected_card_id', this.selected_card_id, card)
+      if (card) {
+        switch (this.display_card_type) {
+          case 1:
+            console.log('your_hand:', this.your_hand, 'opponent_field_unit:', this.opponent_field_unit, this.display_card_position)
+            const used_intercept_cards = []
+            if (this.your_trigger_cards[1]) {
+              const d = this.card_information[this.your_trigger_cards[1]]
+              if (d.category === 2 && (card.type === d.type || d.type === 4)) {
+                if (d.skill.trigger_1 === 1) {
+                  if (window.confirm(`Do you use ${d.name} Intercept Card`)) {
+                    used_intercept_cards.push(parseInt(d.card_id))
+                  }
+                }
+              }
+            }
+            // ユニットカード且つフィールドに置けるスペースがある場合
+            if (this.selected_card_category === 0 && !this.your_field_unit[5]) {
+              if (this.your_cp >= card.cost) {
+                // ハンドを減らす
+                this.your_cp -= card.cost
+                for (let i = this.display_card_position; i <= 6; i++) {
+                  this.your_hand[i] = this.your_hand[i+1]
+                }
+                this.your_hand[7] = null
+                // 場に出す
+                let isSet = false
+                for (let i = 1; i <= 5; i++) {
+                  if (!this.your_field_unit[i] && !isSet) {
+                    this.your_field_unit[i] = this.selected_card_id
+                    this.your_field_unit_action[i] = 1
+                    isSet = true
+                    this.putCardOnTheField(i, this.selected_card_id, used_intercept_cards)
+                  }
+                }
+              }
+            }
+            // トリガー（インターセプト）カード且つフトリガーゾーンに置けるスペースがある場合
+            if ((this.selected_card_category === 1 || this.selected_card_category === 2) && !this.your_trigger_cards[4]) {
+              // ハンドを減らす
+              this.your_cp -= card.cost
+              for (let i = this.display_card_position; i <= 6; i++) {
+                this.your_hand[i] = this.your_hand[i+1]
+              }
+              this.your_hand[7] = null
+              // 場に出す
+              let isSet = false
+              for (let i = 1; i <= 4; i++) {
+                if (!this.your_trigger_cards[i] && !isSet) {
+                  this.your_trigger_cards[i] = this.selected_card_id
+                  isSet = true
+                }
+              }
+            }
+            // if (this.your_hand[this.display_card_position] === this.selected_card_id) {
+            //   this.your_hand
+            // }
+            break
+          case 3:
+            break
         }
       }
     },
@@ -1255,9 +1359,16 @@ video {
   padding: 5px;
 }
 
+/* field */
 .your_cards {
   clear: both;
   margin-top: 60px;
+}
+.your_cards .v-col {
+  padding-right: 6px;
+}
+.rival_cards .v-col {
+  padding-right: 6px;
 }
 
 .attack-anime {
@@ -1334,6 +1445,10 @@ video {
     display: block;
     margin: 0 auto;
     width: 200px;
+  }
+
+  .remaining_time {
+    width: 290px;
   }
 }
 

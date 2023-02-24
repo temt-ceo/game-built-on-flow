@@ -1,13 +1,13 @@
 export default {
     createPlayer: `
-      import CodeOfFlowDay3_8 from 0xCOF
+      import CodeOfFlowDay4_2 from 0xCOF
 
       transaction(nickname: String) {
         prepare(acct: AuthAccount) {
           // Step1
-          acct.save(<- CodeOfFlowDay3_8.createPlayer(nickname: nickname), to: CodeOfFlowDay3_8.PlayerStoragePath)
+          acct.save(<- CodeOfFlowDay4_2.createPlayer(nickname: nickname), to: CodeOfFlowDay4_2.PlayerStoragePath)
           // Step2
-          acct.link<&CodeOfFlowDay3_8.Player{CodeOfFlowDay3_8.IPlayerPublic}>(CodeOfFlowDay3_8.PlayerPublicPath, target: CodeOfFlowDay3_8.PlayerStoragePath)
+          acct.link<&CodeOfFlowDay4_2.Player{CodeOfFlowDay4_2.IPlayerPublic}>(CodeOfFlowDay4_2.PlayerPublicPath, target: CodeOfFlowDay4_2.PlayerStoragePath)
           }
         execute {
           log("success")
@@ -15,11 +15,11 @@ export default {
       }
     `,
     matchingStart: `
-      import CodeOfFlowDay3_8 from 0xCOF
+      import CodeOfFlowDay4_2 from 0xCOF
 
       transaction() {
         prepare(acct: AuthAccount) {
-          let gamePlayer = acct.borrow<&CodeOfFlowDay3_8.Player>(from: CodeOfFlowDay3_8.PlayerStoragePath)
+          let gamePlayer = acct.borrow<&CodeOfFlowDay4_2.Player>(from: CodeOfFlowDay4_2.PlayerStoragePath)
             ?? panic("This Player has not registered")
           gamePlayer.matching_start()
         }
@@ -29,11 +29,11 @@ export default {
       }
     `,
     gameStart: `
-      import CodeOfFlowDay3_8 from 0xCOF
+      import CodeOfFlowDay4_2 from 0xCOF
 
       transaction(drawed_cards: [UInt16]) {
         prepare(acct: AuthAccount) {
-          let gamePlayer = acct.borrow<&CodeOfFlowDay3_8.Player>(from: CodeOfFlowDay3_8.PlayerStoragePath)
+          let gamePlayer = acct.borrow<&CodeOfFlowDay4_2.Player>(from: CodeOfFlowDay4_2.PlayerStoragePath)
             ?? panic("This Player has not registered")
           gamePlayer.game_start(drawed_cards: drawed_cards)
         }
@@ -43,13 +43,27 @@ export default {
       }
     `,
     turnChange: `
-      import CodeOfFlowDay3_8 from 0xCOF
+      import CodeOfFlowDay4_2 from 0xCOF
 
-      transaction(attacked_cards: {String: UInt16}, used_card: {String: UInt16}) {
+      transaction(attacked_cards: [UInt8], enemy_skill_target: {UInt8: UInt8}, trigger_cards: {UInt8: UInt16?}, used_intercept_positions: {UInt8: [UInt8]}) {
         prepare(acct: AuthAccount) {
-          let gamePlayer = acct.borrow<&CodeOfFlowDay3_8.Player>(from: CodeOfFlowDay3_8.PlayerStoragePath)
+          let gamePlayer = acct.borrow<&CodeOfFlowDay4_2.Player>(from: CodeOfFlowDay4_2.PlayerStoragePath)
             ?? panic("This Player has not registered")
-          gamePlayer.turn_change(attacked_cards: attacked_cards, used_card: used_card)
+          gamePlayer.turn_change(attacked_cards: attacked_cards, enemy_skill_target: enemy_skill_target, trigger_cards: trigger_cards, used_intercept_positions: used_intercept_positions)
+        }
+        execute {
+          log("success")
+        }
+      }
+    `,
+    putCardOnField: `
+      import CodeOfFlowDay4_2 from 0xCOF
+
+      transaction(unit_card: {UInt8: UInt16}, enemy_skill_target: {UInt8: UInt8}, trigger_cards: {UInt8: UInt16?}, used_intercept_positions: [UInt8]) {
+        prepare(acct: AuthAccount) {
+          let gamePlayer = acct.borrow<&CodeOfFlowDay4_2.Player>(from: CodeOfFlowDay4_2.PlayerStoragePath)
+            ?? panic("This Player has not registered")
+          gamePlayer.put_card_on_the_field(unit_card: unit_card, enemy_skill_target: enemy_skill_target, trigger_cards: trigger_cards, used_intercept_positions: used_intercept_positions)
         }
         execute {
           log("success")
@@ -57,11 +71,11 @@ export default {
       }
     `,
     claimWin: `
-      import CodeOfFlowDay3_8 from 0xCOF
+      import CodeOfFlowDay4_2 from 0xCOF
 
       transaction() {
         prepare(acct: AuthAccount) {
-          let gamePlayer = acct.borrow<&CodeOfFlowDay3_8.Player>(from: CodeOfFlowDay3_8.PlayerStoragePath)
+          let gamePlayer = acct.borrow<&CodeOfFlowDay4_2.Player>(from: CodeOfFlowDay4_2.PlayerStoragePath)
             ?? panic("This Player has not registered")
           gamePlayer.claimWin()
         }
@@ -71,11 +85,11 @@ export default {
       }
     `,
     surrendar: `
-      import CodeOfFlowDay3_8 from 0xCOF
+      import CodeOfFlowDay4_2 from 0xCOF
 
       transaction() {
         prepare(acct: AuthAccount) {
-          let gamePlayer = acct.borrow<&CodeOfFlowDay3_8.Player>(from: CodeOfFlowDay3_8.PlayerStoragePath)
+          let gamePlayer = acct.borrow<&CodeOfFlowDay4_2.Player>(from: CodeOfFlowDay4_2.PlayerStoragePath)
             ?? panic("This Player has not registered")
           gamePlayer.surrendar()
         }
