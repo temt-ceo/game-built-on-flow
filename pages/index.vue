@@ -158,6 +158,7 @@
                   <div style="position: absolute; bottom: 0px; font-size: 12px;">
                     <v-icon v-if="your_field_unit_action[n] >= 1" color="green-accent-2" icon="mdi-shield-cross-outline"></v-icon>
                     <v-icon v-if="your_field_unit_action[n] >= 2" color="white" icon="mdi-fencing" style="position: absolute; left: 18px;"></v-icon>
+                    <v-icon v-if="your_field_unit_attack_action[n] == 1" color="red-darken-3" icon="mdi-sword" style="position: absolute; left: 36px;"></v-icon>
                   </div>
                 </v-col>
               </v-row>
@@ -302,7 +303,7 @@
     class="ma-1"
     color="indigo"
     icon="mdi-gavel"
-    @click="turnChange"
+    @click="giveTurn"
     style="position: absolute; bottom: 180px; left: -5px;"
   ></v-btn>
   <v-btn
@@ -445,38 +446,70 @@
         >
           Game Start
         </v-btn>
-        <v-btn
-          v-if="game_started && is_first !== is_first_turn"
-          :loading="customLoading"
-          :disabled="customLoading"
-          size="x-large"
-          color="info"
-          @click="claimWin"
-          style="margin: 0 auto; display: block;"
-        >
-          Yes
-          <template v-slot:loader>
-            <span class="custom-loader">
-              <v-icon light>mdi-cached</v-icon>
-            </span>
-          </template>
-        </v-btn>
-        <v-btn
-          v-if="game_started && is_first === is_first_turn"
-          :loading="customLoading"
-          :disabled="customLoading"
-          size="x-large"
-          color="info"
-          @click="turnChange"
-          style="margin: 0 auto; display: block;"
-        >
-          Yes
-          <template v-slot:loader>
-            <span class="custom-loader">
-              <v-icon light>mdi-cached</v-icon>
-            </span>
-          </template>
-        </v-btn>
+        <div style="display: flex;">
+          <v-btn
+            v-if="game_started && is_first !== is_first_turn"
+            :loading="customLoading"
+            :disabled="customLoading"
+            size="x-large"
+            color="info"
+            @click="claimWin"
+            style="margin: 0 auto; display: block;"
+          >
+            Yes
+            <template v-slot:loader>
+              <span class="custom-loader">
+                <v-icon light>mdi-cached</v-icon>
+              </span>
+            </template>
+          </v-btn>
+          <v-btn
+            v-if="game_started && is_first === is_first_turn && battleDialogText !== `Your Turn!! Let's draw two cards!!`"
+            :loading="customLoading"
+            :disabled="customLoading"
+            size="x-large"
+            color="info"
+            @click="turnChange"
+            style="margin: 0 auto; display: block;"
+          >
+            Yes
+            <template v-slot:loader>
+              <span class="custom-loader">
+                <v-icon light>mdi-cached</v-icon>
+              </span>
+            </template>
+          </v-btn>
+          <v-btn
+            v-if="battleDialogText === `Your Turn!! Let's draw two cards!!`"
+            :loading="customLoading"
+            :disabled="customLoading"
+            size="x-large"
+            color="info"
+            @click="startYourTurn"
+            style="margin: 0 auto; display: block;"
+          >
+            Yes
+            <template v-slot:loader>
+              <span class="custom-loader">
+                <v-icon light>mdi-cached</v-icon>
+              </span>
+            </template>
+          </v-btn>
+          <v-btn
+            v-if="battleDialogText == 'Do you give the turn to the opponent?'"
+            size="x-large"
+            color="red"
+            @click="show_game_dialog = false"
+            style="margin: 0 auto; display: block;"
+          >
+            No
+            <template v-slot:loader>
+              <span class="custom-loader">
+                <v-icon light>mdi-cached</v-icon>
+              </span>
+            </template>
+          </v-btn>
+        </div>
       </div>
     </div></div>
     <div v-if="show_battle_dialog" class="v-overlay v-overlay--active v-theme--light v-locale--is-ltr v-dialog v-overlay--scroll-blocked" aria-role="dialog" aria-modal="true" style="z-index: 2400;"><div class="v-overlay__content" style="width: auto;">
@@ -575,6 +608,7 @@ export default {
       ],
       matchingDialog: false,
       matchingTimeup: false,
+      matchingStartFlg: false,
       matching_time_second: '',
       marigan_time_second: 5,
       marigan_time_millisecond_1: 0,
@@ -608,6 +642,7 @@ export default {
       your_dead_cards: [],
       opponent_dead_cards: [],
       your_field_unit_action: {},
+      your_field_unit_attack_action: {},
       opponent_field_unit_action: {},
       selected_card_id: null,
       selected_card_cost: null,
@@ -627,6 +662,7 @@ export default {
       show_turn_change_dialog: {1: [false, false], 2: [false, false], 3: [false, false], 4: [false, false], 5: [false, false], 6: [false, false], 7: [false, false], 8: [false, false], 9: [false, false], 10: [false, false]},
       card_information: {},
       stopCountdownTimer: null,
+      attack_unit_cards: [],
       enemyAttack: false,
       address: '',
       hasNFT: false,
@@ -719,18 +755,20 @@ export default {
     },
     showCardInfo(card_id, display_card_type, display_card_position) {
       const d = this.card_information[card_id]
-      let info = ''
       if (d) {
-        info += d.bp > 0 ? `BP: ${d.bp}` : ''
-        info += ` ${d.skill.description}`
+        let info = ''
+        if (d) {
+          info += d.bp > 0 ? `BP: ${d.bp}` : ''
+          info += ` ${d.skill.description}`
+        }
+        console.log('CARD:', d)
+        this.display_cardinfo = info
+        this.selected_card_cost = parseInt(d.cost)
+        this.selected_card_category = parseInt(d.category)
+        this.selected_card_id = card_id
+        this.display_card_type = display_card_type
+        this.display_card_position = display_card_position
       }
-      console.log('CARD:', d)
-      this.display_cardinfo = info
-      this.selected_card_cost = parseInt(d.cost)
-      this.selected_card_category = parseInt(d.category)
-      this.selected_card_id = card_id
-      this.display_card_type = display_card_type
-      this.display_card_position = display_card_position
     },
     showBattleDialogWindow() {
       if ((this.display_card_type === 1 || this.display_card_type === 3) && this.is_first === this.is_first_turn && this.turn_timer !== '00') {
@@ -847,6 +885,7 @@ export default {
         return
       } else {
         this.matchingTimeup = false
+        this.matchingStartFlg = true
         const transactionId = await this.$fcl.mutate({
           cadence: FlowTransactions.matchingStart,
           args: (arg, t) => [
@@ -1020,7 +1059,7 @@ export default {
                     this.matchingSuccess()
                   } else {
                     // リロード対策
-                    if (this.onMatching != 2) {
+                    if (this.onMatching === 1 && this.matchingStartFlg === false) {
                       this.onMatching = 3
                       this.marigan_cards = await this.get_marigan_cards()
                       this.your_hand['1'] = !this.your_hand['1'] ? this.marigan_cards[0][0] : this.your_hand['1']
@@ -1043,6 +1082,19 @@ export default {
                     this.battleDialogText = ''
                     this.battleDialogText2 = ''
                     this.turnChangeActionDone = false
+                    clearInterval(timerID)
+                  } else if(transactionName === 'putCardOnTheField') {
+                    this.loadingDialog = false
+                    this.your_remain_deck = result.your_remain_deck?.length
+                    this.your_hand = result.your_hand
+                    this.your_field_unit = result.your_field_unit
+                    this.your_trigger_cards = result.your_trigger_cards
+                    this.your_field_unit_action = result.your_field_unit_action
+                    this.opponent_hand = parseInt(result.opponent_hand)
+                    this.opponent_field_unit = result.opponent_field_unit
+                    this.opponent_trigger_cards = result.opponent_trigger_cards
+                    this.opponent_field_unit_action = result.opponent_field_unit_action
+                    clearInterval(timerID)
                   }
                   if (this.onMatching != 2) {
                     this.onMatching = 3
@@ -1061,6 +1113,12 @@ export default {
                     this.opponent_field_unit = result.opponent_field_unit
                     this.opponent_trigger_cards = result.opponent_trigger_cards
                     this.opponent_field_unit_action = result.opponent_field_unit_action
+                    // 自ターンに変わる時、且つカードを引いていない時、バトルの対応とカードドロー
+                    if (result.is_first === result.is_first_turn && result.card_draw_in_this_turn === false) {
+                      this.battleDialogText = "Your Turn!! Let's draw two cards!!"
+                      this.battleDialogText2 = ''
+                      this.show_game_dialog = true
+                    }
                   }
                   this.turn = result.turn
                   this.is_first = result.is_first
@@ -1092,6 +1150,7 @@ export default {
               this.show_game_dialog = false
               this.show_battle_dialog = false
               this.show_surrendar_dialog = false
+              this.loadingDialog = false
             }
           } else {
             clearInterval(timerID)
@@ -1102,6 +1161,12 @@ export default {
       }
       const timerID = setInterval(func, 3000)
       func()
+    },
+    giveTurn() {
+      this.battleDialogText = 'Do you give the turn to the opponent?'
+      this.battleDialogText2 = ''
+      this.show_game_dialog = true
+
     },
     gameControl () {
       const now = new Date()
@@ -1129,14 +1194,13 @@ export default {
     },
     async turnChange() {
       this.customLoading = true
-      setTimeout(() => (this.customLoading = false), 5000)
       const transactionId = await this.$fcl.mutate({
         cadence: FlowTransactions.turnChange,
         args: (arg, t) => [
-          arg([], Array(t.UInt8)),
-          arg([], t.Dictionary({ key: t.UInt8, value: t.UInt8 })),
-          arg([], t.Dictionary({ key: t.UInt8, value: t.UInt16 })),
-          arg([], t.Dictionary({ key: t.UInt8, value: Array(t.UInt16) }))
+          arg(this.attack_unit_cards, t.Array(t.UInt8)), // attacked_cards
+          arg([], t.Dictionary({ key: t.UInt8, value: t.UInt8 })), // enemy_skill_target
+          arg([], t.Dictionary({ key: t.UInt8, value: t.UInt16 })), // trigger_cards
+          arg([], t.Dictionary({ key: t.UInt8, value: t.Array(t.UInt16) })) // used_intercept_positions
         ],
         proposer: this.$fcl.authz,
         payer: this.$fcl.authz,
@@ -1146,24 +1210,46 @@ export default {
       console.log(`TransactionId: ${transactionId}`)
       this.show_game_dialog = false
       this.turnChangeActionDone = true
+      this.customLoading = false
+      this.loadingDialog = true
+      this.checkTransactionComplete('turnChange')
+    },
+    async startYourTurn() {
+      this.customLoading = true
+      const transactionId = await this.$fcl.mutate({
+        cadence: FlowTransactions.startYourTurn,
+        args: (arg, t) => [
+          arg([], t.Dictionary({ key: t.UInt8, value: t.UInt8 })), // blocked_unit
+          arg([], t.Dictionary({ key: t.UInt8, value: t.UInt8 })), // used_intercept_position
+        ],
+        proposer: this.$fcl.authz,
+        payer: this.$fcl.authz,
+        authorizations: [this.$fcl.authz],
+        limit: 999
+      })
+      console.log(`TransactionId: ${transactionId}`)
+      this.show_game_dialog = false
+      this.turnChangeActionDone = true
+      this.customLoading = false
       this.loadingDialog = true
       this.checkTransactionComplete('turnChange')
     },
     async putCardOnTheField(field_position, card_id, used_intercept_card) {
       this.customLoading = true
       setTimeout(() => (this.customLoading = false), 5000)
+      console.log("The Card Put on the Field:", card_id)
       const transactionId = await this.$fcl.mutate({
         cadence: FlowTransactions.putCardOnField,
         args: (arg, t) => [
           arg([{key: field_position, value: card_id }], t.Dictionary({ key: t.UInt8, value: t.UInt16 })), // unit_card
           arg([], t.Dictionary({ key: t.UInt8, value: t.UInt8 })), // enemy_skill_target
           arg([{
-            key: 1, value: this.your_trigger_cards[1] || null,
-            key: 2, value: this.your_trigger_cards[2] || null,
-            key: 3, value: this.your_trigger_cards[4] || null,
-            key: 4, value: this.your_trigger_cards[4] || null,
+            key: 1, value: this.your_trigger_cards[1] || 0,
+            key: 2, value: this.your_trigger_cards[2] || 0,
+            key: 3, value: this.your_trigger_cards[4] || 0,
+            key: 4, value: this.your_trigger_cards[4] || 0,
           }], t.Dictionary({ key: t.UInt8, value: t.UInt16 })), // trigger_cards
-          arg([], t.Dictionary(Array(t.UInt8))) // used_intercept_positions
+          arg([], t.Array(t.UInt8)) // used_intercept_positions
         ],
         proposer: this.$fcl.authz,
         payer: this.$fcl.authz,
@@ -1174,16 +1260,14 @@ export default {
       this.show_game_dialog = false
       this.turnChangeActionDone = true
       this.loadingDialog = true
-      this.checkTransactionComplete('turnChange')
+      this.checkTransactionComplete('putCardOnTheField')
     },
-    async cardMoveDecided() {
+    cardMoveDecided() {
       this.show_battle_dialog = false
       const card = this.card_information[this.selected_card_id]
-      console.log('display_card_type', this.display_card_type, 'display_card_position', this.display_card_position, 'selected_card_id', this.selected_card_id, card)
       if (card) {
         switch (this.display_card_type) {
           case 1:
-            console.log('your_hand:', this.your_hand, 'opponent_field_unit:', this.opponent_field_unit, this.display_card_position)
             const used_intercept_cards = []
             if (this.your_trigger_cards[1]) {
               const d = this.card_information[this.your_trigger_cards[1]]
@@ -1238,6 +1322,10 @@ export default {
             // }
             break
           case 3:
+            console.log('display_card_type', this.display_card_type, 'display_card_position', this.display_card_position, 'selected_card_id', this.selected_card_id, card)
+            console.log('your_hand:', this.your_hand, 'opponent_field_unit:', this.opponent_field_unit, this.display_card_position)
+            this.your_field_unit_attack_action[this.display_card_position] = 1
+            this.attack_unit_cards.push(this.display_card_position)
             break
         }
       }
