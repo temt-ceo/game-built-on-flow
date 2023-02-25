@@ -1,4 +1,4 @@
-pub contract CodeOfFlowDay5 {
+pub contract CodeOfFlowDay5_4 {
 
   // Events
   pub event PlayerRegistered(player_id: UInt32)
@@ -56,15 +56,15 @@ pub contract CodeOfFlowDay5 {
     pub let type_2: UInt8
     pub let type_3: UInt8
     pub let type_4: UInt8
-    pub let amount_1: UInt16
-    pub let amount_2: UInt16
-    pub let amount_3: UInt16
-    pub let amount_4: UInt16
+    pub let amount_1: UInt32
+    pub let amount_2: UInt32
+    pub let amount_3: UInt32
+    pub let amount_4: UInt32
     pub let nestedSkill_1: Skill?
     pub let nestedSkill_2: Skill?
     pub let nestedSkill_3: Skill?
     pub let nestedSkill_4: Skill?
-    init(description: String, triggers: [UInt8], asks: [UInt8], types: [UInt8], amounts: [UInt16], skills: [Skill]) {
+    init(description: String, triggers: [UInt8], asks: [UInt8], types: [UInt8], amounts: [UInt32], skills: [Skill]) {
       self.description = description
       self.trigger_1 = triggers[0]
       self.ask_1 = asks[0]
@@ -138,7 +138,7 @@ pub contract CodeOfFlowDay5 {
     pub(set) var your_remain_deck: [UInt16]
     pub(set) var your_hand: {UInt8: UInt16}
     pub(set) var card_draw_in_this_turn: Bool
-    pub(set) var enemy_attacked_cards: [AttackStruct]
+    pub(set) var enemy_attacking_cards: [AttackStruct]
 
     init(is_first: Bool, opponent: UInt32, matched_time: UFix64) {
       self.turn = 1
@@ -162,7 +162,7 @@ pub contract CodeOfFlowDay5 {
       self.your_trigger_cards = {}
       self.your_remain_deck = []
       self.your_hand = {}
-      self.enemy_attacked_cards = []
+      self.enemy_attacking_cards = []
       self.card_draw_in_this_turn = false
     }
   }
@@ -173,14 +173,14 @@ pub contract CodeOfFlowDay5 {
     pub let bp: UInt32
     pub let damage: UInt16
     pub let damage_to: UInt8
-    pub let field_position: UInt8
+    pub let used_trigger_cards: [UInt16]
 
-    init(card_id: UInt16, bp: UInt32, damage: UInt16, damage_to: UInt8, field_position: UInt8) {
+    init(card_id: UInt16, bp: UInt32, damage: UInt16, damage_to: UInt8, used_trigger_cards: [UInt16]) {
       self.card_id = card_id
       self.bp = bp
       self.damage = damage
       self.damage_to = damage_to
-      self.field_position = field_position
+      self.used_trigger_cards = used_trigger_cards
     }
   }
 
@@ -228,16 +228,16 @@ pub contract CodeOfFlowDay5 {
 
     pub fun get_players_score(): [ScoreStruct] {
       let retArr: [ScoreStruct] = []
-      retArr.append(CodeOfFlowDay5.playerList[self.player_id]!)
-      if let info = CodeOfFlowDay5.battleInfo[self.player_id] {
+      retArr.append(CodeOfFlowDay5_4.playerList[self.player_id]!)
+      if let info = CodeOfFlowDay5_4.battleInfo[self.player_id] {
         let opponent = info.opponent
-        retArr.append(CodeOfFlowDay5.playerList[opponent]!)
+        retArr.append(CodeOfFlowDay5_4.playerList[opponent]!)
       }
       return retArr
     }
 
     pub fun get_current_status(): AnyStruct {
-      if let info = CodeOfFlowDay5.battleInfo[self.player_id] {
+      if let info = CodeOfFlowDay5_4.battleInfo[self.player_id] {
         return info
       }
       return self.lastTimeMatching
@@ -253,7 +253,7 @@ pub contract CodeOfFlowDay5 {
       self.lastTimeMatching = current_time
 
       // Search where matching times are already past 60 seconds
-      for time in CodeOfFlowDay5.matchingLimits {
+      for time in CodeOfFlowDay5_4.matchingLimits {
         if outdated == -1 && current_time > time + 60.0 {
           outdated = counter
         }
@@ -264,40 +264,98 @@ pub contract CodeOfFlowDay5 {
       if outdated > -1 {
         // Save only valid matchin times
         if (outdated == 0) {
-          CodeOfFlowDay5.matchingLimits = []
-          CodeOfFlowDay5.matchingPlayers = []
+          CodeOfFlowDay5_4.matchingLimits = []
+          CodeOfFlowDay5_4.matchingPlayers = []
         } else {
-          CodeOfFlowDay5.matchingLimits = CodeOfFlowDay5.matchingLimits.slice(from: 0, upTo: outdated)
-          CodeOfFlowDay5.matchingPlayers = CodeOfFlowDay5.matchingPlayers.slice(from: 0, upTo: outdated)
+          CodeOfFlowDay5_4.matchingLimits = CodeOfFlowDay5_4.matchingLimits.slice(from: 0, upTo: outdated)
+          CodeOfFlowDay5_4.matchingPlayers = CodeOfFlowDay5_4.matchingPlayers.slice(from: 0, upTo: outdated)
         }
       }
 
       emit WaitingTheMatch(player_id: self.player_id)
-      if CodeOfFlowDay5.matchingLimits.length >= 1 {
+      if CodeOfFlowDay5_4.matchingLimits.length >= 1 {
         // Pick the opponent from still matching players.
-        let time = CodeOfFlowDay5.matchingLimits.removeLast()
-        let opponent = CodeOfFlowDay5.matchingPlayers.removeLast()
+        let time = CodeOfFlowDay5_4.matchingLimits.removeLast()
+        let opponent = CodeOfFlowDay5_4.matchingPlayers.removeLast()
 
         var is_first = false
         // Decides which is first
-        if (CodeOfFlowDay5.matchingLimits.length % 2 == 1) {
+        if (CodeOfFlowDay5_4.matchingLimits.length % 2 == 1) {
           is_first = true
         }
 
         self.lastTimeMatching = nil
-        CodeOfFlowDay5.battleInfo[self.player_id] = BattleStruct(is_first: is_first, opponent: opponent, matched_time: current_time)
-        CodeOfFlowDay5.battleInfo[opponent] = BattleStruct(is_first: !is_first, opponent: self.player_id, matched_time: current_time)
+        CodeOfFlowDay5_4.battleInfo[self.player_id] = BattleStruct(is_first: is_first, opponent: opponent, matched_time: current_time)
+        CodeOfFlowDay5_4.battleInfo[opponent] = BattleStruct(is_first: !is_first, opponent: self.player_id, matched_time: current_time)
       } else {
         // Put player_id in the matching list.
-        CodeOfFlowDay5.matchingLimits.append(current_time)
-        CodeOfFlowDay5.matchingPlayers.append(self.player_id)
+        CodeOfFlowDay5_4.matchingLimits.append(current_time)
+        CodeOfFlowDay5_4.matchingPlayers.append(self.player_id)
       }
+
+      // Creates Pseudorandom Numbe for the marigan cards
+      let blockCreatedAt = getCurrentBlock().timestamp.toString().slice(from: 0, upTo: 10)
+      let decodedArray = blockCreatedAt.decodeHex()
+
+      let pseudorandomNumber1 = decodedArray[decodedArray.length - 1]
+      let pseudorandomNumber2 = decodedArray[decodedArray.length - 2]
+      let pseudorandomNumber3 = decodedArray[decodedArray.length - 3]
+      let pseudorandomNumber4 = decodedArray[decodedArray.length - 4]
+      let pseudorandomNumber5 = decodedArray[decodedArray.length - 5]
+      let pseudorandomNumber6 = decodedArray[decodedArray.length - 1]
+      let pseudorandomNumber7 = decodedArray[decodedArray.length - 2]
+      let pseudorandomNumber8 = decodedArray[decodedArray.length - 3]
+      let pseudorandomNumber9 = decodedArray[decodedArray.length - 4]
+      let pseudorandomNumber10 = decodedArray[decodedArray.length - 5]
+      let pseudorandomNumber11 = decodedArray[decodedArray.length - 1]
+      let pseudorandomNumber12 = decodedArray[decodedArray.length - 2]
+      let pseudorandomNumber13 = decodedArray[decodedArray.length - 3]
+      let pseudorandomNumber14 = decodedArray[decodedArray.length - 4]
+      let pseudorandomNumber15 = decodedArray[decodedArray.length - 5]
+      let pseudorandomNumber16 = decodedArray[decodedArray.length - 1]
+      let pseudorandomNumber17 = decodedArray[decodedArray.length - 2]
+      let pseudorandomNumber18 = decodedArray[decodedArray.length - 3]
+      let pseudorandomNumber19 = decodedArray[decodedArray.length - 4]
+      let pseudorandomNumber20 = decodedArray[decodedArray.length - 5]
+
+      let withdrawPosition1 = pseudorandomNumber1 % 30
+      let withdrawPosition2 = pseudorandomNumber2 % 29
+      let withdrawPosition3 = pseudorandomNumber3 % 28
+      let withdrawPosition4 = pseudorandomNumber4 % 27
+
+      let withdrawPosition5 = pseudorandomNumber5 % 30
+      let withdrawPosition6 = pseudorandomNumber6 % 29
+      let withdrawPosition7 = pseudorandomNumber7 % 28
+      let withdrawPosition8 = pseudorandomNumber8 % 27
+
+      let withdrawPosition9 = pseudorandomNumber9 % 30
+      let withdrawPosition10 = pseudorandomNumber10 % 29
+      let withdrawPosition11 = pseudorandomNumber11 % 28
+      let withdrawPosition12 = pseudorandomNumber12 % 27
+
+      let withdrawPosition13 = pseudorandomNumber13 % 30
+      let withdrawPosition14 = pseudorandomNumber14 % 29
+      let withdrawPosition15 = pseudorandomNumber15 % 28
+      let withdrawPosition16 = pseudorandomNumber16 % 27
+
+      let withdrawPosition17 = pseudorandomNumber17 % 30
+      let withdrawPosition18 = pseudorandomNumber18 % 29
+      let withdrawPosition19 = pseudorandomNumber19 % 28
+      let withdrawPosition20 = pseudorandomNumber20 % 27
+
+      self.marigan_cards = [
+        [withdrawPosition1, withdrawPosition2, withdrawPosition3, withdrawPosition4],
+        [withdrawPosition5, withdrawPosition6, withdrawPosition7, withdrawPosition8],
+        [withdrawPosition9, withdrawPosition10, withdrawPosition11, withdrawPosition12],
+        [withdrawPosition13, withdrawPosition14, withdrawPosition15, withdrawPosition16],
+        [withdrawPosition17, withdrawPosition18, withdrawPosition19, withdrawPosition20]
+      ]
     }
 
     pub fun game_start(drawed_cards: [UInt16]) {
       pre {
         drawed_cards.length == 4 : "Invalid argument."
-        CodeOfFlowDay5.battleInfo[self.player_id] != nil && CodeOfFlowDay5.battleInfo[self.player_id]!.game_started == false : "Game already started."
+        CodeOfFlowDay5_4.battleInfo[self.player_id] != nil && CodeOfFlowDay5_4.battleInfo[self.player_id]!.game_started == false : "Game already started."
       }
       var drawed_pos: [UInt8] = []
       for arr in self.marigan_cards {
@@ -310,25 +368,28 @@ pub contract CodeOfFlowDay5 {
       }
 
 
-      if let info = CodeOfFlowDay5.battleInfo[self.player_id] {
+      if let info = CodeOfFlowDay5_4.battleInfo[self.player_id] {
         info.game_started = true
         info.your_remain_deck = self.deck
         info.last_time_turnend = getCurrentBlock().timestamp
+        // Set hand
+        var key: UInt8 = 1
+        for pos in drawed_pos {
+          let card_id = info.your_remain_deck.remove(at: pos - (key - 1))
+          info.your_hand[key] = card_id
+          key = key + 1
+        }
+        if (info.is_first == true) {
+          info.card_draw_in_this_turn = true
+        }
         let opponent = info.opponent
-        if let opponentInfo = CodeOfFlowDay5.battleInfo[opponent] {
+        if let opponentInfo = CodeOfFlowDay5_4.battleInfo[opponent] {
           if opponentInfo.last_time_turnend != nil { // If both people pushed Game Start button..
             opponentInfo.last_time_turnend = info.last_time_turnend // set time same time
-            var key: UInt8 = 1
-            for pos in drawed_pos {
-              let card_id = info.your_remain_deck.remove(at: pos - (key - 1))
-              info.your_hand[key] = card_id
-              key = key + 1
-            }
-
             opponentInfo.game_started = true
-            CodeOfFlowDay5.battleInfo[opponent] = opponentInfo
             opponentInfo.opponent_remain_deck = info.your_remain_deck.length
-            opponentInfo.opponent_hand = key as! Int
+            opponentInfo.opponent_hand = info.your_hand.keys.length
+            CodeOfFlowDay5_4.battleInfo[opponent] = opponentInfo
           }
         }
         if (info.is_first == true) {
@@ -338,29 +399,29 @@ pub contract CodeOfFlowDay5 {
           info.your_cp = 3
           emit GameStart(first: info.opponent, second: self.player_id)
         }
-        CodeOfFlowDay5.battleInfo[self.player_id] = info
+        CodeOfFlowDay5_4.battleInfo[self.player_id] = info
       }
     }
 
-    pub fun turn_change(attacked_cards: [UInt8], enemy_skill_target: {UInt8: UInt8}, trigger_cards: {UInt8: UInt16}, used_intercept_position: {UInt8: UInt8}) {
-      for position in attacked_cards {
-        if CodeOfFlowDay5.battleInfo[self.player_id]!.your_field_unit[position] == nil {
+    pub fun turn_change(attacking_cards: [UInt8], enemy_skill_target: {UInt8: UInt8}, trigger_cards: {UInt8: UInt16}, used_intercept_position: {UInt8: [UInt8]}) {
+      for position in attacking_cards {
+        if CodeOfFlowDay5_4.battleInfo[self.player_id]!.your_field_unit[position] == nil {
           panic("You have not set unit card in this position!")
         }
       }
       for position in trigger_cards.keys {
-        if CodeOfFlowDay5.battleInfo[self.player_id]!.your_trigger_cards[position] != trigger_cards[position] || CodeOfFlowDay5.battleInfo[self.player_id]!.your_trigger_cards[position] == nil {
+        if CodeOfFlowDay5_4.battleInfo[self.player_id]!.your_trigger_cards[position] != trigger_cards[position] || CodeOfFlowDay5_4.battleInfo[self.player_id]!.your_trigger_cards[position] == nil {
           panic("Your trigger card is Tampered!")
         }
       }
       for position in used_intercept_position.keys {
-        if CodeOfFlowDay5.battleInfo[self.player_id]!.your_trigger_cards[position] == nil {
+        if used_intercept_position[position]!.length > 0 && CodeOfFlowDay5_4.battleInfo[self.player_id]!.your_trigger_cards[position] == nil {
           panic("You have not set trigger card in this position!")
         }
       }
-      var enemy_attacked_cards: [AttackStruct] = []
+      var enemy_attacking_cards: [AttackStruct] = []
       var your_trigger_cards_count: Int = 0
-      if let info = CodeOfFlowDay5.battleInfo[self.player_id] {
+      if let info = CodeOfFlowDay5_4.battleInfo[self.player_id] {
         info.last_time_turnend = getCurrentBlock().timestamp
         // トリガーゾーンのカードを合わせる
         for position in trigger_cards.keys {
@@ -375,19 +436,28 @@ pub contract CodeOfFlowDay5 {
         }
 
         // Process Battle Action
-        for position in attacked_cards {
+        var bp_change: UInt32 = 0
+        for position in attacking_cards {
           info.your_field_unit_action[position] = 0 // 2: can attack, 1: can defence only, 0: nothing can do.
           // TODO Trigger Card
-          if let used_trigger_card_position = used_intercept_position[position] {
-            let trigger_card_id = info.your_trigger_cards[used_trigger_card_position]!
-            let cardData = CodeOfFlowDay5.cardInfo[trigger_card_id]!
-            info.your_trigger_cards[used_trigger_card_position] = nil
+          let used_trigger_cards: [UInt16] = []
+          if let usedTriggerCards = used_intercept_position[position] {
+            for triggerPosition in usedTriggerCards {
+              let trigger_card_id = info.your_trigger_cards[triggerPosition]!
+              let cardData = CodeOfFlowDay5_4.cardInfo[trigger_card_id]!
+              if (cardData.skill.type_1 == 2) {
+                // Pump BP
+                bp_change = bp_change + cardData.skill.amount_1
+              }
+              info.your_trigger_cards[triggerPosition] = nil
+              used_trigger_cards.append(trigger_card_id)
+            }
           }
           let card_id: UInt16 = info.your_field_unit[position]! // CardID
-          let unit = CodeOfFlowDay5.cardInfo[card_id]!
+          let unit = CodeOfFlowDay5_4.cardInfo[card_id]!
           // TODO Damage Setting
-          let target = enemy_skill_target[position]!
-          enemy_attacked_cards.append(AttackStruct(card_id: unit.card_id, bp: unit.bp, damage: 0, damage_to: 0, field_position: position))
+          let target: UInt8? = enemy_skill_target[position]
+          enemy_attacking_cards.append(AttackStruct(card_id: unit.card_id, bp: unit.bp + bp_change, damage: 0, damage_to: 0, used_trigger_cards: used_trigger_cards))
         }
         your_trigger_cards_count = info.your_trigger_cards.keys.length
 
@@ -397,25 +467,28 @@ pub contract CodeOfFlowDay5 {
         if (info.is_first_turn) {
           info.turn = info.turn + 1
           info.your_cp = info.turn + 1
+          if (info.turn == 1 && !info.is_first) {
+            info.your_cp = 3
+          }
         }
         info.card_draw_in_this_turn = false
-        CodeOfFlowDay5.battleInfo[self.player_id] = info
+        CodeOfFlowDay5_4.battleInfo[self.player_id] = info
 
         let opponent = info.opponent
         for position in enemy_skill_target.values {
-          if CodeOfFlowDay5.battleInfo[opponent]!.your_field_unit[position] == nil {
+          if CodeOfFlowDay5_4.battleInfo[opponent]!.your_field_unit[position] == nil {
             panic("You can not use skill for the target of this position!")
           }
         }
-        if let infoOpponent = CodeOfFlowDay5.battleInfo[opponent] {
+        if let infoOpponent = CodeOfFlowDay5_4.battleInfo[opponent] {
           // Recover Field Unit Actions
-          for position in infoOpponent.opponent_field_unit.keys {
+          for position in infoOpponent.your_field_unit_action.keys {
             infoOpponent.your_field_unit_action[position] = 2 // 2: can attack, 1: can defence only, 0: nothing can do.
           }
           // Process Battle Action
-          for position in attacked_cards {
+          for position in attacking_cards {
             infoOpponent.opponent_field_unit_action = info.your_field_unit_action
-            infoOpponent.enemy_attacked_cards = enemy_attacked_cards
+            infoOpponent.enemy_attacking_cards = enemy_attacking_cards
             infoOpponent.opponent_trigger_cards = your_trigger_cards_count
           }
           // Turn Change
@@ -424,32 +497,36 @@ pub contract CodeOfFlowDay5 {
           if (infoOpponent.is_first_turn) {
             infoOpponent.turn = infoOpponent.turn + 1
             infoOpponent.your_cp = infoOpponent.turn + 1
+            if (infoOpponent.turn == 1 && !infoOpponent.is_first) {
+              info.your_cp = 3
+            }
           }
-          CodeOfFlowDay5.battleInfo[opponent] = infoOpponent
+          CodeOfFlowDay5_4.battleInfo[opponent] = infoOpponent
         }
       }
     }
 
     pub fun start_your_turn_and_draw_two_cards(blocked_unit: {UInt8: UInt8}, used_intercept_position: {UInt8: UInt8}) {
 
-      if let info = CodeOfFlowDay5.battleInfo[self.player_id] {
+      if let info = CodeOfFlowDay5_4.battleInfo[self.player_id] {
         info.last_time_turnend = getCurrentBlock().timestamp
 
         // draw card
         let blockCreatedAt = getCurrentBlock().timestamp.toString().slice(from: 0, upTo: 10)
         let decodedArray = blockCreatedAt.decodeHex()
 
-        let pseudorandomNumber1 = decodedArray[decodedArray.length - 1] as! Int
-        let pseudorandomNumber2 = decodedArray[decodedArray.length - 2] as! Int
+        let pseudorandomNumber1 = decodedArray[decodedArray.length - 1] // as! Int
+        let pseudorandomNumber2 = decodedArray[decodedArray.length - 2] // as! Int
 
         let cardRemainCounts = info.your_remain_deck.length
-        let withdrawPosition1 = pseudorandomNumber1 % (cardRemainCounts - 1)
-        let withdrawPosition2 = pseudorandomNumber2 % (cardRemainCounts - 2)
-        let drawed_card_id2 = info.your_remain_deck.remove(at: withdrawPosition2)
+        let withdrawPosition1 = pseudorandomNumber1 % 15 // (cardRemainCounts - 1)
+        let withdrawPosition2 = pseudorandomNumber2 % 15 // (cardRemainCounts - 2)
+        let drawed_card_id2 = info.your_remain_deck.remove(at: decodedArray[0])
         var isSetCard1 = false
         var isSetCard2 = false
         var handCnt = 0
-        for hand_position in info.your_hand.keys {
+        let handPositions: [UInt8] = [1, 2, 3, 4, 5 ,6, 7]
+        for hand_position in handPositions {
           if info.your_hand[hand_position] == nil && isSetCard1 == false {
             info.your_hand[hand_position] = info.your_remain_deck.remove(at: withdrawPosition1)
             isSetCard1 = true
@@ -463,31 +540,31 @@ pub contract CodeOfFlowDay5 {
           }
         }
         info.card_draw_in_this_turn = true
-        CodeOfFlowDay5.battleInfo[self.player_id] = info
+        CodeOfFlowDay5_4.battleInfo[self.player_id] = info
 
         let opponent = info.opponent
-        if let infoOpponent = CodeOfFlowDay5.battleInfo[opponent] {
+        if let infoOpponent = CodeOfFlowDay5_4.battleInfo[opponent] {
           infoOpponent.last_time_turnend = info.last_time_turnend // set time same time
           infoOpponent.opponent_remain_deck = info.your_remain_deck.length
           infoOpponent.opponent_hand = handCnt
-          CodeOfFlowDay5.battleInfo[opponent] = infoOpponent
+          CodeOfFlowDay5_4.battleInfo[opponent] = infoOpponent
         }
       }
     }
 
     pub fun put_card_on_the_field(unit_card: {UInt8: UInt16}, enemy_skill_target: {UInt8: UInt8}, trigger_cards: {UInt8: UInt16?}, used_intercept_positions: [UInt8]) {
       for position in unit_card.keys {
-        if CodeOfFlowDay5.battleInfo[self.player_id]!.your_field_unit[position] != nil {
+        if CodeOfFlowDay5_4.battleInfo[self.player_id]!.your_field_unit[position] != nil {
           panic("You can't put unit in this position!")
         }
       }
       for position in trigger_cards.keys {
-        if CodeOfFlowDay5.battleInfo[self.player_id]!.your_trigger_cards[position] != nil && CodeOfFlowDay5.battleInfo[self.player_id]!.your_trigger_cards[position] != trigger_cards[position] {
+        if CodeOfFlowDay5_4.battleInfo[self.player_id]!.your_trigger_cards[position] != nil && CodeOfFlowDay5_4.battleInfo[self.player_id]!.your_trigger_cards[position] != trigger_cards[position] {
           panic("Your trigger card is Tampered!")
         }
       }
       for position in used_intercept_positions {
-        if CodeOfFlowDay5.battleInfo[self.player_id]!.your_trigger_cards[position] == nil {
+        if CodeOfFlowDay5_4.battleInfo[self.player_id]!.your_trigger_cards[position] == nil {
           panic("You have not set trigger card in this position!")
         }
       }
@@ -495,7 +572,7 @@ pub contract CodeOfFlowDay5 {
       var your_trigger_cards_count: Int = 0
       var your_hand_count: Int = 0
       var your_field_unit_action: {UInt8: UInt8} = {}
-      if let info = CodeOfFlowDay5.battleInfo[self.player_id] {
+      if let info = CodeOfFlowDay5_4.battleInfo[self.player_id] {
         // ハンドの整合性を合わせる(トリガーゾーンに移動した分、ハンドから取る)
         var isRemoved = false
         for trigger_position in trigger_cards.keys {
@@ -515,7 +592,7 @@ pub contract CodeOfFlowDay5 {
         // Process Card Skills
         for field_position in unit_card.keys {
           let card_id: UInt16 = unit_card[field_position]!
-          let unit = CodeOfFlowDay5.cardInfo[card_id]!
+          let unit = CodeOfFlowDay5_4.cardInfo[card_id]!
           if (unit.category != 0) {
             panic("The card you put on the field is not a Unit Card!")
           }
@@ -540,7 +617,7 @@ pub contract CodeOfFlowDay5 {
           // TODO Trigger Card
           for card in used_intercept_positions {
             let trigger_card_id = info.your_trigger_cards[card]!
-            let cardData = CodeOfFlowDay5.cardInfo[trigger_card_id]!
+            let cardData = CodeOfFlowDay5_4.cardInfo[trigger_card_id]!
             info.your_trigger_cards[card] = nil
             //infoOpponent.opponent_remain_deck = info.your_remain_deck.length // カードを引いた場合
             //infoOpponent.opponent_hand = handCnt
@@ -552,63 +629,64 @@ pub contract CodeOfFlowDay5 {
         }
         your_field_unit = info.your_field_unit
         your_trigger_cards_count = info.your_trigger_cards.keys.length
-        CodeOfFlowDay5.battleInfo[self.player_id] = info
+        CodeOfFlowDay5_4.battleInfo[self.player_id] = info
 
         let opponent = info.opponent
         for position in enemy_skill_target.values {
-          if CodeOfFlowDay5.battleInfo[opponent]!.your_field_unit[position] == nil {
+          if CodeOfFlowDay5_4.battleInfo[opponent]!.your_field_unit[position] == nil {
             panic("You can not use skill for the target of this position!")
           }
         }
-        if let infoOpponent = CodeOfFlowDay5.battleInfo[opponent] {
+        if let infoOpponent = CodeOfFlowDay5_4.battleInfo[opponent] {
           infoOpponent.opponent_field_unit_action = your_field_unit_action
           infoOpponent.opponent_field_unit = your_field_unit
           infoOpponent.opponent_trigger_cards = your_trigger_cards_count
           infoOpponent.opponent_hand = your_hand_count
-          CodeOfFlowDay5.battleInfo[opponent] = infoOpponent
+          CodeOfFlowDay5_4.battleInfo[opponent] = infoOpponent
         }
       }
     }
 
     pub fun claimWin() {
-      if let info = CodeOfFlowDay5.battleInfo[self.player_id] {
+      if let info = CodeOfFlowDay5_4.battleInfo[self.player_id] {
         if (info.last_time_turnend! > getCurrentBlock().timestamp + 60.0 && info.is_first != info.is_first_turn) {
           let opponent = info.opponent
-          CodeOfFlowDay5.battleInfo.remove(key: self.player_id)
-          CodeOfFlowDay5.battleInfo.remove(key: opponent)
-          CodeOfFlowDay5.playerList[self.player_id]!.score.append({getCurrentBlock().timestamp: 1})
-          CodeOfFlowDay5.playerList[opponent]!.score.append({getCurrentBlock().timestamp: 0})
+          CodeOfFlowDay5_4.battleInfo.remove(key: self.player_id)
+          CodeOfFlowDay5_4.battleInfo.remove(key: opponent)
+          CodeOfFlowDay5_4.playerList[self.player_id]!.score.append({getCurrentBlock().timestamp: 1})
+          CodeOfFlowDay5_4.playerList[opponent]!.score.append({getCurrentBlock().timestamp: 0})
           self.lastTimeMatching = nil
         }
       }
     }
 
     pub fun surrendar() {
-      if CodeOfFlowDay5.battleInfo[self.player_id] != nil {
-        let opponent = CodeOfFlowDay5.battleInfo[self.player_id]!.opponent
-        CodeOfFlowDay5.battleInfo.remove(key: self.player_id)
-        CodeOfFlowDay5.playerList[self.player_id]!.score.append({getCurrentBlock().timestamp: 0})
-        if (CodeOfFlowDay5.battleInfo[opponent] != nil) {
-          CodeOfFlowDay5.battleInfo.remove(key: opponent)
-          CodeOfFlowDay5.playerList[opponent]!.score.append({getCurrentBlock().timestamp: 1})
+      if CodeOfFlowDay5_4.battleInfo[self.player_id] != nil {
+        let opponent = CodeOfFlowDay5_4.battleInfo[self.player_id]!.opponent
+        CodeOfFlowDay5_4.battleInfo.remove(key: self.player_id)
+        CodeOfFlowDay5_4.playerList[self.player_id]!.score.append({getCurrentBlock().timestamp: 0})
+        if (CodeOfFlowDay5_4.battleInfo[opponent] != nil) {
+          CodeOfFlowDay5_4.battleInfo.remove(key: opponent)
+          CodeOfFlowDay5_4.playerList[opponent]!.score.append({getCurrentBlock().timestamp: 1})
         }
         self.lastTimeMatching = nil
       }
     }
 
     init(nickname: String) {
-      CodeOfFlowDay5.totalPlayers = CodeOfFlowDay5.totalPlayers + 1
-      self.player_id = CodeOfFlowDay5.totalPlayers + 1
+      CodeOfFlowDay5_4.totalPlayers = CodeOfFlowDay5_4.totalPlayers + 1
+      self.player_id = CodeOfFlowDay5_4.totalPlayers + 1
       self.nickname = nickname
       self.deck = [14, 15, 16, 17, 18, 19, 20, 21, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9]
       self.lastTimeMatching = nil
-      self.marigan_cards = [[21, 6, 11, 16], [2, 7, 12, 17], [3, 8, 13, 18], [4, 9, 14, 19], [5, 10, 15, 20]]
-      CodeOfFlowDay5.playerList[self.player_id] = ScoreStruct(player_name: nickname)
+
+      self.marigan_cards = []
+      CodeOfFlowDay5_4.playerList[self.player_id] = ScoreStruct(player_name: nickname)
       emit PlayerRegistered(player_id: self.player_id)
     }
   }
 
-  pub fun createPlayer(nickname: String): @CodeOfFlowDay5.Player {
+  pub fun createPlayer(nickname: String): @CodeOfFlowDay5_4.Player {
     return <- create Player(nickname: nickname)
   }
 
@@ -621,9 +699,9 @@ pub contract CodeOfFlowDay5 {
   }
 
   init () {
-    self.AdminStoragePath = /storage/CodeOfFlowDay5Admin
-    self.PlayerStoragePath = /storage/CodeOfFlowDay5Player
-    self.PlayerPublicPath = /public/CodeOfFlowDay5Player
+    self.AdminStoragePath = /storage/CodeOfFlowDay5_4Admin
+    self.PlayerStoragePath = /storage/CodeOfFlowDay5_4Player
+    self.PlayerPublicPath = /public/CodeOfFlowDay5_4Player
     self.totalPlayers = 0
     self.cardInfo = {
       1: CardStruct(card_id: 1, name: "Hound", bp: 1000, cost: 0, type: 0, category: 0, skill: Skill(description: "No Skill", triggers: [0], asks: [0], types: [0], amounts: [0], skills: [])),
@@ -651,7 +729,7 @@ pub contract CodeOfFlowDay5 {
       23: CardStruct(card_id: 23, name: "Photon", bp: 0, cost: 0, type: 1, category: 2, skill: Skill(description: "[🔸INTERCEPT CARD(only avalable when the yellow type unit is on the field)] When your unit is put on the field, you choose an enemy's move right lost unit, then give 3000 BP damage.", triggers: [1], asks: [3], types: [1], amounts: [3000], skills: [])),
       24: CardStruct(card_id: 24, name: "Titan's Lock", bp: 0, cost: 0, type: 1, category: 2, skill: Skill(description: "[🔸INTERCEPT CARD(only avalable when the yellow type unit is on the field)] When your unit attacks, you choose an enemy unit, remove the move right on the turn.", triggers: [2], asks: [1], types: [5], amounts: [1], skills: [])),
       25: CardStruct(card_id: 25, name: "Judge", bp: 0, cost: 6, type: 1, category: 2, skill: Skill(description: "[🔸INTERCEPT CARD(only avalable when the yellow type unit is on the field)] When your unit attacks, you remove all enemy units move right on the turn.", triggers: [2], asks: [0], types: [5], amounts: [5], skills: [])),
-      26: CardStruct(card_id: 26, name: "Hero's Sword", bp: 0, cost: 0, type: 2, category: 0, skill: Skill(description: "[🔸INTERCEPT CARD] When your unit battled, this card increases your unit BP 2000.", triggers: [5], asks: [0], types: [2], amounts: [2000], skills: []))
+      26: CardStruct(card_id: 26, name: "Hero's Sword", bp: 0, cost: 0, type: 4, category: 2, skill: Skill(description: "[🔸INTERCEPT CARD] When your unit battled, this card increases your unit BP 2000.", triggers: [5], asks: [0], types: [2], amounts: [2000], skills: []))
     }
     self.battleInfo = {}
     self.matchingLimits = []
