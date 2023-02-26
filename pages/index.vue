@@ -615,9 +615,11 @@
         </div>
       </v-card>
     </div></div>
+    <confirm ref="confirmRef"></confirm>
   </v-row>
 </template>
 <script>
+import confirm from '../components/confirm'
 import { Auth, API } from 'aws-amplify'
 import { createTodo } from '~/src/graphql/mutations'
 import { onCreateTodo } from '~/src/graphql/subscriptions'
@@ -627,6 +629,17 @@ import { useAttrs } from 'vue'
 import { collapseTextChangeRangesAcrossMultipleVersions } from 'typescript'
 import { ConsoleLogger } from '@aws-amplify/core'
 export default {
+  components: {
+    confirm
+  },
+  setup () {
+    const confirmRef = ref(null)
+    onMounted(() => {
+    })
+    return {
+      confirmRef
+    }
+  },
   data() {
     return {
       walletUser: {},
@@ -758,15 +771,7 @@ export default {
       console.error('セッションが無効です。')
     };
     this.subscribe()
-    this.show_choose_dialog = true
-    if (
-      await this.$refs.confirm.open(
-        "Confirm",
-        "Are you sure you want to delete this record?"
-      )
-    ) {
-      console.log(222)
-    }
+    // const ret = await this.confirmRef.prompt('Choose the target', 'Are you sure?', { color: 'red' })
   },
   methods: {
     async flowWalletSignIn () {
@@ -1334,7 +1339,7 @@ export default {
       }, 1000)
     },
 
-    defence(card_id, position) {
+    async defence(card_id, position) {
       const myCard = this.card_information[card_id]
       this.defence_executed = true
       this.defence_unit_position = position
@@ -1357,7 +1362,7 @@ export default {
           // インターセプトカードの場合
           if (card.category == 2) {
             if (card.skill.trigger_1 == 5) {
-              if (window.confirm(`Do you use "${card.name}" 'Intercept Card?'`)) {
+              if (await this.confirmRef.confirm('Intercept Card can be invoked', `Do you use "${card.name}" Intercept Card?`, {color: 'red'})) {
                 if (card.skill.type_1 == 2) {
                   yourBP += card.skill.tamount_1
                   this.battleActionObj.yourPump[position] = card.skill.tamount_1
@@ -1519,7 +1524,7 @@ export default {
       this.loadingDialog = true
       this.checkTransactionComplete('putCardOnTheField')
     },
-    cardMoveDecided() {
+    async cardMoveDecided() {
       this.show_battle_dialog = false
       const card = this.card_information[this.selected_card_id]
       if (card) {
@@ -1532,21 +1537,23 @@ export default {
                 let enemy_targets = []
                 Object.keys(this.opponent_field_unit).forEach((position) => {
                   if (this.opponent_field_unit[position] && this.opponent_field_unit[position] != '0') {
-                    enemy_targets.push(position)
+                    const unit3 = this.card_information[this.opponent_field_unit[position]]
+                    enemy_targets.push({position: position, name: unit3.name})
                   }
                 })
                 if (enemy_targets.length > 0) {
-                  enemy_skill_target = window.prompt(`Enter the enemy unit target from ${enemy_targets}, note: target is counted from left most.`)
+                  enemy_skill_target = await this.confirmRef.prompt('Choose the unit target', enemy_targets, {color: 'red'})
                 }
               } else if (card.skill.ask_1 === 3 || card.skill.ask_1 === '3') {
                 let enemy_targets = []
                 Object.keys(this.opponent_field_unit_action).forEach((position) => {
                   if (this.opponent_field_unit_action[position] == 2) {
-                    enemy_targets.push(position)
+                    const unit3 = this.card_information[this.opponent_field_unit[position]]
+                    enemy_targets.push({position: position, name: unit3.name})
                   }
                 })
                 if (enemy_targets.length > 0) {
-                  enemy_skill_target = window.prompt(`Enter the enemy unit target from ${enemy_targets}, note: target is counted from left most.`)
+                  enemy_skill_target = await this.confirmRef.prompt('Choose the unit target', enemy_targets, {color: 'red'})
                 }
               }
             }
@@ -1569,17 +1576,18 @@ export default {
                     if (d.type === 4) {
                       // The card trigger is when the unit is put on the field
                       if (d.skill.trigger_1 === 1 || d.skill.trigger_1 === '1') {
-                        if (window.confirm(`Do you use ${d.name} Intercept Card`)) {
+                        if (await this.confirmRef.confirm('Intercept Card can be invoked', `Do you use "${d.name}" Intercept Card?`, {color: 'red'})) {
                           if (d.skill.ask_1 === 1 || d.skill.ask_1 === '1') {
                             used_intercept_cards.push(parseInt(d.card_id))
                             let enemy_targets = []
                             Object.keys(this.opponent_field_unit).forEach((position) => {
                               if (this.opponent_field_unit[position] && this.opponent_field_unit[position] != '0') {
-                                enemy_targets.push(position)
+                                const unit3 = this.card_information[this.opponent_field_unit[position]]
+                                enemy_targets.push({position: position, name: unit3.name})
                               }
                             })
                             if (enemy_targets.length > 0) {
-                              enemy_skill_target = window.prompt(`Enter the enemy unit target from ${enemy_targets}, note: target is counted from left most.`)
+                              enemy_skill_target = await this.confirmRef.prompt('Choose the unit target', enemy_targets, {color: 'red'})
                             } else {
                               alert('Sorry, in this field, there is no target of this trigger card. Do again.')
                             }
@@ -1600,17 +1608,18 @@ export default {
                       }
                       // The card trigger is when the unit is put on the field
                       if (same_color_on_the_field && (d.skill.trigger_1 === 1 || d.skill.trigger_1 === '1')) {
-                        if (window.confirm(`Do you use ${d.name} Intercept Card`)) {
+                        if (await this.confirmRef.confirm('Intercept Card can be invoked', `Do you use "${d.name}" Intercept Card?`, {color: 'red'})) {
                           used_intercept_cards.push(parseInt(d.card_id))
                           if (d.skill.ask_1 === 1 || d.skill.ask_1 === '1') {
                             let enemy_targets = []
                             Object.keys(this.opponent_field_unit).forEach((position) => {
                               if (this.opponent_field_unit[position] && this.opponent_field_unit[position] != '0') {
-                                enemy_targets.push(position)
+                                const unit3 = this.card_information[this.opponent_field_unit[position]]
+                                enemy_targets.push({position: position, name: unit3.name})
                               }
                             })
                             if (enemy_targets.length > 0) {
-                              enemy_skill_target = window.prompt(`Enter the enemy unit target from ${enemy_targets}, note: target is counted from left most.`)
+                              enemy_skill_target = await this.confirmRef.prompt('Choose the unit target', enemy_targets, {color: 'red'})
                             } else {
                               alert('Sorry, in this field, there is no target of this trigger card. Do again.')
                             }
@@ -1618,11 +1627,12 @@ export default {
                             let enemy_targets = []
                             Object.keys(this.opponent_field_unit_action).forEach((position) => {
                               if (this.opponent_field_unit_action[position] == 2) {
-                                enemy_targets.push(position)
+                                const unit3 = this.card_information[this.opponent_field_unit[position]]
+                                enemy_targets.push({position: position, name: unit3.name})
                               }
                             })
                             if (enemy_targets.length > 0) {
-                              enemy_skill_target = window.prompt(`Enter the enemy unit target from ${enemy_targets}, note: target is counted from left most.`)
+                              enemy_skill_target = await this.confirmRef.prompt('Choose the unit target', enemy_targets, {color: 'red'})
                             } else {
                               alert('Sorry, in this field, there is no target of this trigger card. Do again.')
                             }
@@ -1685,11 +1695,12 @@ export default {
               let enemy_targets = []
               Object.keys(this.opponent_field_unit).forEach((position) => {
                 if (this.opponent_field_unit[position] && this.opponent_field_unit[position] != '0') {
-                  enemy_targets.push(position)
+                  const unit3 = this.card_information[this.opponent_field_unit[position]]
+                  enemy_targets.push({position: position, name: unit3.name})
                 }
               })
               if (enemy_targets.length > 0) {
-                skill_target = window.prompt(`Enter the enemy unit target from ${enemy_targets}, (Note: target is counted from left most.)`)
+                skill_target = await this.confirmRef.prompt('Choose the unit target', enemy_targets, {color: 'red'})
               }
               this.enemy_skill_target[this.display_card_position] = skill_target
             }
@@ -1702,7 +1713,7 @@ export default {
                   // インターセプトカードの場合
                   if (card.category == 2) {
                     if (card.skill.trigger_1 == 2 || card.skill.trigger_1 == 5) {
-                      if (window.confirm(`Do you use "${card.name}" Intercept Card?`)) {
+                      if (await this.confirmRef.confirm('Intercept Card can be invoked', `Do you use "${card.name}" Intercept Card?`, {color: 'red'})) {
                         if (card.skill.type_1 == 2) {
                           if (!this.used_intercept_position[this.display_card_position]) {
                             this.used_intercept_position[this.display_card_position] = []
@@ -1714,7 +1725,7 @@ export default {
                       }
                     }
                   } else if (card.category == 1 && card.skill.trigger_1 == 2) {
-                    window.alert(`"${card.name}" Trigger Card activated!`)
+                    await this.confirmRef.confirm('Trigger Card has been invoked', `${card.name}" trigger card is activated!`, {color: 'red'})
                     if (!this.used_intercept_position[this.display_card_position]) {
                       this.used_intercept_position[this.display_card_position] = []
                       this.used_intercept_position[this.display_card_position].push(card.card_id)
