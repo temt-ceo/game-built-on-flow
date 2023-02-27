@@ -9,6 +9,9 @@ The game system is very similar to v1.0.0 of Code Of Joker. (But majority are no
 If you don’t know COJ, please take a look at well-played game’s YouTube 👇<br>
 https://m.youtube.com/watch?v=tYioSA10Ckc<br>
 
+### You can play this CODE-Of-Flow Game in smartphone or Mac or PC.
+URL is https://hackathon.d8gpbl0qw42np.amplifyapp.com/
+
 <img width="314" alt="CODE-Of-Flow" src="https://user-images.githubusercontent.com/58613670/221454777-4163b675-e8ca-44db-9f93-21ff93c4393b.png">
 
 # Extending the ecosystem

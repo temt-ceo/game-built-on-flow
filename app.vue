@@ -14,8 +14,8 @@ const auth = useAuthenticator()
         >
           <div class="navbar-brand">
             <img src="/img/CODE_Of_Flow.png" style="height: 37px;" />
-            <div style="font-size: 10px; margin-top: 5px;">Agent Name: {{ user.username }}</div>
-            <v-btn @click="signOut(auth)" color="primary" class="sign-out">Sign Out</v-btn>
+            <div style="font-size: 12px; margin-top: 3px;">Agent Name: {{ user.username }}</div>
+            <v-btn @click="signOut(auth)" color="primary" class="sign-out" style="margin-top: 5px; height: 29px;">Sign Out</v-btn>
           </div>
         </nav>
         <section class="section top-screen">
@@ -50,11 +50,11 @@ const auth = useAuthenticator()
                   <div><br><br><br><br>
                     If you don't know Code Of Joker👇<br>
                     <a href="https://m.youtube.com/watch?v=tYioSA10Ckc">https://m.youtube.com/watch?v=tYioSA10Ckc</a><br>
-                  </div>
+                  </div><br>
                   <v-btn
-                    variant="text"
+                    class="ma-1"
                     @click="showDialog = false"
-                  >Close</v-btn>
+                  >Close</v-btn><br>
 
                 <div class="v-progress-linear v-progress-linear--active v-theme--light mb-0" role="progressbar" aria-hidden="false" aria-valuemin="0" aria-valuemax="100" style="top: 0px; height: 4px; --v-progress-linear-height:4px; left: 50%; transform: translateX(-50%);">
                   <div class="v-progress-linear__background bg-white" style="width: 100%;"></div>
@@ -186,7 +186,8 @@ h6 {
 
 .header-bar {
   width: 100%;
-  transform: translateY(16px);
+  text-align: center;
+  transform: translateY(5px);
   position: relative;
 }
 /* 

@@ -2,12 +2,12 @@
   <div class="game-screen">
     <div class="content top-screen">
       <v-chip
-        v-if="newEventAlertChip"
+        v-for="chip in newEventAlertChip"
         class="ma-2"
-        color="red"
+        :color="chip.color"
         text-color="white"
       >
-        {{ newEventAlert }}
+        {{ chip.message }}
       </v-chip>
       <div class="top-screen">
         <div v-if="onMatching === 1" class="matching-screen">
@@ -224,7 +224,7 @@
             (CODE-Of-Flow is an homage to SEGA's "Code Of Joker")
             <div><br><br><br><br>
               If you don't know Code Of Joker👇<br>
-              <a href="https://m.youtube.com/watch?v=tYioSA10Ckc">https://m.youtube.com/watch?v=tYioSA10Ckc</a><br><br><br>
+              <a href="https://m.youtube.com/watch?v=tYioSA10Ckc">https://m.youtube.com/watch?v=tYioSA10Ckc</a><br><br><br><br><br>
             </div>
           </div>
           <p v-if="address && hasNFT">
@@ -272,6 +272,7 @@
       </div>
     </div>
     <div class="header-bar">
+      <div class="your_score">{{ your_score }}</div>
       <div v-if="onMatching === 3 && game_started === true" class="remaining_time" :class="is_first == is_first_turn ? 'you' : 'opponent'">
         {{ current_turn }} | TIME: {{ turn_timer }}
       </div>
@@ -294,7 +295,7 @@
     color="success"
     icon="mdi-gavel"
     @click="show_game_dialog = true"
-    style="position: absolute; bottom: 10%; left: -5px;"
+    style="position: absolute; top: 22%; left: -5px;"
   ></v-btn>
   <v-btn
     v-if="
@@ -649,8 +650,7 @@ export default {
       gameEndDialog: false,
       turnChangedDialog: false,
       registered: null,
-      newEventAlertChip: false,
-      newEventAlert: '',
+      newEventAlertChip: [],
       onMatching: 1,
       timeline: [
         {
@@ -682,8 +682,8 @@ export default {
       turn_timer: 60,
       attack_timer: 5,
       opponent: null,
-      your_score: [],
-      opponent_score: [],
+      your_score: '',
+      opponent_score: '',
       turn: null,
       is_first: null,
       is_first_turn: null,
@@ -760,6 +760,11 @@ export default {
         this.matchingDialog = false
         this.matchingTimeup = true
       }, 60000)
+    },
+    onMatching (val) {
+      if (val === 1) {
+        this.getPlayersScore()
+      }
     },
   },
   async created() {
@@ -1040,7 +1045,26 @@ export default {
         })
         console.log('SCORE:', result)
         if (result && result.length === 1) {
+          let win = 0
+          let loss = 0
           this.your_score = result[0]
+          result[0].score.forEach((obj) => {
+            const key = Object.keys(obj)[0]
+            const score = obj[key]
+            if (score === '1') {
+              win++
+            } else {
+              loss++
+            }
+          })
+          this.your_score = ` ${result[0].player_name}: Results ${ win } Win ${ loss } Loss`
+          // this.your_score.forEach((ret) => {
+          //   if (ret === '1') {
+          //     this.player_win_score++
+          //   } else {
+          //     this.player_loss_score++
+          //   }
+          // })
         } else if(result && result.length === 2) {
           this.your_score = result[0]
           this.opponent_score = result[0]
@@ -1122,9 +1146,7 @@ export default {
                     }
                     return
                   }
-                  this.matching_time_second = ''
-                  this.matchingTimeup = true
-                  this.matchingDialog = false
+                  console.log('Time', d.getTime() / 1000 - matchingTime)
                   if (transactionName !== 'watchCurrentStatus') {
                     clearInterval(timerID)
                   }
@@ -1764,17 +1786,90 @@ export default {
         next: (eventData) => {
           const flowEv = eventData.value.data.onCreateTodo
           flowEv.flowEvent.data = JSON.parse(flowEv.flowEvent.data)
-          const dateObj = new Date(flowEv.flowEvent.data.blockTimestamp)
-          flowEv.flowEvent.data.datetime =
-            dateObj.getFullYear() + '/' + (dateObj.getMonth() + 1) + '/' +
-            dateObj.getDate() + ' ' + dateObj.getHours() + ':' +
-            dateObj.getMinutes() + ':' + dateObj.getSeconds()
-          this.newEventAlert = `${flowEv.flowEvent.name} To: ${flowEv.flowEvent.data.data.to}
-             Amount:${ flowEv.flowEvent.data.data.amount } $FLOW at ${ flowEv.flowEvent.data.datetime }`
-          this.newEventAlertChip = true;
+          const events = flowEv.flowEvent.data
+          const battleSequence1 = []
+          const battleSequence2 = []
+          const battleSequence3 = []
+          const battleSequence4 = []
+          let newEventAlert = ''
+          events.forEach((event) => {
+            let dateObj = new Date(event.blockTimestamp)
+            let player_id = event.data.player_id
+            let sequence = event.data.sequence
+            let datetime =
+              dateObj.getFullYear() + '/' + (dateObj.getMonth() + 1) + '/' +
+              dateObj.getDate() + ' ' + dateObj.getHours() + ':' +
+              dateObj.getMinutes() + ':' + dateObj.getSeconds()
+            // Amount:${ flowEv.flowEvent.data.data.amount } $FLOW at ${ flowEv.flowEvent.data.datetime }`
+            if (sequence == '0') {
+              battleSequence1.push({date: datetime, player_id: player_id})
+            } else if (sequence == '1') {
+              battleSequence2.push({date: datetime, player_id: player_id, opponent: opponent})
+            } else if (sequence == '2') {
+              battleSequence3.push({date: datetime, player_id: player_id, opponent: opponent})
+            } else if (sequence == '3') {
+              battleSequence4.push({date: datetime, player_id: player_id})
+            }
+          })
+          if (battleSequence1.length > 0) {
+            if (battleSequence1.length > 2) {
+              newEventAlert = `[${(battleSequence1[0].date)}] Agent ${battleSequence1[0].player_id} and ${(battleSequence1.length -1)} agents entered to Arcana. Battle stund by.`
+              this.newEventAlertChip.push({color: 'red', message: newEventAlert});
+            } else if (battleSequence1.length > 1) {
+              newEventAlert = `[${(battleSequence1[0].date)}] Agent ${battleSequence1[0].player_id} entered to Arcana. Battle stund by.`
+              this.newEventAlertChip.push({color: 'red', message: newEventAlert});
+              newEventAlert = `[${(battleSequence1[1].date)}] Agent ${battleSequence1[1].player_id} entered to Arcana. Battle stund by.`
+              this.newEventAlertChip.push({color: 'red', message: newEventAlert});
+            } else {
+              newEventAlert = `[${(battleSequence1[0].date)}] Agent ${battleSequence1[0].player_id} entered to Arcana. Battle stund by.`
+              this.newEventAlertChip.push({color: 'red', message: newEventAlert});
+            }
+          }
+          if (battleSequence2.length > 0) {
+            if (battleSequence2.length > 2) {
+              newEventAlert = `[${(battleSequence2[0].date)}] Agent ${battleSequence2[0].player_id} and ${(battleSequence2.length -1)} agents engage in battle.`
+              this.newEventAlertChip.push({color: 'purple', message: newEventAlert});
+            } else if (battleSequence2.length > 1) {
+              newEventAlert = `[${(battleSequence2[0].date)}] Agent ${battleSequence2[0].player_id} Engage in battle To No. ${battleSequence2[0].opponent}.`
+              this.newEventAlertChip.push({color: 'purple', message: newEventAlert});
+              newEventAlert = `[${(battleSequence2[1].date)}] Agent ${battleSequence2[1].player_id} Engage in battle To No. ${battleSequence2[1].opponent}.`
+              this.newEventAlertChip.push({color: 'purple', message: newEventAlert});
+            } else {
+              newEventAlert = `[${(battleSequence2[0].date)}] Agent ${battleSequence2[0].player_id} Engage in battle To No. ${battleSequence2[0].opponent}.`
+              this.newEventAlertChip.push({color: 'purple', message: newEventAlert});
+            }
+          }
+          if (battleSequence3.length > 0) {
+            if (battleSequence3.length > 2) {
+              newEventAlert = `[${(battleSequence3[0].date)}] The ${battleSequence3.length} Battle Started on Arcana Cyberspace.`
+              this.newEventAlertChip.push({color: 'blue-darken-4', message: newEventAlert});
+            } else if (battleSequence3.length > 1) {
+              newEventAlert = `[${(battleSequence3[0].date)}] The Battle Started Between Agent ${battleSequence3[0].player_id} and No. ${battleSequence3[0].opponent}.`
+              this.newEventAlertChip.push({color: 'blue-darken-4', message: newEventAlert});
+              newEventAlert = `[${(battleSequence3[1].date)}] The Battle Started Between Agent ${battleSequence3[1].player_id} and No. ${battleSequence3[1].opponent}.`
+              this.newEventAlertChip.push({color: 'blue-darken-4', message: newEventAlert});
+            } else {
+              newEventAlert = `[${(battleSequence3[0].date)}] The Battle Started Between Agent ${battleSequence3[0].player_id} and No. ${battleSequence3[0].opponent}.`
+              this.newEventAlertChip.push({color: 'blue-darken-4', message: newEventAlert});
+            }
+          }
+          if (battleSequence4.length > 0) {
+            if (battleSequence4.length > 2) {
+              newEventAlert = `[${(battleSequence4[0].date)}] The Battle is Settled. Agent ${battleSequence4[0].player_id} and ${(battleSequence4.length -1)} agents Win.`
+              this.newEventAlertChip.push({color: 'green', message: newEventAlert});
+            } else if (battleSequence4.length > 1) {
+              newEventAlert = `[${(battleSequence4[0].date)}] The battle is settled. Agent ${battleSequence4[0].player_id} Win.`
+              this.newEventAlertChip.push({color: 'green', message: newEventAlert});
+              newEventAlert = `[${(battleSequence4[1].date)}] The battle is settled. Agent ${battleSequence4[1].player_id} Win.`
+              this.newEventAlertChip.push({color: 'green', message: newEventAlert});
+            } else {
+              newEventAlert = `[${(battleSequence4[0].date)}] The battle is settled. Agent ${battleSequence4[0].player_id} Win.`
+              this.newEventAlertChip.push({color: 'green', message: newEventAlert});
+            }
+          }
           setTimeout(() => {
-            this.newEventAlertChip = false
-          }, 4000)
+              this.newEventAlertChip = []
+            }, 4000)
         },
       })
     },
@@ -1885,6 +1980,12 @@ video {
   margin: 0 auto;
   color: #00BCD4;
   text-align: center;
+}
+
+.your_score {
+  font-size: 11px;
+  margin-right: 20px;
+  text-align: right;
 }
 
 .remaining_time.opponent {
@@ -1998,6 +2099,12 @@ video {
     border-radius: 20px;
     margin: 0 auto;
   }
+  .header-bar {
+    font-size: 15px;
+  }
+  .section .content.top-screen {
+    top: 50px;
+  }
 }
 
 @media screen and (max-height: 800px) and (max-width: 700px) {
@@ -2041,6 +2148,9 @@ video {
   #field {
     bottom: 20%;
     right: 5%;
+  }
+  .header-bar {
+    font-size: 15px;
   }
 }
 @media screen and (max-width: 700px) and (orientation: landscape) {
