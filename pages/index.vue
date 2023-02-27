@@ -496,7 +496,7 @@
         </v-btn>
         <div style="display: flex;">
           <v-btn
-            v-if="game_started && is_first !== is_first_turn"
+            v-if="game_started && (is_first !== is_first_turn || this.turn === '11')"
             :loading="customLoading"
             :disabled="customLoading"
             size="x-large"
@@ -512,7 +512,7 @@
             </template>
           </v-btn>
           <v-btn
-            v-if="game_started && is_first === is_first_turn && battleDialogText !== `Your turn! Draw two cards!`"
+            v-if="game_started && is_first === is_first_turn && battleDialogText !== `Your turn! Draw two cards!` && this.turn !== '11'"
             :loading="customLoading"
             :disabled="customLoading"
             size="x-large"
@@ -768,7 +768,7 @@ export default {
       game_start_done: false,
       show_surrendar_dialog: false,
       turnChangeActionDone: false,
-      show_turn_change_dialog: {1: [false, false], 2: [false, false], 3: [false, false], 4: [false, false], 5: [false, false], 6: [false, false], 7: [false, false], 8: [false, false], 9: [false, false], 10: [false, false]},
+      show_turn_change_dialog: {1: [false, false], 2: [false, false], 3: [false, false], 4: [false, false], 5: [false, false], 6: [false, false], 7: [false, false], 8: [false, false], 9: [false, false], 10: [false, false], 11: [false, false]},
       card_information: {},
       stopCountdownTimer: null,
       attack_unit_cards: [],
@@ -898,6 +898,7 @@ export default {
       }
     },
     showBattleDialogWindow() {
+      this.selected_card_cost = 11 // ２重で置くのを防ぐため
       if ((this.display_card_type === 1 || this.display_card_type === 3) && this.is_first === this.is_first_turn && this.turn_timer !== '00') {
         this.show_battle_dialog = true
       } else if (this.turn_timer === '00') {
@@ -1254,6 +1255,20 @@ export default {
                   }
                 // ゲーム開始済み
                 } else if (this.game_started === true) {
+                  this.turn = result.turn
+                  console.log(111, !result.is_first_turn)
+                  if (this.turn == '11') {
+                    this.onMatching = 3
+                    if (result.your_life > result.opponent_life) {
+                      this.battleDialogText = 'You Win!'
+                      this.show_game_dialog = true
+                    } else if (result.your_life == result.opponent_life && !result.is_first) {
+                      console.log(222)
+                      this.battleDialogText = 'You Win!'
+                      this.show_game_dialog = true
+                    }
+                    clearInterval(timerID)
+                  }
                   if (transactionName === 'turnChange' && result.is_first !== result.is_first_turn) {
                     this.loadingDialog = false
                     this.battleDialogText = ''
@@ -1330,7 +1345,6 @@ export default {
                     this.opponent_field_unit_bp_amount_of_change = result.opponent_field_unit_bp_amount_of_change
                     this.enemy_skill_target = {}
                   }
-                  this.turn = result.turn
                   this.your_cp = result.your_cp
                   this.opponent_cp = result.opponent_cp
                   this.is_first = result.is_first

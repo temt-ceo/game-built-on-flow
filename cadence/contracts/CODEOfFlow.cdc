@@ -1046,6 +1046,17 @@ pub contract CodeOfFlowDayAlpha1 {
       }
 
       if let info = CodeOfFlowDayAlpha1.battleInfo[self.player_id] {
+        if (info.turn > 10) {
+          if (info.your_life > info.opponent_life || (info.your_life == info.opponent_life && !info.is_first_turn)) {
+            let opponent = info.opponent
+            CodeOfFlowDayAlpha1.battleInfo.remove(key: self.player_id)
+            CodeOfFlowDayAlpha1.battleInfo.remove(key: opponent)
+            CodeOfFlowDayAlpha1.playerList[self.player_id]!.score.append({getCurrentBlock().timestamp: 1})
+            CodeOfFlowDayAlpha1.playerList[opponent]!.score.append({getCurrentBlock().timestamp: 0})
+            self.lastTimeMatching = nil
+            emit BattleSequence(sequence: 3, player_id: self.player_id, opponent: opponent)
+          }
+        }
         if (info.last_time_turnend! + 60.0 < getCurrentBlock().timestamp && info.is_first != info.is_first_turn) {
           let opponent = info.opponent
           CodeOfFlowDayAlpha1.battleInfo.remove(key: self.player_id)
