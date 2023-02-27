@@ -210,7 +210,7 @@
               </v-col>
             </v-row>
           </div>
-          <div style="max-width: 600px;">
+          <div class="card_information" style="max-width: 600px;">
             Card Information: Cost: 
             <span :style="selected_card_cost <= your_cp || this.display_card_type === 3 ? 'color:white;': 'color:red;'">{{ selected_card_cost }}</span><br>
             <span :style="selected_card_cost <= your_cp || this.display_card_type === 3 ? 'color:white;': 'color:red;'">{{ display_cardinfo }}</span>
@@ -218,7 +218,7 @@
         </div>
 
         <div>
-          <h2>Hello! {{ attrs.player.username }}</h2>
+          <h2 v-if="!registered">Hello! {{ attrs.player.username }}</h2>
           <div v-if="!registered" style="margin: 10px;">
             Welcome. My name is Actis. I am here to support you and your agents. Your mission as agents is to keep cyberspace safe. Your role is to infiltrate the cyberspace, Arcana, and fight off hackers and others who try to destroy the cyberspace Arcana. Register your agent name and register on the Flow Blockchain to infiltrate Arcana. If you are matched with other opponents, the game will switch to battle mode. I will support you and you will have to use your abilities to fight them off to keep Arkana safe. <br><br>
             (CODE-Of-Flow is an homage to SEGA's "Code Of Joker")
@@ -294,7 +294,7 @@
     color="success"
     icon="mdi-gavel"
     @click="show_game_dialog = true"
-    style="position: absolute; bottom: 40px; left: -5px;"
+    style="position: absolute; bottom: 10%; left: -5px;"
   ></v-btn>
   <v-btn
     v-if="
@@ -1933,7 +1933,7 @@ video {
 .boxInner img {
     width: 100%;
 }
-@media screen and (max-width: 700px) {
+@media screen and (max-width: 700px) and (orientation: portrait) {
   .v-timeline--vertical.v-timeline {
     width: 150px;
     padding: 0;
@@ -1954,10 +1954,8 @@ video {
     left: 0;
   }
   .your_hands {
-    margin-top: 35px;
+    margin-top: 5px;
   }
-}
-@media screen and (max-width: 700px) {
   .dialog_title {
     font-size: 16px;
   }
@@ -2007,6 +2005,44 @@ video {
 @media screen and (max-height: 750px) and (max-width: 700px) {
   .main-screen {
     font-size: 10px;
+  }
+}
+/* landscape対応 */
+@media (orientation: landscape) and (max-width: 1000px) {
+  .section {
+    height: calc(100vh);
+  }
+
+  .navbar {
+    z-index: 99;
+  }
+
+  .navbar.header {
+    display: none;
+  }
+  .main-screen {
+    font-size: 10px;
+  }
+  .section .content.top-screen {
+    top: 50px;
+  }
+  .section .game-screen {
+    height: calc(100vh - 35px);
+  }
+  .your_hands {
+    margin-top: 5px;
+  }
+  .card_information {
+    max-width: 400px !important;
+  }
+  #field {
+    bottom: 20%;
+    right: 5%;
+  }
+}
+@media screen and (max-width: 700px) and (orientation: landscape) {
+  .your_hands {
+    max-width: 310px;
   }
 }
 @keyframes fadeOut2 {
