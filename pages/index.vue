@@ -1146,9 +1146,7 @@ export default {
                     }
                     return
                   }
-                  this.matching_time_second = ''
-                  this.matchingTimeup = true
-                  this.matchingDialog = false
+                  console.log('Time', d.getTime() / 1000 - matchingTime)
                   if (transactionName !== 'watchCurrentStatus') {
                     clearInterval(timerID)
                   }
