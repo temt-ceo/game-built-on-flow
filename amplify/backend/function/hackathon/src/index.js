@@ -17,7 +17,7 @@ import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 const dbclient = new DynamoDBClient({ region: process.env.REGION})
 
 fcl.config({
-  "accessNode.api": "https://rest-mainnet.onflow.org"
+  "accessNode.api": "https://rest-testnet.onflow.org"
 })
 
 const GRAPHQL_ENDPOINT = process.env.API_FLOWEVENTS_GRAPHQLAPIENDPOINTOUTPUT;
@@ -62,10 +62,10 @@ const mutate = /* GraphQL */ `
  export const handler = async (event) => {
   console.log(`EVENT: ${JSON.stringify(event)}`);
 
-  const address = '1654653399040a61'
-  const contractName = 'FlowToken'
-  const eventName = 'TokensDeposited'
-  let flowEventData = ''
+  const address = '9e447fb949c3f1b6'
+  const contractName = 'CodeOfFlowDayAlpha1'
+  const eventName = 'BattleSequence'
+  const flowEventData = []
 
   const fetchEvents = async() => {
     const latestBlock = await fcl.send([
@@ -111,10 +111,9 @@ const mutate = /* GraphQL */ `
       fcl.getEventsAtBlockHeightRange(`A.${address}.${contractName}.${eventName}`,
         fromBlockHeight, toBlockHeight)
     ]).then(fcl.decode)
-
     events.forEach((eventObj) => {
-      if (flowEventData === '') {
-        flowEventData = JSON.stringify(eventObj)
+      if (eventObj) {
+        flowEventData.push(eventObj)
       }
     })
   }
@@ -133,7 +132,7 @@ const mutate = /* GraphQL */ `
     input: {
       name: 'Hello, Todo!',
       description: 'This is from Lambda!',
-      flowEvent: { name: eventName, data: flowEventData}
+      flowEvent: { name: eventName, data: JSON.stringify(flowEventData)}
     }
   }
 
@@ -152,13 +151,15 @@ const mutate = /* GraphQL */ `
   const request = new Request(endpoint, signed);
 
   let statusCode = 200;
-  let body;
+  let body = {};
   let response;
 
   try {
-    response = await fetch(request);
-    body = await response.json();
-    if (body.errors) statusCode = 400;
+    if (flowEventData.length) {
+      response = await fetch(request);
+      body = await response.json();
+      if (body.errors) statusCode = 400;
+    }
   } catch (error) {
     statusCode = 500;
     body = {

@@ -2,12 +2,12 @@
   <div class="game-screen">
     <div class="content top-screen">
       <v-chip
-        v-if="newEventAlertChip"
+        v-for="chip in newEventAlertChip"
         class="ma-2"
-        color="red"
+        :color="chip.color"
         text-color="white"
       >
-        {{ newEventAlert }}
+        {{ chip.message }}
       </v-chip>
       <div class="top-screen">
         <div v-if="onMatching === 1" class="matching-screen">
@@ -650,8 +650,7 @@ export default {
       gameEndDialog: false,
       turnChangedDialog: false,
       registered: null,
-      newEventAlertChip: false,
-      newEventAlert: '',
+      newEventAlertChip: [],
       onMatching: 1,
       timeline: [
         {
@@ -683,8 +682,8 @@ export default {
       turn_timer: 60,
       attack_timer: 5,
       opponent: null,
-      your_score: [],
-      opponent_score: [],
+      your_score: '',
+      opponent_score: '',
       turn: null,
       is_first: null,
       is_first_turn: null,
@@ -1058,7 +1057,7 @@ export default {
               loss++
             }
           })
-          this.your_score = ` ${result[0].player_name}: SCORE ${ win } Win ${ loss } Loss`
+          this.your_score = ` ${result[0].player_name}: Results ${ win } Win ${ loss } Loss`
           // this.your_score.forEach((ret) => {
           //   if (ret === '1') {
           //     this.player_win_score++
@@ -1789,17 +1788,90 @@ export default {
         next: (eventData) => {
           const flowEv = eventData.value.data.onCreateTodo
           flowEv.flowEvent.data = JSON.parse(flowEv.flowEvent.data)
-          const dateObj = new Date(flowEv.flowEvent.data.blockTimestamp)
-          flowEv.flowEvent.data.datetime =
-            dateObj.getFullYear() + '/' + (dateObj.getMonth() + 1) + '/' +
-            dateObj.getDate() + ' ' + dateObj.getHours() + ':' +
-            dateObj.getMinutes() + ':' + dateObj.getSeconds()
-          this.newEventAlert = `${flowEv.flowEvent.name} To: ${flowEv.flowEvent.data.data.to}
-             Amount:${ flowEv.flowEvent.data.data.amount } $FLOW at ${ flowEv.flowEvent.data.datetime }`
-          this.newEventAlertChip = true;
+          const events = flowEv.flowEvent.data
+          const battleSequence1 = []
+          const battleSequence2 = []
+          const battleSequence3 = []
+          const battleSequence4 = []
+          let newEventAlert = ''
+          events.forEach((event) => {
+            let dateObj = new Date(event.blockTimestamp)
+            let player_id = event.data.player_id
+            let sequence = event.data.sequence
+            let datetime =
+              dateObj.getFullYear() + '/' + (dateObj.getMonth() + 1) + '/' +
+              dateObj.getDate() + ' ' + dateObj.getHours() + ':' +
+              dateObj.getMinutes() + ':' + dateObj.getSeconds()
+            // Amount:${ flowEv.flowEvent.data.data.amount } $FLOW at ${ flowEv.flowEvent.data.datetime }`
+            if (sequence == '0') {
+              battleSequence1.push({date: datetime, player_id: player_id})
+            } else if (sequence == '1') {
+              battleSequence2.push({date: datetime, player_id: player_id, opponent: opponent})
+            } else if (sequence == '2') {
+              battleSequence3.push({date: datetime, player_id: player_id, opponent: opponent})
+            } else if (sequence == '3') {
+              battleSequence4.push({date: datetime, player_id: player_id})
+            }
+          })
+          if (battleSequence1.length > 0) {
+            if (battleSequence1.length > 2) {
+              newEventAlert = `[${(battleSequence1[0].date)}] Agent ${battleSequence1[0].player_id} and ${(battleSequence1.length -1)} agents entered to Arcana. Battle stund by.`
+              this.newEventAlertChip.push({color: 'red', message: newEventAlert});
+            } else if (battleSequence1.length > 1) {
+              newEventAlert = `[${(battleSequence1[0].date)}] Agent ${battleSequence1[0].player_id} entered to Arcana. Battle stund by.`
+              this.newEventAlertChip.push({color: 'red', message: newEventAlert});
+              newEventAlert = `[${(battleSequence1[1].date)}] Agent ${battleSequence1[1].player_id} entered to Arcana. Battle stund by.`
+              this.newEventAlertChip.push({color: 'red', message: newEventAlert});
+            } else {
+              newEventAlert = `[${(battleSequence1[0].date)}] Agent ${battleSequence1[0].player_id} entered to Arcana. Battle stund by.`
+              this.newEventAlertChip.push({color: 'red', message: newEventAlert});
+            }
+          }
+          if (battleSequence2.length > 0) {
+            if (battleSequence2.length > 2) {
+              newEventAlert = `[${(battleSequence2[0].date)}] Agent ${battleSequence2[0].player_id} and ${(battleSequence2.length -1)} agents engage in battle.`
+              this.newEventAlertChip.push({color: 'purple', message: newEventAlert});
+            } else if (battleSequence2.length > 1) {
+              newEventAlert = `[${(battleSequence2[0].date)}] Agent ${battleSequence2[0].player_id} Engage in battle To No. ${battleSequence2[0].opponent}.`
+              this.newEventAlertChip.push({color: 'purple', message: newEventAlert});
+              newEventAlert = `[${(battleSequence2[1].date)}] Agent ${battleSequence2[1].player_id} Engage in battle To No. ${battleSequence2[1].opponent}.`
+              this.newEventAlertChip.push({color: 'purple', message: newEventAlert});
+            } else {
+              newEventAlert = `[${(battleSequence2[0].date)}] Agent ${battleSequence2[0].player_id} Engage in battle To No. ${battleSequence2[0].opponent}.`
+              this.newEventAlertChip.push({color: 'purple', message: newEventAlert});
+            }
+          }
+          if (battleSequence3.length > 0) {
+            if (battleSequence3.length > 2) {
+              newEventAlert = `[${(battleSequence3[0].date)}] The ${battleSequence3.length} Battle Started on Arcana Cyberspace.`
+              this.newEventAlertChip.push({color: 'blue-darken-4', message: newEventAlert});
+            } else if (battleSequence3.length > 1) {
+              newEventAlert = `[${(battleSequence3[0].date)}] The Battle Started Between Agent ${battleSequence3[0].player_id} and No. ${battleSequence3[0].opponent}.`
+              this.newEventAlertChip.push({color: 'blue-darken-4', message: newEventAlert});
+              newEventAlert = `[${(battleSequence3[1].date)}] The Battle Started Between Agent ${battleSequence3[1].player_id} and No. ${battleSequence3[1].opponent}.`
+              this.newEventAlertChip.push({color: 'blue-darken-4', message: newEventAlert});
+            } else {
+              newEventAlert = `[${(battleSequence3[0].date)}] The Battle Started Between Agent ${battleSequence3[0].player_id} and No. ${battleSequence3[0].opponent}.`
+              this.newEventAlertChip.push({color: 'blue-darken-4', message: newEventAlert});
+            }
+          }
+          if (battleSequence4.length > 0) {
+            if (battleSequence4.length > 2) {
+              newEventAlert = `[${(battleSequence4[0].date)}] The Battle is Settled. Agent ${battleSequence4[0].player_id} and ${(battleSequence4.length -1)} agents Win.`
+              this.newEventAlertChip.push({color: 'green', message: newEventAlert});
+            } else if (battleSequence4.length > 1) {
+              newEventAlert = `[${(battleSequence4[0].date)}] The battle is settled. Agent ${battleSequence4[0].player_id} Win.`
+              this.newEventAlertChip.push({color: 'green', message: newEventAlert});
+              newEventAlert = `[${(battleSequence4[1].date)}] The battle is settled. Agent ${battleSequence4[1].player_id} Win.`
+              this.newEventAlertChip.push({color: 'green', message: newEventAlert});
+            } else {
+              newEventAlert = `[${(battleSequence4[0].date)}] The battle is settled. Agent ${battleSequence4[0].player_id} Win.`
+              this.newEventAlertChip.push({color: 'green', message: newEventAlert});
+            }
+          }
           setTimeout(() => {
-            this.newEventAlertChip = false
-          }, 4000)
+              this.newEventAlertChip = []
+            }, 4000)
         },
       })
     },
