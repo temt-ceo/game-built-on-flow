@@ -224,7 +224,7 @@
             (CODE-Of-Flow is an homage to SEGA's "Code Of Joker")
             <div><br><br><br><br>
               If you don't know Code Of Joker👇<br>
-              <a href="https://m.youtube.com/watch?v=tYioSA10Ckc">https://m.youtube.com/watch?v=tYioSA10Ckc</a><br><br><br>
+              <a href="https://m.youtube.com/watch?v=tYioSA10Ckc">https://m.youtube.com/watch?v=tYioSA10Ckc</a><br><br><br><br><br>
             </div>
           </div>
           <p v-if="address && hasNFT">
@@ -272,6 +272,7 @@
       </div>
     </div>
     <div class="header-bar">
+      <div class="your_score">{{ your_score }}</div>
       <div v-if="onMatching === 3 && game_started === true" class="remaining_time" :class="is_first == is_first_turn ? 'you' : 'opponent'">
         {{ current_turn }} | TIME: {{ turn_timer }}
       </div>
@@ -294,7 +295,7 @@
     color="success"
     icon="mdi-gavel"
     @click="show_game_dialog = true"
-    style="position: absolute; bottom: 10%; left: -5px;"
+    style="position: absolute; top: 22%; left: -5px;"
   ></v-btn>
   <v-btn
     v-if="
@@ -761,6 +762,11 @@ export default {
         this.matchingTimeup = true
       }, 60000)
     },
+    onMatching (val) {
+      if (val === 1) {
+        this.getPlayersScore()
+      }
+    },
   },
   async created() {
     this.$fcl.currentUser.subscribe(this.setupWalletInfo)
@@ -1040,7 +1046,26 @@ export default {
         })
         console.log('SCORE:', result)
         if (result && result.length === 1) {
+          let win = 0
+          let loss = 0
           this.your_score = result[0]
+          result[0].score.forEach((obj) => {
+            const key = Object.keys(obj)[0]
+            const score = obj[key]
+            if (score === '1') {
+              win++
+            } else {
+              loss++
+            }
+          })
+          this.your_score = ` ${result[0].player_name}: SCORE ${ win } Win ${ loss } Loss`
+          // this.your_score.forEach((ret) => {
+          //   if (ret === '1') {
+          //     this.player_win_score++
+          //   } else {
+          //     this.player_loss_score++
+          //   }
+          // })
         } else if(result && result.length === 2) {
           this.your_score = result[0]
           this.opponent_score = result[0]
@@ -1887,6 +1912,12 @@ video {
   text-align: center;
 }
 
+.your_score {
+  font-size: 11px;
+  margin-right: 20px;
+  text-align: right;
+}
+
 .remaining_time.opponent {
   width: 290px;
   color: #FF5722;
@@ -1998,6 +2029,12 @@ video {
     border-radius: 20px;
     margin: 0 auto;
   }
+  .header-bar {
+    font-size: 15px;
+  }
+  .section .content.top-screen {
+    top: 50px;
+  }
 }
 
 @media screen and (max-height: 800px) and (max-width: 700px) {
@@ -2041,6 +2078,9 @@ video {
   #field {
     bottom: 20%;
     right: 5%;
+  }
+  .header-bar {
+    font-size: 15px;
   }
 }
 @media screen and (max-width: 700px) and (orientation: landscape) {

@@ -1036,8 +1036,12 @@ pub contract CodeOfFlowDay6 {
     }
 
     pub fun claimWin() {
+      pre {
+        CodeOfFlowDay6.battleInfo[self.player_id] != nil : "This guy doesn't do match."
+      }
+
       if let info = CodeOfFlowDay6.battleInfo[self.player_id] {
-        if (info.last_time_turnend! > getCurrentBlock().timestamp + 60.0 && info.is_first != info.is_first_turn) {
+        if (info.last_time_turnend! + 60.0 < getCurrentBlock().timestamp && info.is_first != info.is_first_turn) {
           let opponent = info.opponent
           CodeOfFlowDay6.battleInfo.remove(key: self.player_id)
           CodeOfFlowDay6.battleInfo.remove(key: opponent)
