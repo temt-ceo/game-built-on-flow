@@ -291,7 +291,7 @@
     style="position: absolute; top: 20px; left: -5px;"
   ></v-btn>
   <v-btn
-    v-if="is_first !== is_first_turn && turn_timer === '00' && onMatching === 3"
+    v-if="is_first !== is_first_turn && turn_timer === '--' && onMatching === 3"
     class="ma-1"
     color="success"
     icon="mdi-gavel"
@@ -401,7 +401,7 @@
         </v-card-text>
         <v-btn
           color="success"
-          @click="gameEndDialog = false; onMatching = 1"
+          @click="gameEndDialog = false; onMatching = 1; turn_timer = ''"
           style="margin: 0 auto 40px; width: 50%; display: block; "
         >
           OK
@@ -1064,16 +1064,21 @@ export default {
             }
           })
           this.your_score = ` ${result[0].player_name}: Results ${ win } Win ${ loss } Loss`
-          // this.your_score.forEach((ret) => {
-          //   if (ret === '1') {
-          //     this.player_win_score++
-          //   } else {
-          //     this.player_loss_score++
-          //   }
-          // })
         } else if(result && result.length === 2) {
+          let win = 0
+          let loss = 0
           this.your_score = result[0]
-          this.opponent_score = result[0]
+          result[0].score.forEach((obj) => {
+            const key = Object.keys(obj)[0]
+            const score = obj[key]
+            if (score === '1') {
+              win++
+            } else {
+              loss++
+            }
+          })
+          this.your_score = ` ${result[0].player_name}: Results ${ win } Win ${ loss } Loss`
+          // this.opponent_score = ` ${result[1].player_name}: Results ${ win } Win ${ loss } Loss`
         }
     },
     async getCurrentStatus() {
@@ -1285,6 +1290,7 @@ export default {
             } else {
               if (transactionName === 'claimWin' || transactionName === 'surrendar') {
                 this.onMatching = 1
+                this.turn_timer = ''
               } else if (this.is_first_turn != this.is_first && this.onMatching === 3) {
                 this.gameEndDialog = true
               }
@@ -1439,8 +1445,13 @@ export default {
       if (pastTime <= 0) {
         this.turn_timer = '00' // DEBUG
         if (this.is_first !== this.is_first_turn) {
-          this.battleDialogText = 'TIME UP'
-          this.battleDialogText2 = "Oppenent seems doesn't do any action in this turn. Claim the win of this game now!"
+          setTimeout(() => {
+            if (this.turn_timer === '00') {
+              this.turn_timer = '--'
+              this.battleDialogText = 'TIME UP'
+              this.battleDialogText2 = "Oppenent seems doesn't do any action in this turn. Claim the win of this game now!"
+            }
+          }, 30000)
         } else if (!this.show_game_dialog && this.turnChangeActionDone === false) {
           this.battleDialogText = 'TIME UP'
           this.battleDialogText2 = "Give the turn to the opponent's turn."
