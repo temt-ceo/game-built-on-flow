@@ -369,7 +369,8 @@ pub contract CodeOfFlowDayAlpha1 {
         }
       }
       if (drawed_pos.length == 0) {
-        panic("Invalid argument.")
+        // Maybe the player did marigan more than 5 times. Set first cards to avoid errors.
+        drawed_pos = self.marigan_cards[0]
       }
 
 

@@ -291,12 +291,22 @@
     style="position: absolute; top: 20px; left: -5px;"
   ></v-btn>
   <v-btn
-    v-if="is_first !== is_first_turn && turn_timer === '00' && onMatching === 3"
+    v-if="is_first !== is_first_turn && turn_timer === '--' && onMatching === 3"
     class="ma-1"
     color="success"
     icon="mdi-gavel"
     @click="show_game_dialog = true"
-    style="position: absolute; top: 22%; left: -5px;"
+    style="position: absolute; top: 19%; left: -5px;"
+  ></v-btn>
+  <v-btn
+    v-if="
+      onMatching === 3
+    "
+    class="ma-1"
+    color="indigo"
+    icon="mdi-home"
+    @click="tutorialDialog = true"
+    style="position: absolute; bottom: 55%; left: -5px;"
   ></v-btn>
   <v-btn
     v-if="
@@ -318,8 +328,7 @@
       display_cardinfo !== '' &&
       (display_card_type === 1 || display_card_type === 3) &&
       is_first === is_first_turn &&
-      turn_timer !== '00' &&
-      (selected_card_cost <= your_cp || this.display_card_type === 3) &&
+      (selected_card_cost <= your_cp || selected_card_category > 0) &&
       !(display_card_type === 3 && attack_unit_cards.includes(display_card_position))
     "
     class="ma-1"
@@ -397,11 +406,43 @@
     <div v-if="gameEndDialog" class="v-overlay v-overlay--active v-theme--light v-locale--is-ltr v-dialog v-overlay--scroll-blocked" aria-role="dialog" aria-modal="true" style="z-index: 2400;"><div class="v-overlay__content" style="width: auto; height: 290px;">
       <v-card color="yellow-lighten-1">
         <v-card-text color="yellow-lighten-1">
-          <div class="text-h6 pa-12">Your victory is confirmed!</div>
+          <div class="text-h6 pa-12">A.C.T.I.S:<br>Congratulation, your victory is confirmed!<br><br>Terminates the battle sequence...</div>
         </v-card-text>
         <v-btn
           color="success"
-          @click="gameEndDialog = false; onMatching = 1"
+          @click="gameEndDialog = false; onMatching = 1; turn_timer = ''"
+          style="margin: 0 auto 40px; width: 50%; display: block; "
+        >
+          OK
+        </v-btn>
+      </v-card>
+    </div></div>
+    <div v-if="tutorialDialog" class="v-overlay v-overlay--active v-theme--light v-locale--is-ltr v-dialog v-overlay--scroll-blocked" aria-role="dialog" aria-modal="true" style="z-index: 2500;"><div class="v-overlay__content" style="width: auto; max-width: 600px; height: 290px;">
+      <v-card color="yellow-lighten-1">
+        <v-card-text color="yellow-lighten-1">
+          <div class="text-h6 pa-12">A.C.T.I.S:<br>
+            If you are unable to take any action, please reload your web browser.<br><br>
+            Rule1. If you are not ahead, you are awarded 3 CP on turn 1 to eliminate any disadvantage.<br>
+            Rule2. If the lives are the same at the end of the 10th turn, the latter wins.<br>
+            Rule3. Up to 7 cards can be held in the hand.</div>
+        </v-card-text>
+        <v-btn
+          color="success"
+          @click="tutorialDialog = false;"
+          style="margin: 0 auto 40px; width: 50%; display: block; "
+        >
+          OK
+        </v-btn>
+      </v-card>
+    </div></div>
+    <div v-if="gameEndedByOpponentDialog" class="v-overlay v-overlay--active v-theme--light v-locale--is-ltr v-dialog v-overlay--scroll-blocked" aria-role="dialog" aria-modal="true" style="z-index: 2400;"><div class="v-overlay__content" style="width: auto; height: 290px;">
+      <v-card color="yellow-lighten-1">
+        <v-card-text color="yellow-lighten-1">
+          <div class="text-h6 pa-12">The game is closed by opponent.<br>One possibility is that the opposing agent may have filed for victory because you did not end your turn by time.</div>
+        </v-card-text>
+        <v-btn
+          color="success"
+          @click="gameEndDialog = false; onMatching = 1; turn_timer = ''"
           style="margin: 0 auto 40px; width: 50%; display: block; "
         >
           OK
@@ -647,8 +688,10 @@ export default {
       walletUser: {},
       watchCurrentStatusFlg: false,
       loadingDialog: false,
+      tutorialDialog: false,
       gameStartDialog: false,
       gameEndDialog: false,
+      gameEndedByOpponentDialog: false,
       turnChangedDialog: false,
       registered: null,
       newEventAlertChip: [],
@@ -740,6 +783,7 @@ export default {
       enemy_skill_target: {},
       defenced_unit: {},
       defenced_used_intercept: {},
+      current_win_count: 0,
       address: '',
       hasNFT: false,
       nftType: 'human',
@@ -1042,39 +1086,50 @@ export default {
       this.marigan_cards = await this.get_marigan_cards()
       await this.getPlayersScore()
     },
-    async getPlayersScore() {
-        const result = await this.$fcl.query({
-          cadence: FlowScripts.getPlayersScore,
-          args: (arg, t) => [
-            arg(this.address, t.Address)
-          ]
+    async getPlayersScore(returnFlg) {
+      const result = await this.$fcl.query({
+        cadence: FlowScripts.getPlayersScore,
+        args: (arg, t) => [
+          arg(this.address, t.Address)
+        ]
+      })
+      console.log('SCORE:', result)
+      let win = 0
+      if (result && result.length === 1) {
+        win = 0
+        let loss = 0
+        this.your_score = result[0]
+        result[0].score.forEach((obj) => {
+          const key = Object.keys(obj)[0]
+          const score = obj[key]
+          if (score === '1') {
+            win++
+          } else {
+            loss++
+          }
         })
-        console.log('SCORE:', result)
-        if (result && result.length === 1) {
-          let win = 0
-          let loss = 0
-          this.your_score = result[0]
-          result[0].score.forEach((obj) => {
-            const key = Object.keys(obj)[0]
-            const score = obj[key]
-            if (score === '1') {
-              win++
-            } else {
-              loss++
-            }
-          })
-          this.your_score = ` ${result[0].player_name}: Results ${ win } Win ${ loss } Loss`
-          // this.your_score.forEach((ret) => {
-          //   if (ret === '1') {
-          //     this.player_win_score++
-          //   } else {
-          //     this.player_loss_score++
-          //   }
-          // })
-        } else if(result && result.length === 2) {
-          this.your_score = result[0]
-          this.opponent_score = result[0]
-        }
+        this.your_score = ` ${result[0].player_name}: Results ${ win } Win ${ loss } Loss`
+      } else if(result && result.length === 2) {
+        win = 0
+        let loss = 0
+        this.your_score = result[0]
+        result[0].score.forEach((obj) => {
+          const key = Object.keys(obj)[0]
+          const score = obj[key]
+          if (score === '1') {
+            win++
+          } else {
+            loss++
+          }
+        })
+        this.your_score = ''
+        // this.opponent_score = ` ${result[1].player_name}: Results ${ win } Win ${ loss } Loss`
+      }
+      if (returnFlg) {
+        return win
+      } else {
+        this.current_win_count = win
+      }
     },
     async getCurrentStatus() {
         const result = await this.$fcl.query({
@@ -1142,6 +1197,17 @@ export default {
             console.log(transactionName, result)
             if (result) {
               if (!isNaN(parseFloat(result))) {
+                if (this.onMatching === 3) {
+                  // 対戦相手が勝利申請した可能性がある
+                  if (this.is_first_turn == this.is_first && this.onMatching === 3) {
+                    this.gameEndedByOpponentDialog = true
+                    this.show_game_dialog = false
+                    this.show_battle_dialog = false
+                    this.show_surrendar_dialog = false
+                    this.loadingDialog = false
+                  }
+                }
+
                 let matchingTime = parseFloat(result)
                 let d = new Date()
                 if (d.getTime() / 1000 - matchingTime > 60) {
@@ -1153,7 +1219,7 @@ export default {
                     return
                   }
                   console.log('Time', d.getTime() / 1000 - matchingTime)
-                  if (transactionName !== 'watchCurrentStatus') {
+                  if (transactionName !== 'watchCurrentStatus' && transactionName !== 'matchingStart') {
                     clearInterval(timerID)
                   }
                 }
@@ -1285,6 +1351,7 @@ export default {
             } else {
               if (transactionName === 'claimWin' || transactionName === 'surrendar') {
                 this.onMatching = 1
+                this.turn_timer = ''
               } else if (this.is_first_turn != this.is_first && this.onMatching === 3) {
                 this.gameEndDialog = true
               }
@@ -1292,6 +1359,10 @@ export default {
               this.show_battle_dialog = false
               this.show_surrendar_dialog = false
               this.loadingDialog = false
+              const winCount = await this.getPlayersScore(true)
+              if (winCount > this.current_win_count) {
+                this.gameEndDialog = true
+              }
             }
           } else {
             clearInterval(timerID)
@@ -1432,15 +1503,31 @@ export default {
 
     },
     gameControl () {
+      if (this.onMatching !== 3) {
+        return
+      }
       const now = new Date()
       this.current_turn = `Turn ${this.turn} | ${this.is_first === this.is_first_turn ? 'Your' : "Enemy"} Turn`
       const p = this.is_first_turn ? 0 : 1
       const pastTime = 60 - ((now.getTime() / 1000) - (this.last_time_turnend.getTime() / 1000))
       if (pastTime <= 0) {
-        this.turn_timer = '00' // DEBUG
+        this.turn_timer = '00'
         if (this.is_first !== this.is_first_turn) {
-          this.battleDialogText = 'TIME UP'
-          this.battleDialogText2 = "Oppenent seems doesn't do any action in this turn. Claim the win of this game now!"
+          if (pastTime < -60) {
+            if (this.turn_timer === '00') {
+              this.turn_timer = '--'
+              this.battleDialogText = 'TIME UP'
+              this.battleDialogText2 = "Oppenent seems doesn't do any action in this turn. Claim the win of this game now!"
+            }
+          } else {
+            setTimeout(() => {
+              if (this.turn_timer === '00') {
+                this.turn_timer = '--'
+                this.battleDialogText = 'TIME UP'
+                this.battleDialogText2 = "Oppenent seems doesn't do any action in this turn. Claim the win of this game now!"
+              }
+            }, 30000)
+          }
         } else if (!this.show_game_dialog && this.turnChangeActionDone === false) {
           this.battleDialogText = 'TIME UP'
           this.battleDialogText2 = "Give the turn to the opponent's turn."
@@ -1801,6 +1888,7 @@ export default {
           events.forEach((event) => {
             let dateObj = new Date(event.blockTimestamp)
             let player_id = event.data.player_id
+            let opponent = event.data.opponent
             let sequence = event.data.sequence
             let datetime =
               dateObj.getFullYear() + '/' + (dateObj.getMonth() + 1) + '/' +
