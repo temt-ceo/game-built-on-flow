@@ -324,7 +324,7 @@
     :color="display_card_type !== 3  ? 'purple' : 'deep-orange-accent-4'"
     :icon="display_card_type !== 3  ? 'mdi-call-split' : 'mdi-sword'"
     @click="showBattleDialogWindow"
-    style="position: absolute; bottom: 40px; left: -5px;"
+    style="position: absolute; bottom: 60px; left: -5px;"
   ></v-btn>
   <v-row justify="center">
     <div v-if="marigan_dialog" class="v-overlay v-overlay--active v-theme--light v-locale--is-ltr v-dialog v-overlay--scroll-blocked" aria-role="dialog" aria-modal="true" style="z-index: 2400;"><div class="v-overlay__scrim"></div><div class="v-overlay__content" style="width: auto;"><div class="v-card v-theme--light v-card--density-default v-card--variant-elevated"><!----><div class="v-card__loader"><div class="v-progress-linear v-theme--light" role="progressbar" aria-hidden="true" aria-valuemin="0" aria-valuemax="100" style="top: 0px; height: 0px; --v-progress-linear-height:2px; left: 50%; transform: translateX(-50%);"><!----><div class="v-progress-linear__background" style="width: 100%;"></div><div class="v-progress-linear__indeterminate"><div class="v-progress-linear__indeterminate long"></div><div class="v-progress-linear__indeterminate short"></div></div><!----></div></div><!----><!----><header class="v-toolbar v-toolbar--density-default bg-primary v-theme--light"><!----><div class="v-toolbar__content" style="height: 64px;"><!----><div class="v-toolbar-title">
@@ -802,18 +802,19 @@ export default {
         this.your_hand[4] = this.marigan_cards[this.marigan_count][3]
       }
     },
-    countdown() { // DUBUG
-      // this.stopCountdownTimer = setInterval(() => {
-      //   this.turn_timer -= 1
-      //   if (this.turn_timer <= 0) {
-      //     this.turn_timer = '00'
-      //     clearInterval(this.stopCountdownTimer)
-      //     this.stopCountdownTimer = null
-      //   }
-      // }, 1000)
+    countdown() { // DEBUG
+      this.stopCountdownTimer = setInterval(() => {
+        this.turn_timer -= 1
+        if (this.turn_timer <= 0) {
+          this.turn_timer = '00'
+          clearInterval(this.stopCountdownTimer)
+          this.stopCountdownTimer = null
+        }
+      }, 1000)
     },
     async gameStart() {
       this.show_game_dialog = false
+      this.defence_executed = false
       const arg1 = [this.your_hand[1], this.your_hand[2], this.your_hand[3], this.your_hand[4]]
       const transactionId = await this.$fcl.mutate({
         cadence: FlowTransactions.gameStart,
@@ -1232,6 +1233,8 @@ export default {
                     this.enemy_skill_target = {}
                   }
                   this.turn = result.turn
+                  this.your_cp = result.your_cp
+                  this.opponent_cp = result.opponent_cp
                   this.is_first = result.is_first
                   this.is_first_turn = result.is_first_turn
                   this.last_time_turnend = new Date(parseFloat(result.last_time_turnend) * 1000)
@@ -1406,14 +1409,14 @@ export default {
       const p = this.is_first_turn ? 0 : 1
       const pastTime = 60 - ((now.getTime() / 1000) - (this.last_time_turnend.getTime() / 1000))
       if (pastTime <= 0) {
-        // this.turn_timer = '00' // DUBUG
+        this.turn_timer = '00' // DEBUG
         if (this.is_first !== this.is_first_turn) {
           this.battleDialogText = 'TIME UP'
           this.battleDialogText2 = "Oppenent seems doesn't do any action in this turn. Claim the win of this game now!"
         } else if (!this.show_game_dialog && this.turnChangeActionDone === false) {
           this.battleDialogText = 'TIME UP'
           this.battleDialogText2 = "Give the turn to the opponent's turn."
-          // this.show_game_dialog = true // DEBUG
+          this.show_game_dialog = true // DEBUG
         }
       } else {
         if (this.stopCountdownTimer === null) {
@@ -1427,31 +1430,31 @@ export default {
       this.attack_unit_cards.forEach((card_position) => {
         this.enemy_skill_target[card_position] = this.enemy_skill_target[card_position] || 0
       })
-      console.log(999999, 'attack_unit_cards', this.attack_unit_cards, 'enemy_skill_target', this.enemy_skill_target, 'your_trigger_cards', this.your_trigger_cards)
+      console.log(999999, parseInt(this.enemy_skill_target[3]), 'attack_unit_cards', this.attack_unit_cards, 'enemy_skill_target', this.enemy_skill_target, 'your_trigger_cards', this.your_trigger_cards)
       const transactionId = await this.$fcl.mutate({
         cadence: FlowTransactions.turnChange,
         args: (arg, t) => [
           arg(this.attack_unit_cards, t.Array(t.UInt8)), // attacking_cards
-          arg({
-            key: 1, value: parseInt(this.enemy_skill_target[1]) || 0,
-            key: 2, value: parseInt(this.enemy_skill_target[2]) || 0,
-            key: 3, value: parseInt(this.enemy_skill_target[3]) || 0,
-            key: 4, value: parseInt(this.enemy_skill_target[4]) || 0,
-            key: 5, value: parseInt(this.enemy_skill_target[5]) || 0,
-          }, t.Dictionary({ key: t.UInt8, value: t.UInt8 })), // enemy_skill_target
-          arg([{
-            key: 1, value: parseInt(this.your_trigger_cards[1]) || 0,
-            key: 2, value: parseInt(this.your_trigger_cards[2]) || 0,
-            key: 3, value: parseInt(this.your_trigger_cards[3]) || 0,
-            key: 4, value: parseInt(this.your_trigger_cards[4]) || 0,
-          }], t.Dictionary({ key: t.UInt8, value: t.UInt16 })), // trigger_cards
-          arg({
-            key: 1, value: this.used_intercept_position[1] ? this.used_intercept_position : [],
-            key: 2, value: this.used_intercept_position[2] ? this.used_intercept_position : [],
-            key: 3, value: this.used_intercept_position[3] ? this.used_intercept_position : [],
-            key: 4, value: this.used_intercept_position[4] ? this.used_intercept_position : [],
-            key: 5, value: this.used_intercept_position[5] ? this.used_intercept_position : [],
-          }, t.Dictionary({ key: t.UInt8, value: t.Array(t.UInt8) })) // used_intercept_position
+          arg([
+            {key: 1, value: parseInt(this.enemy_skill_target[1]) || 0},
+            {key: 2, value: parseInt(this.enemy_skill_target[2]) || 0},
+            {key: 3, value: parseInt(this.enemy_skill_target[3]) || 0},
+            {key: 4, value: parseInt(this.enemy_skill_target[4]) || 0},
+            {key: 5, value: parseInt(this.enemy_skill_target[5]) || 0},
+          ], t.Dictionary({ key: t.UInt8, value: t.UInt8 })), // enemy_skill_target
+          arg([
+            {key: 1, value: parseInt(this.your_trigger_cards[1]) || 0},
+            {key: 2, value: parseInt(this.your_trigger_cards[2]) || 0},
+            {key: 3, value: parseInt(this.your_trigger_cards[3]) || 0},
+            {key: 4, value: parseInt(this.your_trigger_cards[4]) || 0},
+          ], t.Dictionary({ key: t.UInt8, value: t.UInt16 })), // trigger_cards
+          arg([
+            {key: 1, value: this.used_intercept_position[1] ? this.used_intercept_position : []},
+            {key: 2, value: this.used_intercept_position[2] ? this.used_intercept_position : []},
+            {key: 3, value: this.used_intercept_position[3] ? this.used_intercept_position : []},
+            {key: 4, value: this.used_intercept_position[4] ? this.used_intercept_position : []},
+            {key: 5, value: this.used_intercept_position[5] ? this.used_intercept_position : []},
+          ], t.Dictionary({ key: t.UInt8, value: t.Array(t.UInt8) })) // used_intercept_position
         ],
         proposer: this.$fcl.authz,
         payer: this.$fcl.authz,
@@ -1470,19 +1473,19 @@ export default {
       const transactionId = await this.$fcl.mutate({
         cadence: FlowTransactions.startYourTurn,
         args: (arg, t) => [
-          arg([{
-            key: 1, value: this.defenced_unit[1] || 0,
-            key: 2, value: this.defenced_unit[2] || 0,
-            key: 3, value: this.defenced_unit[3] || 0,
-            key: 4, value: this.defenced_unit[4] || 0,
-            key: 5, value: this.defenced_unit[4] || 0,
-          }], t.Dictionary({ key: t.UInt8, value: t.UInt8 })), // blocked_unit
-          arg([{
-            key: 1, value: this.defenced_used_intercept[1] || 0,
-            key: 2, value: this.defenced_used_intercept[2] || 0,
-            key: 3, value: this.defenced_used_intercept[3] || 0,
-            key: 4, value: this.defenced_used_intercept[4] || 0,
-          }], t.Dictionary({ key: t.UInt8, value: t.UInt8 })), // used_intercept_position
+          arg([
+            {key: 1, value: this.defenced_unit[1] || 0},
+            {key: 2, value: this.defenced_unit[2] || 0},
+            {key: 3, value: this.defenced_unit[3] || 0},
+            {key: 4, value: this.defenced_unit[4] || 0},
+            {key: 5, value: this.defenced_unit[4] || 0},
+          ], t.Dictionary({ key: t.UInt8, value: t.UInt8 })), // blocked_unit
+          arg([
+            {key: 1, value: this.defenced_used_intercept[1] || 0},
+            {key: 2, value: this.defenced_used_intercept[2] || 0},
+            {key: 3, value: this.defenced_used_intercept[3] || 0},
+            {key: 4, value: this.defenced_used_intercept[4] || 0},
+          ], t.Dictionary({ key: t.UInt8, value: t.UInt8 })), // used_intercept_position
         ],
         proposer: this.$fcl.authz,
         payer: this.$fcl.authz,
@@ -1499,18 +1502,18 @@ export default {
     async putCardOnTheField(field_position, card_id, used_intercept_card, enemy_skill_target) {
       this.customLoading = true
       setTimeout(() => (this.customLoading = false), 5000)
-      console.log("The Card Put on the Field:", card_id, field_position, card_id, used_intercept_card, enemy_skill_target)
+      console.log("The Card Put on the Field:", this.your_trigger_cards)
       const transactionId = await this.$fcl.mutate({
         cadence: FlowTransactions.putCardOnField,
         args: (arg, t) => [
           arg([{key: field_position, value: card_id }], t.Dictionary({ key: t.UInt8, value: t.UInt16 })), // unit_card
           arg(enemy_skill_target || 0, t.UInt8), // enemy_skill_target
-          arg([{
-            key: 1, value: this.your_trigger_cards[1] || 0,
-            key: 2, value: this.your_trigger_cards[2] || 0,
-            key: 3, value: this.your_trigger_cards[4] || 0,
-            key: 4, value: this.your_trigger_cards[4] || 0,
-          }], t.Dictionary({ key: t.UInt8, value: t.UInt16 })), // trigger_cards
+          arg([
+            {key: 1, value: this.your_trigger_cards[1] || 0},
+            {key: 2, value: this.your_trigger_cards[2] || 0},
+            {key: 3, value: this.your_trigger_cards[4] || 0},
+            {key: 4, value: this.your_trigger_cards[4] || 0},
+          ], t.Dictionary({ key: t.UInt8, value: t.UInt16 })), // trigger_cards
           arg(used_intercept_card, t.Array(t.UInt8)) // used_intercept_positions
         ],
         proposer: this.$fcl.authz,
@@ -1725,7 +1728,7 @@ export default {
                       }
                     }
                   } else if (card.category == 1 && card.skill.trigger_1 == 2) {
-                    await this.confirmRef.confirm('Trigger Card has been invoked', `${card.name}" trigger card is activated!`, {color: 'red'})
+                    await this.confirmRef.alert('Trigger Card has been invoked', `${card.name}" trigger card is activated!`, {color: 'red'})
                     if (!this.used_intercept_position[this.display_card_position]) {
                       this.used_intercept_position[this.display_card_position] = []
                       this.used_intercept_position[this.display_card_position].push(card.card_id)
@@ -2008,7 +2011,7 @@ video {
   }
 }
 /* landscape対応 */
-@media (orientation: landscape) and (max-width: 1000px) {
+@media (orientation: landscape) and (max-width: 950px) {
   .section {
     height: calc(100vh);
   }

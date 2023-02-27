@@ -592,6 +592,7 @@ pub contract CodeOfFlowDay6 {
           } else {
             info.your_field_unit_action[field_position] = 1
           }
+          info.your_cp = info.your_cp - unit.cost
 
           // ハンドの整合性を合わせる(フィールドに移動した分、ハンドから取る)
           var isRemoved2 = false
@@ -721,8 +722,6 @@ pub contract CodeOfFlowDay6 {
                 var target: UInt8 = 1
                 if enemy_skill_target[position] != nil {
                   target = enemy_skill_target[position]!
-                } else {
-                  panic(position.toString()) // DEBUG
                 }
                 if let opponent_field_unit_bp_amount_of_change = info.opponent_field_unit_bp_amount_of_change[target] {
                   info.opponent_field_unit_bp_amount_of_change[target] = opponent_field_unit_bp_amount_of_change + (-1 * Int(unit.skill.amount_1))
@@ -734,8 +733,6 @@ pub contract CodeOfFlowDay6 {
                 var target: UInt8 = 1
                 if enemy_skill_target[position] != nil {
                   target = enemy_skill_target[position]!
-                } else {
-                  panic(position.toString()) // DEBUG
                 }
                 if (info.opponent_field_unit_action[target] == 3) { // // 2: can attack, 1: can defence only, 0: nothing can do.
                   if let opponent_field_unit_bp_amount_of_change = info.opponent_field_unit_bp_amount_of_change[target] {
@@ -918,7 +915,7 @@ pub contract CodeOfFlowDay6 {
                 }
               }
             }
-            if (used_intercept_position[position] != nil) {
+            if (used_intercept_position[position] != nil && used_intercept_position[position] != 0) {
               // Used Trigger or Intercept Card
               let card_position = used_intercept_position[position]!
               let trigger_card_id = info.your_trigger_cards[card_position]!
