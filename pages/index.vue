@@ -28,7 +28,8 @@
             Player information has not yet been created on the blockchain.<br>Please press the Create Player button below.
           </div>
           <div v-if="matchingTimeup" style="padding: 0 20px; font-weight: bold; color: #311B92;">
-            タイムアップしました。もう一度マッチングボタンを押してください。
+            Time Expired. Please press the Matching button again.
+            If you have friends, invite them to join the game.
           </div>
           <p>
             <span style="margin: 20px auto; display: block; width: 130px;">
@@ -831,7 +832,7 @@ export default {
         authorizations: [this.$fcl.authz],
         limit: 999
       })
-      console.log(`TransactionId: ${transactionId}`, arg1)
+      console.log(`TransactionId: ${transactionId}`)
       this.loadingDialog = true
       this.checkTransactionComplete('gameStart')
     },
@@ -993,11 +994,16 @@ export default {
       }
     },
     async matchingSuccess () {
-      this.onMatching = 2
-      const audio = document.getElementById("audio1");
-      audio.play();
-      const video1 = document.getElementById("video1");
-      video1.play();
+      let intViewportWidth = window.innerWidth
+      let videoTime = 0
+      if (intViewportWidth > 950) {
+        this.onMatching = 2
+        const audio = document.getElementById("audio1");
+        audio.play();
+        const video1 = document.getElementById("video1");
+        video1.play();
+        videoTime = 17000
+      }
       setTimeout(() => {
         this.onMatching = 3
         setTimeout(() => {
@@ -1032,7 +1038,7 @@ export default {
             this.game_start_done = true
           }, 7300)
         }
-      }, 17000)
+      }, videoTime)
       this.marigan_cards = await this.get_marigan_cards()
       await this.getPlayersScore()
     },
@@ -1877,6 +1883,10 @@ export default {
 }
 </script>
 <style>
+.navbar {
+  z-index: 99;
+}
+
 .v-chip {
   position: absolute;
   right: 0;
@@ -1983,7 +1993,7 @@ video {
 }
 
 .your_score {
-  font-size: 11px;
+  font-size: 10px;
   margin-right: 20px;
   text-align: right;
 }
@@ -2121,10 +2131,6 @@ video {
 @media (orientation: landscape) and (max-width: 950px) {
   .section {
     height: calc(100vh);
-  }
-
-  .navbar {
-    z-index: 99;
   }
 
   .navbar.header {

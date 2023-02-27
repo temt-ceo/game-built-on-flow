@@ -380,7 +380,7 @@ pub contract CodeOfFlowDayAlpha1 {
         // Set hand
         var key: UInt8 = 1
         for pos in drawed_pos {
-          let card_id = info.your_remain_deck.remove(at: pos - (key - 1))
+          let card_id = info.your_remain_deck.remove(at: pos)
           info.your_hand[key] = card_id
           key = key + 1
         }
