@@ -668,6 +668,20 @@ pub contract CodeOfFlowDayAlpha1 {
           if (trigger_cards[position] != 0) {
             info.your_trigger_cards[position] = trigger_cards[position]
           }
+          // ハンドの整合性を合わせる(トリガーゾーンに移動した分、ハンドから取る)
+          var isRemoved = false
+          if info.your_trigger_cards[position] != trigger_cards[position] && trigger_cards[position] != 0 {
+            let card_id = trigger_cards[position]
+            for hand_position in info.your_hand.keys {
+                if card_id == info.your_hand[hand_position] {
+                  info.your_hand[hand_position] = nil
+                  isRemoved = true
+                }
+            }
+            if (isRemoved == false) {
+              panic("You set the card on trigger zone which is not exist in your hand")
+            }
+          }
         }
 
         // Set Field Unit Actions To Defence Only

@@ -5,7 +5,7 @@
             <v-toolbar dark :color="options.color" dense flat>
                 <v-toolbar-title class="white--text">{{ title }}</v-toolbar-title>
             </v-toolbar>
-            <v-card-text v-show="!!message" class="pa-4">{{ message }}</v-card-text>
+            <v-card-text v-show="!!message" class="pa-4" style="font-size: 18px;">{{ message }}</v-card-text>
             <v-radio-group v-if="this.dialogType == 3" v-model="radio">
                 <v-radio v-for="obj in targetGroup" :label="  obj.name" :value="obj.position" :key="obj.position"></v-radio>
             </v-radio-group>
