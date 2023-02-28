@@ -21,6 +21,13 @@ URL is https://hackathon.d8gpbl0qw42np.amplifyapp.com/
 
 <img width="314" alt="CODE-Of-Flow" src="https://user-images.githubusercontent.com/58613670/221454777-4163b675-e8ca-44db-9f93-21ff93c4393b.png">
 
+### How it works
+System Background is like below image.<br>
+<img width="767" alt="system_arkitecture" src="https://user-images.githubusercontent.com/58613670/221802473-dd0572b7-54f3-41fd-8832-5267d59f8ec7.png">
+This is the idea I planed to create for whole game APIs. But AWS's Lambda has the cron job function which is only available for one minite or longer.<br>
+If I need 3seconds each GraphQL subscription API, I have to set AWS's Step Function. But unfortunately this is created while the hackathon period, so I wanted to the system more simple.<br>
+This GraphQL api is only used for the notifications to notify game users the useful informations using Blockchain Events.
+
 # Extending the ecosystem
 I am planning to share the informations how I implemented the source code written in Smart Contract Language Cadence n Linkedin.<br>
 This includes:<br><br>
