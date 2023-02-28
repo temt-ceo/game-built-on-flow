@@ -479,6 +479,15 @@ pub contract CodeOfFlowDayAlpha1 {
                   } else {
                     info.opponent_field_unit_bp_amount_of_change[opponent_position] = -1 * Int(unit.skill.amount_1)
                   }
+                  // assess is this damage enough to beat the unit.
+                  if let opponent = info.opponent_field_unit[opponent_position] {
+                    let card_id: UInt16 = info.opponent_field_unit[opponent_position]!
+                    let unit = CodeOfFlowDayAlpha1.cardInfo[card_id]!
+                    if Int(unit.bp) < info.opponent_field_unit_bp_amount_of_change[opponent_position]! * -1 {
+                      // beat the opponent
+                      info.opponent_field_unit[opponent_position] = nil
+                    }
+                  }
                 }
               // Damage to one target unit
               } else if (unit.skill.ask_1 == 1) {
@@ -488,6 +497,15 @@ pub contract CodeOfFlowDayAlpha1 {
                       info.opponent_field_unit_bp_amount_of_change[target] = opponent_field_unit_bp_amount_of_change + (-1 * Int(unit.skill.amount_1))
                     } else {
                       info.opponent_field_unit_bp_amount_of_change[target] = -1 * Int(unit.skill.amount_1)
+                    }
+                    // assess is this damage enough to beat the unit.
+                    if let opponent = info.opponent_field_unit[target] {
+                      let card_id: UInt16 = info.opponent_field_unit[target]!
+                      let unit = CodeOfFlowDayAlpha1.cardInfo[card_id]!
+                      if Int(unit.bp) < info.opponent_field_unit_bp_amount_of_change[target]! * -1 {
+                        // beat the opponent
+                        info.opponent_field_unit[target] = nil
+                      }
                     }
                   }
                 }
@@ -564,13 +582,14 @@ pub contract CodeOfFlowDayAlpha1 {
                           info.opponent_field_unit_bp_amount_of_change[target] = -1 * Int(trigger.skill.amount_1)
                         }
                         // assess is this damage enough to beat the unit.
-                        let card_id: UInt16 = info.opponent_field_unit[target]!
-                        let unit = CodeOfFlowDayAlpha1.cardInfo[card_id]!
-                        if Int(unit.bp) < info.opponent_field_unit_bp_amount_of_change[target]! * -1 {
-                          // beat the opponent
-                          info.opponent_field_unit[target] = nil
+                        if let opponent = info.opponent_field_unit[target] {
+                          let card_id: UInt16 = info.opponent_field_unit[target]!
+                          let unit = CodeOfFlowDayAlpha1.cardInfo[card_id]!
+                          if Int(unit.bp) < info.opponent_field_unit_bp_amount_of_change[target]! * -1 {
+                            // beat the opponent
+                            info.opponent_field_unit[target] = nil
+                          }
                         }
-
                       // Omly target which has no action right
                       } else if (trigger.skill.ask_1 == 2) {
                         if (info.opponent_field_unit_action[target] == 3) { // // 2: can attack, 1: can defence only, 0: nothing can do.
@@ -690,9 +709,6 @@ pub contract CodeOfFlowDayAlpha1 {
         info.last_time_turnend = getCurrentBlock().timestamp
         // トリガーゾーンのカードを合わせる
         for position in trigger_cards.keys {
-          if (trigger_cards[position] != 0) {
-            info.your_trigger_cards[position] = trigger_cards[position]
-          }
           // ハンドの整合性を合わせる(トリガーゾーンに移動した分、ハンドから取る)
           var isRemoved = false
           if info.your_trigger_cards[position] != trigger_cards[position] && trigger_cards[position] != 0 {
@@ -706,6 +722,9 @@ pub contract CodeOfFlowDayAlpha1 {
             if (isRemoved == false) {
               panic("You set the card on trigger zone which is not exist in your hand")
             }
+          }
+          if (trigger_cards[position] != 0) {
+            info.your_trigger_cards[position] = trigger_cards[position]
           }
         }
 
