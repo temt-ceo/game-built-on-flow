@@ -3,10 +3,11 @@
     <div class="content top-screen">
       <v-chip
         v-for="(chip, i) in newEventAlertChip"
-        class="ma-2"
+        :class="chip.color"
         :color="chip.color"
-        :style="'top:' + (i * 50) + 'px'"
+        :style="'top:' + (i * 40) + 'px'"
         text-color="white"
+        class="ma-2"
       >
         {{ chip.message }}
       </v-chip>
@@ -139,7 +140,8 @@
                     cover
                     @click="showCardInfo(opponent_field_unit[n], 4, n)"
                   ></v-img>
-                  <div style="position: absolute; top: 60px; font-size: 12px;">
+                  <div style="position: absolute; top: 60px; font-size: 12px;">{{  opponent_field_unit_bp_amount_of_change }}
+                    <div v-if="opponent_field_unit_bp_amount_of_change && opponent_field_unit_bp_amount_of_change[n]" style="position: absolute; left: 4px; font-size: 13px; bottom: 58px; color: red; text-align: center; font-weight: bold; line-height: 0.8;" class="your_damage">{{ opponent_field_unit_bp_amount_of_change[n] }}</div>
                     <v-icon v-if="opponent_field_unit_action[n] >= 1" color="green-accent-2" icon="mdi-shield-cross-outline"></v-icon>
                     <v-icon v-if="opponent_field_unit_action[n] >= 2" color="white" icon="mdi-fencing" style="position: absolute; left: 18px;"></v-icon>
                   </div>
@@ -216,7 +218,6 @@
           <div class="card_information" style="max-width: 600px;">
             Card Information: Cost: 
             <span :style="selected_card_cost <= your_cp || this.display_card_type === 3 ? 'color:white;': 'color:red;'">{{ selected_card_cost }}</span><br>
-            <span :style="selected_card_cost <= your_cp || this.display_card_type === 3 ? 'color:white;': 'color:red;'">{{ display_cardinfo }}</span>
           </div>
         </div>
 
@@ -407,7 +408,7 @@
     <div v-if="gameEndDialog" class="v-overlay v-overlay--active v-theme--light v-locale--is-ltr v-dialog v-overlay--scroll-blocked" aria-role="dialog" aria-modal="true" style="z-index: 2400;"><div class="v-overlay__content" style="width: auto; height: 290px;">
       <v-card color="yellow-lighten-1">
         <v-card-text color="yellow-lighten-1">
-          <div class="text-h6 pa-12">A.C.T.I.S:<br>Congratulation, your victory is confirmed!<br><br>Terminates the battle sequence...</div>
+          <div class="text-h6 pa-12">A.C.T.I.S:<br>Congratulation, your victory is confirmed!<br><br>Return to operational headquarters..</div>
         </v-card-text>
         <v-btn
           color="success"
@@ -905,7 +906,7 @@ export default {
       }
     },
     showBattleDialogWindow() {
-      this.selected_card_cost = 11 // ２重で置くのを防ぐため
+      // this.selected_card_cost = 11 // ２重で置くのを防ぐため
       if ((this.display_card_type === 1 || this.display_card_type === 3) && this.is_first === this.is_first_turn && this.turn_timer !== '00') {
         this.show_battle_dialog = true
       } else if (this.turn_timer === '00') {
@@ -1292,6 +1293,7 @@ export default {
                     this.opponent_field_unit = result.opponent_field_unit
                     this.opponent_trigger_cards = result.opponent_trigger_cards
                     this.opponent_field_unit_action = result.opponent_field_unit_action
+                    this.opponent_field_unit_bp_amount_of_change = result.opponent_field_unit_bp_amount_of_change
                     clearInterval(timerID)
                   } else if(transactionName === 'startYourTurn' && (Object.keys(this.your_hand).length !== Object.keys(result.your_hand).length || Object.keys(this.your_hand).length === 7)) {
                     console.log('startYourTurn:', this.your_hand, result.your_hand)
@@ -1351,8 +1353,8 @@ export default {
                     this.opponent_field_unit_bp_amount_of_change = result.opponent_field_unit_bp_amount_of_change
                     this.enemy_skill_target = {}
                   }
-                  this.your_cp = result.your_cp
-                  this.opponent_cp = result.opponent_cp
+                  this.your_cp = parseInt(result.your_cp)
+                  this.opponent_cp = parseInt(result.opponent_cp)
                   this.is_first = result.is_first
                   this.is_first_turn = result.is_first_turn
                   this.last_time_turnend = new Date(parseFloat(result.last_time_turnend) * 1000)
@@ -1376,6 +1378,7 @@ export default {
               if (transactionName === 'claimWin' || transactionName === 'surrendar') {
                 this.onMatching = 1
                 this.turn_timer = ''
+                clearInterval(timerID)
               } else if (this.is_first_turn != this.is_first && this.onMatching === 3) {
                 this.gameEndDialog = true
               }
@@ -1669,7 +1672,7 @@ export default {
     async putCardOnTheField(field_position, card_id, used_intercept_card, enemy_skill_target) {
       this.customLoading = true
       setTimeout(() => (this.customLoading = false), 5000)
-      console.log("DEBUG The Card Put on the Field:", this.your_trigger_cards, used_intercept_card)
+      console.log("DEBUG The Card Put on the Field:", this.your_trigger_cards, enemy_skill_target, used_intercept_card)
       const transactionId = await this.$fcl.mutate({
         cadence: FlowTransactions.putCardOnField,
         args: (arg, t) => [
@@ -1702,10 +1705,10 @@ export default {
       if (card) {
         switch (this.display_card_type) {
           case 1:
+            let enemy_skill_target = null
             //////// ABILITY ////////
             const used_intercept_cards = []
             if (this.selected_card_category === 0) {
-              let enemy_skill_target = null
               // The card trigger_1 is when the unit is put on the field
               if (card.skill.trigger_1 === 1 || card.skill.trigger_1 === '1') {
                 if (card.skill.ask_1 === 1 || card.skill.ask_1 === '1') {
@@ -1732,10 +1735,8 @@ export default {
                   }
                 }
               }
-              console.log(333)
 
-              for (let position in Object.keys(this.your_trigger_cards)) {
-                console.log(444, position, this.your_trigger_cards[position])
+              for (let position in this.your_trigger_cards) {
                 if (this.your_trigger_cards[position] != null && this.your_trigger_cards[position] !== 0) {
                   const d = this.card_information[this.your_trigger_cards[position]]
                   console.log(d, 555)
@@ -1745,11 +1746,11 @@ export default {
                       // The card trigger is when the unit is put on the field
                       if (d.skill.trigger_1 === 1 || d.skill.trigger_1 === '1') {
                         used_intercept_cards.push(position)
-                        await this.confirmRef.alert('Trigger Card has been invoked', `${d.name}" trigger card is activated!`, {color: 'red'})
+                        await this.confirmRef.alert('Trigger Card has been invoked', `${d.name} Trigger Card is activated!`, {color: 'red'})
                       }
                     }
                     // インターセプト
-                    if (d.category === 2 || d.category === '2') {
+                    if ((d.category === 2 || d.category === '2') && parseInt(d.cost) <= this.your_cp) {
                       console.log(d, 666)
                       // 無色 color
                       if (d.type === 4 || d.type === '4') {
@@ -1774,7 +1775,6 @@ export default {
                           }
                         }
                       } else {
-                        console.log(d, 777)
                         let same_color_on_the_field = false
                         if (card.type === d.type) {
                           same_color_on_the_field = true
@@ -1843,7 +1843,7 @@ export default {
                     this.your_field_unit[i] = this.selected_card_id
                     this.your_field_unit_action[i] = 1
                     isSet = true
-                    this.putCardOnTheField(i, this.selected_card_id, used_intercept_cards)
+                    this.putCardOnTheField(i, this.selected_card_id, used_intercept_cards, enemy_skill_target)
                   }
                 }
               }
@@ -1884,6 +1884,11 @@ export default {
               })
               if (enemy_targets.length > 0) {
                 skill_target = await this.confirmRef.prompt('Choose the unit target', enemy_targets, {color: 'red'})
+                if (this.opponent_field_unit_bp_amount_of_change[skill_target]) {
+                  this.opponent_field_unit_bp_amount_of_change[skill_target] = parseInt(this.opponent_field_unit_bp_amount_of_change[skill_target]) - parseInt(card.skill.amount_1) // 表示用
+                } else {
+                  this.opponent_field_unit_bp_amount_of_change[skill_target] = -1 * parseInt(card.skill.amount_1) // 表示用
+                }
               }
               this.enemy_skill_target[this.display_card_position] = skill_target
             }
@@ -1908,7 +1913,7 @@ export default {
                       }
                     }
                   } else if (card.category == 1 && card.skill.trigger_1 == 2) {
-                    await this.confirmRef.alert('Trigger Card has been invoked', `${card.name}" trigger card is activated!`, {color: 'red'})
+                    await this.confirmRef.alert('Trigger Card has been invoked', `${card.name} Trigger Card is activated!`, {color: 'red'})
                     if (!this.used_intercept_position[this.display_card_position]) {
                       this.used_intercept_position[this.display_card_position] = []
                       this.used_intercept_position[this.display_card_position].push(card.card_id)
@@ -2051,6 +2056,38 @@ export default {
   animation: fadeOut2 4s linear forwards;
 }
 
+.v-chip.green {
+  position: absolute;
+  right: 0;
+  top: 0;
+  background-image: url(https://cdn.vuetifyjs.com/images/backgrounds/bg-2.jpg);
+  border-color: green;
+  border-width: 1px;
+  border-style: dotted;
+  animation: fadeOut2 4s linear forwards;
+}
+
+.v-chip.blue-darken-4 {
+  position: absolute;
+  right: 0;
+  top: 0;
+  background-image: url(https://cdn.vuetifyjs.com/images/backgrounds/bg-2.jpg);
+  border-color: #0D47A1;
+  border-width: 1px;
+  border-style: dotted;
+  animation: fadeOut2 4s linear forwards;
+}
+
+.v-chip.purple {
+  position: absolute;
+  right: 0;
+  top: 0;
+  background-image: url(https://cdn.vuetifyjs.com/images/backgrounds/bg-2.jpg);
+  border-color: purple;
+  border-width: 1px;
+  border-style: dotted;
+  animation: fadeOut2 4s linear forwards;
+}
 .matching-screen {
   width: 100%;
   min-height: 400px;
