@@ -21,7 +21,7 @@ URL is https://hackathon.d8gpbl0qw42np.amplifyapp.com/
 
 <img width="210" alt="CODE-Of-Flow" src="https://user-images.githubusercontent.com/58613670/221454777-4163b675-e8ca-44db-9f93-21ff93c4393b.png">
 
-### Tutorials
+### Game Tutorials
 PC: <br>
 SmartPhone(portrait): <br>
 SmartPhone(landscape): <br>
