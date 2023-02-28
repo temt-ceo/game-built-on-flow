@@ -563,6 +563,14 @@ pub contract CodeOfFlowDayAlpha1 {
                         } else {
                           info.opponent_field_unit_bp_amount_of_change[target] = -1 * Int(trigger.skill.amount_1)
                         }
+                        // assess is this damage enough to beat the unit.
+                        let card_id: UInt16 = info.opponent_field_unit[target]!
+                        let unit = CodeOfFlowDayAlpha1.cardInfo[card_id]!
+                        if Int(unit.bp) < info.opponent_field_unit_bp_amount_of_change[target]! * -1 {
+                          // beat the opponent
+                          info.opponent_field_unit[target] = nil
+                        }
+
                       // Omly target which has no action right
                       } else if (trigger.skill.ask_1 == 2) {
                         if (info.opponent_field_unit_action[target] == 3) { // // 2: can attack, 1: can defence only, 0: nothing can do.
@@ -645,6 +653,7 @@ pub contract CodeOfFlowDayAlpha1 {
           infoOpponent.opponent_field_unit = info.your_field_unit
           infoOpponent.opponent_field_unit_action = info.your_field_unit_action
           infoOpponent.your_field_unit_bp_amount_of_change = info.opponent_field_unit_bp_amount_of_change
+          infoOpponent.your_field_unit = info.opponent_field_unit
           // Process Trigger Lost
           if (lost_card_flg == true) {
             let blockCreatedAt = getCurrentBlock().timestamp.toString().slice(from: 0, upTo: 10)

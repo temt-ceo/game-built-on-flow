@@ -140,7 +140,7 @@
                     cover
                     @click="showCardInfo(opponent_field_unit[n], 4, n)"
                   ></v-img>
-                  <div style="position: absolute; top: 60px; font-size: 12px;">{{  opponent_field_unit_bp_amount_of_change }}
+                  <div style="position: absolute; top: 60px; font-size: 12px;">
                     <div v-if="opponent_field_unit_bp_amount_of_change && opponent_field_unit_bp_amount_of_change[n]" style="position: absolute; left: 4px; font-size: 13px; bottom: 58px; color: red; text-align: center; font-weight: bold; line-height: 0.8;" class="your_damage">{{ opponent_field_unit_bp_amount_of_change[n] }}</div>
                     <v-icon v-if="opponent_field_unit_action[n] >= 1" color="green-accent-2" icon="mdi-shield-cross-outline"></v-icon>
                     <v-icon v-if="opponent_field_unit_action[n] >= 2" color="white" icon="mdi-fencing" style="position: absolute; left: 18px;"></v-icon>
@@ -161,6 +161,7 @@
                     @click="showCardInfo(your_field_unit[n], 3, n)"
                   ></v-img>
                   <div style="position: absolute; bottom: 0px; font-size: 12px;">
+                    <div v-if="your_field_unit_bp_amount_of_change && your_field_unit_bp_amount_of_change[n]" style="position: absolute; left: 4px; font-size: 13px; bottom: 58px; color: red; text-align: center; font-weight: bold; line-height: 0.8;" class="your_damage">{{ your_field_unit_bp_amount_of_change[n] }}</div>
                     <v-icon v-if="your_field_unit_action[n] >= 1" color="green-accent-2" icon="mdi-shield-cross-outline"></v-icon>
                     <v-icon v-if="your_field_unit_action[n] >= 2" color="white" icon="mdi-fencing" style="position: absolute; left: 18px;"></v-icon>
                     <v-icon v-if="your_field_unit_attack_action[n] == 1" color="red-darken-3" icon="mdi-fencing" style="position: absolute; left: 10px;    bottom: 90px;    font-size: 40px;"></v-icon>
@@ -218,6 +219,7 @@
           <div class="card_information" style="max-width: 600px;">
             Card Information: Cost: 
             <span :style="selected_card_cost <= your_cp || this.display_card_type === 3 ? 'color:white;': 'color:red;'">{{ selected_card_cost }}</span><br>
+            <span :style="selected_card_cost <= your_cp || this.display_card_type === 3 ? 'color:white;': 'color:red;'">{{ display_cardinfo }}</span>
           </div>
         </div>
 
