@@ -576,6 +576,22 @@ pub contract CodeOfFlowDayAlpha1 {
                     }
                   }
                 }
+                //---- Draw card ----
+                if (trigger.skill.type_1 == 7) {
+                  let blockCreatedAt = getCurrentBlock().timestamp.toString().slice(from: 0, upTo: 10)
+                  let decodedArray = blockCreatedAt.decodeHex()
+                  let pseudorandomNumber1 = Int(decodedArray[decodedArray.length - 1])
+                  let withdrawPosition1 = pseudorandomNumber1 % (info.your_remain_deck.length - 1)
+                  var isSetCard1 = false
+                  var handCnt = 0
+                  let handPositions: [UInt8] = [1, 2, 3, 4, 5 ,6, 7]
+                  for hand_position in handPositions {
+                    if info.your_hand[hand_position] == nil && isSetCard1 == false {
+                      info.your_hand[hand_position] = info.your_remain_deck.remove(at: withdrawPosition1)
+                      isSetCard1 = true
+                    }
+                  }
+                }
                 //---- Trigger lost ----
                 if (trigger.skill.type_1 == 3) {
                   lost_card_flg = true
@@ -739,7 +755,7 @@ pub contract CodeOfFlowDayAlpha1 {
               // Damage to one target unit
               } else if (unit.skill.ask_1 == 1) {
                 var target: UInt8 = 1
-                if enemy_skill_target[position] != nil {
+                if enemy_skill_target[position] != nil && enemy_skill_target[position] != 0 {
                   target = enemy_skill_target[position]!
                 }
                 if let opponent_field_unit_bp_amount_of_change = info.opponent_field_unit_bp_amount_of_change[target] {
@@ -750,7 +766,7 @@ pub contract CodeOfFlowDayAlpha1 {
               // Omly target which has no action right
               } else if (unit.skill.ask_1 == 2) {
                 var target: UInt8 = 1
-                if enemy_skill_target[position] != nil {
+                if enemy_skill_target[position] != nil && enemy_skill_target[position] != 0 {
                   target = enemy_skill_target[position]!
                 }
                 if (info.opponent_field_unit_action[target] == 3) { // // 2: can attack, 1: can defence only, 0: nothing can do.
@@ -1008,14 +1024,18 @@ pub contract CodeOfFlowDayAlpha1 {
         var handCnt = 0
         let handPositions: [UInt8] = [1, 2, 3, 4, 5 ,6, 7]
         for hand_position in handPositions {
-          if info.your_hand[hand_position] == nil && isSetCard1 == false {
-            info.your_hand[hand_position] = info.your_remain_deck.remove(at: withdrawPosition1)
-            isSetCard1 = true
+          // To prevent double transaction
+          if info.card_draw_in_this_turn == false {
+            if info.your_hand[hand_position] == nil && isSetCard1 == false {
+              info.your_hand[hand_position] = info.your_remain_deck.remove(at: withdrawPosition1)
+              isSetCard1 = true
+            }
+            if info.your_hand[hand_position] == nil && isSetCard2 == false {
+              info.your_hand[hand_position] = info.your_remain_deck.remove(at: withdrawPosition2)
+              isSetCard2 = true
+            }
           }
-          if info.your_hand[hand_position] == nil && isSetCard2 == false {
-            info.your_hand[hand_position] = info.your_remain_deck.remove(at: withdrawPosition2)
-            isSetCard2 = true
-          }
+
           if info.your_hand[hand_position] != nil {
             handCnt = handCnt + 1
           }
@@ -1144,7 +1164,7 @@ pub contract CodeOfFlowDayAlpha1 {
       15: CardStruct(card_id: 15, name: "Roin", bp: 3000, cost: 2, type: 1, category: 0, skill: Skill(description: "When this unit blocks, this unit's BP increases 2000.", triggers: [3], asks: [0], types: [2], amounts: [2000], skills: [])),
       16: CardStruct(card_id: 16, name: "Rairyu", bp: 6000, cost: 5, type: 1, category: 0, skill: Skill(description: "When this unit is put on the field, you choose an enemy's move right lost unit, then give 7000 BP damage.", triggers: [1], asks: [2], types: [1], amounts: [7000], skills: [])),
       17: CardStruct(card_id: 17, name: "Drive", bp: 0, cost: 0, type: 4, category: 1, skill: Skill(description: "[🔹TRIGGER(AUTO)] When your unit attacks, this card increases its BP 2000 automatically.", triggers: [2], asks: [0], types: [2], amounts: [3000], skills: [])),
-      18: CardStruct(card_id: 18, name: "Canon", bp: 0, cost: 0, type: 4, category: 1, skill: Skill(description: "[🔹TRIGGER(AUTO)] When your unit is put on the field, you choose an enemy unit, then give 1000 BP damage.", triggers: [1], asks: [1], types: [1], amounts: [3000], skills: [])),
+      18: CardStruct(card_id: 18, name: "Canon", bp: 0, cost: 0, type: 4, category: 1, skill: Skill(description: "[🔹TRIGGER(AUTO)] When your unit is put on the field, you choose an enemy unit, then give 1000 BP damage.", triggers: [1], asks: [1], types: [1], amounts: [1000], skills: [])),
       19: CardStruct(card_id: 19, name: "Merchant", bp: 0, cost: 0, type: 4, category: 1, skill: Skill(description: "[🔹TRIGGER(AUTO)] When your unit is put on the field, you draw one card.", triggers: [1], asks: [0], types: [7], amounts: [1], skills: [])),
       20: CardStruct(card_id: 20, name: "Breaker", bp: 0, cost: 1, type: 0, category: 2, skill: Skill(description: "[🔸INTERCEPT CARD(only avalable when the red type unit is on the field)] When your unit is put on the field, you choose an enemy unit, then give 3000 BP damage.", triggers: [1], asks: [1], types: [1], amounts: [3000], skills: [])),
       21: CardStruct(card_id: 21, name: "Imperiale", bp: 0, cost: 0, type: 0, category: 2, skill: Skill(description: "[🔸INTERCEPT CARD(only avalable when the red type unit is on the field)] When your unit is put on the field, enables the unit can attack on the turn.(except 1st turn's first)", triggers: [1], asks: [0], types: [11], amounts: [0], skills: [])),
