@@ -21,6 +21,10 @@ URL is https://hackathon.d8gpbl0qw42np.amplifyapp.com/
 
 <img width="210" alt="CODE-Of-Flow" src="https://user-images.githubusercontent.com/58613670/221454777-4163b675-e8ca-44db-9f93-21ff93c4393b.png">
 
+### Tutorials
+PC: <br>
+SmartPhone(portrait): <br>
+SmartPhone(landscape): <br>
 ### How it works
 System Background is like below image.<br>
 <img width="510" alt="system_arkitecture" src="https://user-images.githubusercontent.com/58613670/221802473-dd0572b7-54f3-41fd-8832-5267d59f8ec7.png">
