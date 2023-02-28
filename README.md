@@ -9,13 +9,32 @@ The game system is very similar to v1.0.0 of Code Of Joker. (But majority are no
 If you don’t know COJ, please take a look at well-played game’s YouTube 👇<br>
 https://m.youtube.com/watch?v=tYioSA10Ckc<br>
 
+# The game name is *CODE-Of-Flow*
+
+This game is fully built on Flow Blockchain.
+
+Proof(Smart Contract): https://github.com/temt-ceo/game-built-on-flow/blob/hackathon/cadence/contracts/CODEOfFlow.cdc<br>
+Proof(Smart Contract Calling File): https://github.com/temt-ceo/game-built-on-flow/blob/hackathon/pages/index.vue
+
 ### You can play this CODE-Of-Flow Game in smartphone or Mac or PC.
 URL is https://hackathon.d8gpbl0qw42np.amplifyapp.com/
 
 <img width="314" alt="CODE-Of-Flow" src="https://user-images.githubusercontent.com/58613670/221454777-4163b675-e8ca-44db-9f93-21ff93c4393b.png">
 
 # Extending the ecosystem
+I am planning to share the informations how I implemented the source code written in Smart Contract Language Cadence n Linkedin.<br>
+This includes:<br><br>
+*matchingStart* transaction: Matching function fully implemented on the Smart Contract, How to create Pseudorandom Number on the Smart Contract<br>
+*get_current_status* script: This is the core script of this game, which returns the battle information if the game is started or returns the last matching timestamp if the game not started.<br>
+*game_start* Transaction<br>
+*turn_change* Transaction<br>
+*put_card_on_the_field* Transaction<br>
+*start_your_turn_and_draw_two_cards* Transaction<br>
+*claimWin* Transaction<br>
+*surrendar* Transaction<br><br>
+**So if you are interested, please read articles. URL is　👉 https://www.linkedin.com/in/tahara-takashi-em-technology/recent-activity/**
 
+#### I have already shared the interesting develop informations while this Hackathon.
 Day 1: Matching with opponents is done using blockchain<br>
 LinkedIn article(EN): <br>
 LinkedIn article(JP): <br><br>
