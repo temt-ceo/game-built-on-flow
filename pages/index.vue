@@ -2,9 +2,10 @@
   <div class="game-screen">
     <div class="content top-screen">
       <v-chip
-        v-for="chip in newEventAlertChip"
+        v-for="(chip, i) in newEventAlertChip"
         class="ma-2"
         :color="chip.color"
+        :style="'top:' + (i * 50) + 'px'"
         text-color="white"
       >
         {{ chip.message }}
@@ -125,6 +126,7 @@
             </div>
           </div>
           <div id="field">
+            <flame ref="flameRef"></flame>
             <div class="rival_cards">
               <v-row>
                 <v-col
@@ -312,14 +314,13 @@
     v-if="
       game_started === true &&
       onMatching === 3 &&
-      is_first === is_first_turn &&
-      turn_timer !== '00'
+      is_first === is_first_turn
     "
     class="ma-1"
     color="indigo"
     icon="mdi-gavel"
     @click="giveTurn"
-    style="position: absolute; bottom: 180px; left: -5px;"
+    style="position: absolute; bottom: 32%; left: -5px;"
   ></v-btn>
   <v-btn
     v-if="
@@ -328,7 +329,7 @@
       display_cardinfo !== '' &&
       (display_card_type === 1 || display_card_type === 3) &&
       is_first === is_first_turn &&
-      (selected_card_cost <= your_cp || selected_card_category > 0) &&
+      (selected_card_cost <= your_cp || display_card_type === 3 || selected_card_category > 0) &&
       !(display_card_type === 3 && attack_unit_cards.includes(display_card_position))
     "
     class="ma-1"
@@ -496,7 +497,7 @@
         </v-btn>
         <div style="display: flex;">
           <v-btn
-            v-if="game_started && is_first !== is_first_turn"
+            v-if="game_started && (is_first !== is_first_turn || this.turn === '11')"
             :loading="customLoading"
             :disabled="customLoading"
             size="x-large"
@@ -512,7 +513,7 @@
             </template>
           </v-btn>
           <v-btn
-            v-if="game_started && is_first === is_first_turn && battleDialogText !== `Your turn! Draw two cards!`"
+            v-if="game_started && is_first === is_first_turn && battleDialogText !== `Your turn! Draw two cards!` && this.turn !== '11'"
             :loading="customLoading"
             :disabled="customLoading"
             size="x-large"
@@ -634,8 +635,8 @@
           <div v-if="battleActionObj.result === 1" style="position: absolute; left: 45px; font-size: 70px; bottom: 150px; color: #FFEE58">SUCCESS</div>
           <div v-if="battleActionObj.result === 3" style="position: absolute; left: 45px; font-size: 70px; bottom: 150px; color: #FFEE58">FAILED</div>
           <div v-if="battleActionObj.result === 2" style="position: absolute; left: 45px; font-size: 70px; bottom: 150px; color: #FFEE58">DRAW</div>
-          <div v-if="battleActionObj.enemyPump" style="position: absolute; left: 110px; font-size: 38px; bottom: 300px; color: white;">{{ battleActionObj.enemyPump }}BP</div>
-          <div v-if="battleActionObj.enemyPump" style="position: absolute; left: 100px; font-size: 38px; bottom: 200px; color: white;">{{ battleActionObj.enemyPump }}BP UP</div>
+          <div v-if="battleActionObj.enemyBP" style="position: absolute; left: 38%; font-size: 25px; bottom: 300px; color: white;">{{ battleActionObj.enemyBP }}BP</div>
+          <div v-if="battleActionObj.enemyPump && battleActionObj.enemyPump != '0'" style="position: absolute; left: 100px; font-size: 25px; bottom: 200px; color: white;">+ {{ battleActionObj.enemyPump }}BP</div>
           <v-icon v-if="defence_executed" class="defence_executed" color="white" icon="mdi-fencing" style="position: absolute; left: 155px; font-size: 100px; bottom: 100px;"></v-icon>
           <v-row>
             <v-col
@@ -649,8 +650,9 @@
                 @click="defence(your_field_unit[n], n)"
               ></v-img>
               <div style="position: absolute; bottom: 0px; font-size: 12px;">
-                <div v-if="battleActionObj.yourDamage && battleActionObj.yourDamage[n]" style="position: absolute; left: 1px; font-size: 18px; bottom: 15px; color: white; text-align: center;">{{ battleActionObj.yourDamage[n] }}<br>Damage</div>
-                <div v-if="battleActionObj.yourPump && battleActionObj.yourPump[n]" style="position: absolute; left: 1px; font-size: 16px; bottom: 15px; width: 68px; color: #00BCD4; text-align: center;"> {{ battleActionObj.yourPump[n] }}<br>BP UP</div>
+                <div v-if="battleActionObj.yourDamage && battleActionObj.yourDamage[n]" style="position: absolute; left: 4px; font-size: 18px; bottom: 48px; color: red; text-align: center; font-weight: bold; line-height: 0.8;" class="your_damage">{{ battleActionObj.yourDamage[n] }}<br>Damage</div>
+                <div v-if="battleActionObj.yourBP && battleActionObj.yourBP[n]" style="position: absolute; left: 4px; font-size: 16px; bottom: 30px; width: 68px; color: white;" class="your_bp">{{ battleActionObj.yourBP[n] }}BP</div>
+                <div v-if="battleActionObj.yourPump && battleActionObj.yourPump[n]" style="position: absolute; left: 4px; font-size: 14px; bottom: 80px; width: 68px; color: white; text-align: center; font-weight: bold;" class="your_pump">+{{ battleActionObj.yourPump[n] }}BP</div>
                 <v-icon v-if="your_field_unit_action[n] >= 1" color="green-accent-2" icon="mdi-shield-cross-outline"></v-icon>
               </div>
             </v-col>
@@ -663,6 +665,7 @@
 </template>
 <script>
 import confirm from '../components/confirm'
+import flame from '../components/flame'
 import { Auth, API } from 'aws-amplify'
 import { createTodo } from '~/src/graphql/mutations'
 import { onCreateTodo } from '~/src/graphql/subscriptions'
@@ -673,14 +676,17 @@ import { collapseTextChangeRangesAcrossMultipleVersions } from 'typescript'
 import { ConsoleLogger } from '@aws-amplify/core'
 export default {
   components: {
-    confirm
+    confirm,
+    flame
   },
   setup () {
     const confirmRef = ref(null)
+    const flameRef = ref(null)
     onMounted(() => {
     })
     return {
-      confirmRef
+      confirmRef,
+      flameRef
     }
   },
   data() {
@@ -723,7 +729,7 @@ export default {
       marigan_cards: [],
       marigan_count: 0,
       game_started: false,
-      turn_timer: 60,
+      turn_timer: 120,
       attack_timer: 5,
       opponent: null,
       your_score: '',
@@ -768,7 +774,7 @@ export default {
       game_start_done: false,
       show_surrendar_dialog: false,
       turnChangeActionDone: false,
-      show_turn_change_dialog: {1: [false, false], 2: [false, false], 3: [false, false], 4: [false, false], 5: [false, false], 6: [false, false], 7: [false, false], 8: [false, false], 9: [false, false], 10: [false, false]},
+      show_turn_change_dialog: {1: [false, false], 2: [false, false], 3: [false, false], 4: [false, false], 5: [false, false], 6: [false, false], 7: [false, false], 8: [false, false], 9: [false, false], 10: [false, false], 11: [false, false]},
       card_information: {},
       stopCountdownTimer: null,
       attack_unit_cards: [],
@@ -783,7 +789,7 @@ export default {
       enemy_skill_target: {},
       defenced_unit: {},
       defenced_used_intercept: {},
-      current_win_count: 0,
+      current_win_count: null,
       address: '',
       hasNFT: false,
       nftType: 'human',
@@ -822,6 +828,7 @@ export default {
     };
     this.subscribe()
     // const ret = await this.confirmRef.prompt('Choose the target', 'Are you sure?', { color: 'red' })
+    // this.flameRef.show()
   },
   methods: {
     async flowWalletSignIn () {
@@ -852,7 +859,7 @@ export default {
         this.your_hand[4] = this.marigan_cards[this.marigan_count][3]
       }
     },
-    countdown() { // DEBUG
+    countdown() {
       this.stopCountdownTimer = setInterval(() => {
         this.turn_timer -= 1
         if (this.turn_timer <= 0) {
@@ -898,8 +905,13 @@ export default {
       }
     },
     showBattleDialogWindow() {
+      this.selected_card_cost = 11 // ２重で置くのを防ぐため
       if ((this.display_card_type === 1 || this.display_card_type === 3) && this.is_first === this.is_first_turn && this.turn_timer !== '00') {
         this.show_battle_dialog = true
+      } else if (this.turn_timer === '00') {
+        this.battleDialogText = 'TIME UP'
+        this.battleDialogText2 = "Give the turn to the opponent's turn."
+        this.show_game_dialog = true
       }
     },
     async claimWin() {
@@ -988,7 +1000,7 @@ export default {
     },
     async createPlayer () {
       if (!this.walletUser?.addr) {
-        alert('Please sign in a Flow Wallet.')
+        await this.confirmRef.alert('Please sign in a Flow Wallet.')
         return
       } else {
         const transactionId = await this.$fcl.mutate({
@@ -1008,7 +1020,7 @@ export default {
     },
     async playerMatching () {
       if (!this.walletUser?.addr) {
-        alert('Please sign in a Flow Wallet.')
+        await this.confirmRef.alert('Please sign in a Flow Wallet.')
         return
       } else {
         this.matchingTimeup = false
@@ -1250,6 +1262,19 @@ export default {
                   }
                 // ゲーム開始済み
                 } else if (this.game_started === true) {
+                  this.turn = result.turn
+                  if (this.turn == '11') {
+                    this.onMatching = 3
+                    if (result.your_life > result.opponent_life) {
+                      this.battleDialogText = 'You Win!'
+                      this.show_game_dialog = true
+                    } else if (result.your_life == result.opponent_life && !result.is_first) {
+                      console.log(222)
+                      this.battleDialogText = 'You Win!'
+                      this.show_game_dialog = true
+                    }
+                    clearInterval(timerID)
+                  }
                   if (transactionName === 'turnChange' && result.is_first !== result.is_first_turn) {
                     this.loadingDialog = false
                     this.battleDialogText = ''
@@ -1268,7 +1293,7 @@ export default {
                     this.opponent_trigger_cards = result.opponent_trigger_cards
                     this.opponent_field_unit_action = result.opponent_field_unit_action
                     clearInterval(timerID)
-                  } else if(transactionName === 'startYourTurn' && Object.keys(this.your_hand).length !== Object.keys(result.your_hand).length) {
+                  } else if(transactionName === 'startYourTurn' && (Object.keys(this.your_hand).length !== Object.keys(result.your_hand).length || Object.keys(this.your_hand).length === 7)) {
                     console.log('startYourTurn:', this.your_hand, result.your_hand)
                     this.loadingDialog = false
                     this.your_remain_deck = result.your_remain_deck?.length
@@ -1326,7 +1351,6 @@ export default {
                     this.opponent_field_unit_bp_amount_of_change = result.opponent_field_unit_bp_amount_of_change
                     this.enemy_skill_target = {}
                   }
-                  this.turn = result.turn
                   this.your_cp = result.your_cp
                   this.opponent_cp = result.opponent_cp
                   this.is_first = result.is_first
@@ -1360,7 +1384,7 @@ export default {
               this.show_surrendar_dialog = false
               this.loadingDialog = false
               const winCount = await this.getPlayersScore(true)
-              if (winCount > this.current_win_count) {
+              if (this.current_win_count != null &&winCount > this.current_win_count) {
                 this.gameEndDialog = true
               }
             }
@@ -1388,42 +1412,57 @@ export default {
           this.enemy_attacking_card_id = card.card_id
           this.battleActionObj.enemyTrigger1 = attackingCard.used_trigger_cards.length >= 1 ? attackingCard.used_trigger_cards[0] : null
           this.battleActionObj.enemyTrigger2 = attackingCard.used_trigger_cards.length >= 2 ? attackingCard.used_trigger_cards[1] : null
-          if (attackingCard.pump) {
-            this.battleActionObj.enemyPump = attackingCard.pump
-          } else {
-            this.battleActionObj.enemyPump = 0
-          }
-          this.battleActionObj.yourPump = this.your_field_unit_bp_amount_of_change
-          this.battleActionObj.yourDamage = this.your_field_unit_bp_amount_of_change
+          this.battleActionObj.enemyPump = attackingCard.pump
+          this.battleActionObj.enemyBP = attackingCard.bp
+          this.battleActionObj.yourBP = {}
+          this.battleActionObj.yourPump = {}
+          this.battleActionObj.yourDamage = {}
+          this.used_intercept_position[this.display_card_position]
+          Object.keys(this.your_field_unit).forEach((key) => {
+            const card = this.card_information[parseInt(this.your_field_unit[key])]
+            this.battleActionObj.yourBP[key] = card.bp
+            if (this.your_field_unit_bp_amount_of_change[key]) {
+              if (parseInt(this.your_field_unit_bp_amount_of_change[key]) > 0) {
+                this.battleActionObj.yourPump[key] = parseInt(this.your_field_unit_bp_amount_of_change[key])
+              } else {
+                this.battleActionObj.yourDamage[key] = parseInt(this.your_field_unit_bp_amount_of_change[key])
+              }
+            }
+          })
           this.show_battle_dialog = true
           this.attack_timer = '5:00'
           let attack_time_second = 0
           let attack_time_millisecond_1 = 0
           let attack_time_millisecond_2 = 0
           let counter = 0
-          const stopTimer = setInterval(() => {
+          const stopTimer = setInterval(async () => {
             counter += 50
-            attack_time_second = Math.floor((5000 - counter) / 1000)
+            attack_time_second = Math.floor((500000 - counter) / 1000)
             if (counter % 100 === 0) {
               attack_time_millisecond_1 = counter % 1000 / 100
               attack_time_millisecond_2 = 0
             } else {
               attack_time_millisecond_2 = 5
             }
-            if (attack_time_second === 0) {
+            if (attack_time_second === 0 || this.battleActionObj.result > 0) {
               attack_time_millisecond_2 = 0
               this.show_battle_dialog = false
               clearInterval(stopTimer)
               if (this.defence_executed) {
                 if (this.battleActionObj.result === 2 || this.battleActionObj.result === 3) {
+                  await this.confirmRef.alert('Aa!', `Goddamn it!`, {color: 'red'})
                   this.your_field_unit[this.defence_unit_position] = null
                   this.your_field_unit_action[this.defence_unit_position] = null
                 }
                 if (this.battleActionObj.result === 1 || this.battleActionObj.result === 2) {
+                  if (this.battleActionObj.result === 1) {
+                    await this.confirmRef.alert('Nice!', `How's that!`, {color: 'green'})
+                  }
                 }
                 setTimeout(this.battleAction, 1000)
               } else {
                 this.your_life = this.your_life - 1
+                await this.confirmRef.alert('Geez!!', `You took 1 damage to life`, {color: 'red'})
                 setTimeout(this.battleAction, 1000)
               }
             }
@@ -1452,22 +1491,28 @@ export default {
       const triggerCardName = "Hero's sword"
       const triggerCardCategory = 1
       let yourBP = myCard.bp
-      let opponentBP = this.tempSavedCardInfo.bp
+      let opponentBP = parseInt(this.tempSavedCardInfo.bp)
 
       // 攻撃をブロックしたユニットのポジション
       this.defenced_unit[enemy_field_position] = position
 
       for (let i = 1; i <= 4; i++){
         // トリガーゾーンにカードをセットしている場合
-        if (this.your_trigger_cards[i]) {
+        console.log(this.defenced_used_intercept[i], 9999)
+        if (this.your_trigger_cards[i] && !this.defenced_used_intercept[i]) {
           const card = this.card_information[this.your_trigger_cards[i]]
           // インターセプトカードの場合
-          if (card.category == 2) {
-            if (card.skill.trigger_1 == 5) {
+          if (card.category == 2 || card.category == '2') {
+            if (card.skill.trigger_1 == 5 || card.skill.trigger_1 == '5') {
               if (await this.confirmRef.confirm('Intercept Card can be invoked', `Do you use "${card.name}" Intercept Card?`, {color: 'red'})) {
-                if (card.skill.type_1 == 2) {
-                  yourBP += card.skill.tamount_1
-                  this.battleActionObj.yourPump[position] = card.skill.tamount_1
+                if (card.skill.type_1 == 2 || card.skill.type_1 == '2') {
+                  yourBP += parseInt(card.skill.amount_1)
+                  if (this.your_field_unit_bp_amount_of_change[position]) {
+                    this.your_field_unit_bp_amount_of_change[position] = parseInt(this.your_field_unit_bp_amount_of_change[position]) + parseInt(card.skill.amount_1)
+                  } else {
+                    this.your_field_unit_bp_amount_of_change[position] = parseInt(card.skill.amount_1)
+                  }
+                  this.battleActionObj.yourPump[position] = parseInt(card.skill.amount_1)
                   // 攻撃をブロック時、使用したインターセプトのポジション
                   this.defenced_used_intercept[i] = enemy_field_position
                 }
@@ -1483,11 +1528,18 @@ export default {
         yourBP -= this.battleActionObj.yourDamage[position]
       }
       if (this.battleActionObj.enemyPump) {
-        opponentBP += this.battleActionObj.enemyPump
+        opponentBP += parseInt(this.battleActionObj.enemyPump)
       }
       if (yourBP > opponentBP) {
         // Defence Success
         this.battleActionObj.result = 1
+        this.battleActionObj.yourDamage[position] = opponentBP
+        if (this.your_field_unit_bp_amount_of_change[position]) {
+          this.your_field_unit_bp_amount_of_change[position] = -1 * (parseInt(opponentBP) - parseInt(this.your_field_unit_bp_amount_of_change[position]))
+        } else {
+          this.your_field_unit_bp_amount_of_change[position] = -1 * parseInt(opponentBP)
+        }
+
       } else if (yourBP == opponentBP) {
         // Draw
         this.battleActionObj.result = 2
@@ -1509,7 +1561,7 @@ export default {
       const now = new Date()
       this.current_turn = `Turn ${this.turn} | ${this.is_first === this.is_first_turn ? 'Your' : "Enemy"} Turn`
       const p = this.is_first_turn ? 0 : 1
-      const pastTime = 60 - ((now.getTime() / 1000) - (this.last_time_turnend.getTime() / 1000))
+      const pastTime = 120 - ((now.getTime() / 1000) - (this.last_time_turnend.getTime() / 1000))
       if (pastTime <= 0) {
         this.turn_timer = '00'
         if (this.is_first !== this.is_first_turn) {
@@ -1531,7 +1583,7 @@ export default {
         } else if (!this.show_game_dialog && this.turnChangeActionDone === false) {
           this.battleDialogText = 'TIME UP'
           this.battleDialogText2 = "Give the turn to the opponent's turn."
-          this.show_game_dialog = true // DEBUG
+          this.show_game_dialog = true
         }
       } else {
         if (this.stopCountdownTimer === null) {
@@ -1545,7 +1597,7 @@ export default {
       this.attack_unit_cards.forEach((card_position) => {
         this.enemy_skill_target[card_position] = this.enemy_skill_target[card_position] || 0
       })
-      console.log(999999, parseInt(this.enemy_skill_target[3]), 'attack_unit_cards', this.attack_unit_cards, 'enemy_skill_target', this.enemy_skill_target, 'your_trigger_cards', this.your_trigger_cards)
+      console.log(999999, parseInt(this.enemy_skill_target[3]), 'attack_unit_cards', this.attack_unit_cards, 'enemy_skill_target', this.enemy_skill_target, 'used_intercept_position', this.used_intercept_position)
       const transactionId = await this.$fcl.mutate({
         cadence: FlowTransactions.turnChange,
         args: (arg, t) => [
@@ -1617,7 +1669,7 @@ export default {
     async putCardOnTheField(field_position, card_id, used_intercept_card, enemy_skill_target) {
       this.customLoading = true
       setTimeout(() => (this.customLoading = false), 5000)
-      console.log("The Card Put on the Field:", this.your_trigger_cards)
+      console.log("DEBUG The Card Put on the Field:", this.your_trigger_cards, used_intercept_card)
       const transactionId = await this.$fcl.mutate({
         cadence: FlowTransactions.putCardOnField,
         args: (arg, t) => [
@@ -1644,115 +1696,127 @@ export default {
     },
     async cardMoveDecided() {
       this.show_battle_dialog = false
+      console.log(111)
       const card = this.card_information[this.selected_card_id]
+      console.log(222)
       if (card) {
         switch (this.display_card_type) {
           case 1:
-            let enemy_skill_target = null
-            // The card trigger is when the unit is put on the field
-            if (card.skill.trigger_1 === 1 || card.skill.trigger_1 === '1') {
-              if (card.skill.ask_1 === 1 || card.skill.ask_1 === '1') {
-                let enemy_targets = []
-                Object.keys(this.opponent_field_unit).forEach((position) => {
-                  if (this.opponent_field_unit[position] && this.opponent_field_unit[position] != '0') {
-                    const unit3 = this.card_information[this.opponent_field_unit[position]]
-                    enemy_targets.push({position: position, name: unit3.name})
+            //////// ABILITY ////////
+            const used_intercept_cards = []
+            if (this.selected_card_category === 0) {
+              let enemy_skill_target = null
+              // The card trigger_1 is when the unit is put on the field
+              if (card.skill.trigger_1 === 1 || card.skill.trigger_1 === '1') {
+                if (card.skill.ask_1 === 1 || card.skill.ask_1 === '1') {
+                  let enemy_targets = []
+                  Object.keys(this.opponent_field_unit).forEach((position) => {
+                    if (this.opponent_field_unit[position] && this.opponent_field_unit[position] != '0') {
+                      const unit3 = this.card_information[this.opponent_field_unit[position]]
+                      enemy_targets.push({position: position, name: unit3.name})
+                    }
+                  })
+                  if (enemy_targets.length > 0) {
+                    enemy_skill_target = await this.confirmRef.prompt('Choose the unit target', enemy_targets, {color: 'red'})
                   }
-                })
-                if (enemy_targets.length > 0) {
-                  enemy_skill_target = await this.confirmRef.prompt('Choose the unit target', enemy_targets, {color: 'red'})
-                }
-              } else if (card.skill.ask_1 === 3 || card.skill.ask_1 === '3') {
-                let enemy_targets = []
-                Object.keys(this.opponent_field_unit_action).forEach((position) => {
-                  if (this.opponent_field_unit_action[position] == 2) {
-                    const unit3 = this.card_information[this.opponent_field_unit[position]]
-                    enemy_targets.push({position: position, name: unit3.name})
+                } else if (card.skill.ask_1 === 3 || card.skill.ask_1 === '3') {
+                  let enemy_targets = []
+                  Object.keys(this.opponent_field_unit_action).forEach((position) => {
+                    if (this.opponent_field_unit_action[position] == 2) {
+                      const unit3 = this.card_information[this.opponent_field_unit[position]]
+                      enemy_targets.push({position: position, name: unit3.name})
+                    }
+                  })
+                  if (enemy_targets.length > 0) {
+                    enemy_skill_target = await this.confirmRef.prompt('Choose the unit target', enemy_targets, {color: 'red'})
                   }
-                })
-                if (enemy_targets.length > 0) {
-                  enemy_skill_target = await this.confirmRef.prompt('Choose the unit target', enemy_targets, {color: 'red'})
                 }
               }
-            }
+              console.log(333)
 
-            const used_intercept_cards = []
-            for (let position in Object.keys(this.your_trigger_cards)) {
-              if (this.your_trigger_cards[position] != null && this.your_trigger_cards[position] > 0) {
-                const d = this.card_information[this.your_trigger_cards[position]]
-                if (d) {
-                  // トリガー
-                  if (d.category === 1) {
-                    // The card trigger is when the unit is put on the field
-                    if (d.skill.trigger_1 === 1 || d.skill.trigger_1 === '1') {
-                      used_intercept_cards.push(parseInt(d.card_id))
-                    }
-                  }
-                  // インターセプト
-                  if (d.category === 2) {
-                    // 無色 color
-                    if (d.type === 4) {
+              for (let position in Object.keys(this.your_trigger_cards)) {
+                console.log(444, position, this.your_trigger_cards[position])
+                if (this.your_trigger_cards[position] != null && this.your_trigger_cards[position] !== 0) {
+                  const d = this.card_information[this.your_trigger_cards[position]]
+                  console.log(d, 555)
+                  if (d) {
+                    // トリガー
+                    if (d.category === 1 || d.category === '1') {
                       // The card trigger is when the unit is put on the field
                       if (d.skill.trigger_1 === 1 || d.skill.trigger_1 === '1') {
-                        if (await this.confirmRef.confirm('Intercept Card can be invoked', `Do you use "${d.name}" Intercept Card?`, {color: 'red'})) {
-                          if (d.skill.ask_1 === 1 || d.skill.ask_1 === '1') {
-                            used_intercept_cards.push(parseInt(d.card_id))
-                            let enemy_targets = []
-                            Object.keys(this.opponent_field_unit).forEach((position) => {
-                              if (this.opponent_field_unit[position] && this.opponent_field_unit[position] != '0') {
-                                const unit3 = this.card_information[this.opponent_field_unit[position]]
-                                enemy_targets.push({position: position, name: unit3.name})
+                        used_intercept_cards.push(position)
+                        await this.confirmRef.alert('Trigger Card has been invoked', `${d.name}" trigger card is activated!`, {color: 'red'})
+                      }
+                    }
+                    // インターセプト
+                    if (d.category === 2 || d.category === '2') {
+                      console.log(d, 666)
+                      // 無色 color
+                      if (d.type === 4 || d.type === '4') {
+                        // The card trigger is when the unit is put on the field
+                        if (d.skill.trigger_1 === 1 || d.skill.trigger_1 === '1') {
+                          if (await this.confirmRef.confirm('Intercept Card can be invoked', `Do you use "${d.name}" Intercept Card?`, {color: 'red'})) {
+                            if (d.skill.ask_1 === 1 || d.skill.ask_1 === '1') {
+                              used_intercept_cards.push(position)
+                              let enemy_targets = []
+                              Object.keys(this.opponent_field_unit).forEach((position) => {
+                                if (this.opponent_field_unit[position] && this.opponent_field_unit[position] != '0') {
+                                  const unit3 = this.card_information[this.opponent_field_unit[position]]
+                                  enemy_targets.push({position: position, name: unit3.name})
+                                }
+                              })
+                              if (enemy_targets.length > 0) {
+                                enemy_skill_target = await this.confirmRef.prompt('Choose the unit target', enemy_targets, {color: 'red'})
+                              } else {
+                                await this.confirmRef.alert('Sorry, in this field, there is no target of this trigger card. Do again.')
                               }
-                            })
-                            if (enemy_targets.length > 0) {
-                              enemy_skill_target = await this.confirmRef.prompt('Choose the unit target', enemy_targets, {color: 'red'})
-                            } else {
-                              alert('Sorry, in this field, there is no target of this trigger card. Do again.')
                             }
                           }
                         }
-                      }
-                    } else {
-                      let same_color_on_the_field = false
-                      if (card.type === d.type) {
-                        same_color_on_the_field = true
-                      }
-                      for (let unit_position in Object.keys(this.your_field_unit)) {
-                        const unit2 = this.card_information[this.your_field_unit[unit_position]]
-                        console.log(4, unit2)
-                        if (d.type === unit2.type) {
+                      } else {
+                        console.log(d, 777)
+                        let same_color_on_the_field = false
+                        if (card.type === d.type) {
                           same_color_on_the_field = true
                         }
-                      }
-                      // The card trigger is when the unit is put on the field
-                      if (same_color_on_the_field && (d.skill.trigger_1 === 1 || d.skill.trigger_1 === '1')) {
-                        if (await this.confirmRef.confirm('Intercept Card can be invoked', `Do you use "${d.name}" Intercept Card?`, {color: 'red'})) {
-                          used_intercept_cards.push(parseInt(d.card_id))
-                          if (d.skill.ask_1 === 1 || d.skill.ask_1 === '1') {
-                            let enemy_targets = []
-                            Object.keys(this.opponent_field_unit).forEach((position) => {
-                              if (this.opponent_field_unit[position] && this.opponent_field_unit[position] != '0') {
-                                const unit3 = this.card_information[this.opponent_field_unit[position]]
-                                enemy_targets.push({position: position, name: unit3.name})
+                        for (let unit_position in Object.keys(this.your_field_unit)) {
+                          const unit2 = this.card_information[this.your_field_unit[unit_position]]
+                          if (unit2 && d.type === unit2.type) {
+                            same_color_on_the_field = true
+                          }
+                        }
+                        // The card trigger is when the unit is put on the field
+                        if (same_color_on_the_field && (d.skill.trigger_1 === 1 || d.skill.trigger_1 === '1')) {
+                          console.log(d, 888)
+                          if (await this.confirmRef.confirm('Intercept Card can be invoked', `Do you use "${d.name}" Intercept Card?`, {color: 'red'})) {
+                            console.log(d, 999)
+                            used_intercept_cards.push(position)
+                            if (d.skill.ask_1 === 1 || d.skill.ask_1 === '1') {
+                              let enemy_targets = []
+                              Object.keys(this.opponent_field_unit).forEach((position) => {
+                                if (this.opponent_field_unit[position] && this.opponent_field_unit[position] != '0') {
+                                  const unit3 = this.card_information[this.opponent_field_unit[position]]
+                                  enemy_targets.push({position: position, name: unit3.name})
+                                }
+                              })
+                              if (enemy_targets.length > 0) {
+                                enemy_skill_target = await this.confirmRef.prompt('Choose the unit target', enemy_targets, {color: 'red'})
+                              } else {
+                                await this.confirmRef.alert('Sorry, in this field, there is no target of this trigger card. Do again.')
                               }
-                            })
-                            if (enemy_targets.length > 0) {
-                              enemy_skill_target = await this.confirmRef.prompt('Choose the unit target', enemy_targets, {color: 'red'})
-                            } else {
-                              alert('Sorry, in this field, there is no target of this trigger card. Do again.')
-                            }
-                          } else if (d.skill.ask_1 === 3 || d.skill.ask_1 === '3') {
-                            let enemy_targets = []
-                            Object.keys(this.opponent_field_unit_action).forEach((position) => {
-                              if (this.opponent_field_unit_action[position] == 2) {
-                                const unit3 = this.card_information[this.opponent_field_unit[position]]
-                                enemy_targets.push({position: position, name: unit3.name})
+                            } else if (d.skill.ask_1 === 3 || d.skill.ask_1 === '3') {
+                              let enemy_targets = []
+                              Object.keys(this.opponent_field_unit_action).forEach((position) => {
+                                if (this.opponent_field_unit_action[position] == 2) {
+                                  const unit3 = this.card_information[this.opponent_field_unit[position]]
+                                  enemy_targets.push({position: position, name: unit3.name})
+                                }
+                              })
+                              if (enemy_targets.length > 0) {
+                                enemy_skill_target = await this.confirmRef.prompt('Choose the unit target', enemy_targets, {color: 'red'})
+                              } else {
+                                await this.confirmRef.alert('Sorry, in this field, there is no target of this trigger card. Do again.')
                               }
-                            })
-                            if (enemy_targets.length > 0) {
-                              enemy_skill_target = await this.confirmRef.prompt('Choose the unit target', enemy_targets, {color: 'red'})
-                            } else {
-                              alert('Sorry, in this field, there is no target of this trigger card. Do again.')
                             }
                           }
                         }
@@ -1762,6 +1826,7 @@ export default {
                 }
               }
             }
+            ////////// ABILITY /////////
             // ユニットカード且つフィールドに置けるスペースがある場合
             if (this.selected_card_category === 0 && !this.your_field_unit[5]) {
               if (this.your_cp >= card.cost) {
@@ -2203,6 +2268,11 @@ video {
   .section .content.top-screen {
     top: 50px;
   }
+  .enemy_attack div.your_damage,
+  .enemy_attack div.your_bp,
+  .enemy_attack div.your_pump {
+    font-size: 14px !important;
+  }
 }
 
 @media screen and (max-height: 800px) and (max-width: 700px) {
@@ -2245,6 +2315,20 @@ video {
   }
   .header-bar {
     font-size: 15px;
+  }
+
+  .attack-anime {
+    width: 100px !important;
+  }
+
+  .dialog_title {
+    font-size: 14px;
+  }
+
+  .enemy_attack div.your_damage,
+  .enemy_attack div.your_bp,
+  .enemy_attack div.your_pump {
+    font-size: 14px !important;
   }
 }
 @media screen and (max-width: 700px) and (orientation: landscape) {

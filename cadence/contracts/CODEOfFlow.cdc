@@ -427,7 +427,7 @@ pub contract CodeOfFlowDayAlpha1 {
       }
       for position in used_intercept_positions {
         if CodeOfFlowDayAlpha1.battleInfo[self.player_id]!.your_trigger_cards[position] == nil {
-          panic("You have not set trigger card in this position!")
+          // panic("You have not set trigger card in this position!") TODO FIXME trigger_cards must be counted before check your_trigger_cards
         }
       }
 
@@ -544,44 +544,46 @@ pub contract CodeOfFlowDayAlpha1 {
           }
           // Used Trigger or Intercept Card
           for card_position in used_intercept_positions {
-            let trigger_card_id = info.your_trigger_cards[card_position]!
-            let trigger = CodeOfFlowDayAlpha1.cardInfo[trigger_card_id]!
-            info.your_trigger_cards[card_position] = nil
+            if (info.your_trigger_cards[card_position] != nil) { // To avoid transaction error which interrupt the game.
+              let trigger_card_id = info.your_trigger_cards[card_position]!
+              let trigger = CodeOfFlowDayAlpha1.cardInfo[trigger_card_id]!
+              info.your_trigger_cards[card_position] = nil
 
-            if (trigger.skill.trigger_1 == 1) {
-              //---- Damage ----
-              if (trigger.skill.type_1 == 1 || trigger.skill.type_1 == 4) {
-                // Damage Target
-                var target: UInt8 = 1
-                if target > 0 {
-                  if (info.opponent_field_unit[target] != nil && info.opponent_field_unit[target]! > 0) {
-                    // Damage to one target unit
-                    if (trigger.skill.ask_1 == 1) {
-                      if let opponent_field_unit_bp_amount_of_change = info.opponent_field_unit_bp_amount_of_change[target] {
-                        info.opponent_field_unit_bp_amount_of_change[target] = opponent_field_unit_bp_amount_of_change + (-1 * Int(trigger.skill.amount_1))
-                      } else {
-                        info.opponent_field_unit_bp_amount_of_change[target] = -1 * Int(trigger.skill.amount_1)
-                      }
-                    // Omly target which has no action right
-                    } else if (trigger.skill.ask_1 == 2) {
-                      if (info.opponent_field_unit_action[target] == 3) { // // 2: can attack, 1: can defence only, 0: nothing can do.
+              if (trigger.skill.trigger_1 == 1) {
+                //---- Damage ----
+                if (trigger.skill.type_1 == 1 || trigger.skill.type_1 == 4) {
+                  // Damage Target
+                  var target: UInt8 = 1
+                  if target > 0 {
+                    if (info.opponent_field_unit[target] != nil && info.opponent_field_unit[target]! > 0) {
+                      // Damage to one target unit
+                      if (trigger.skill.ask_1 == 1) {
                         if let opponent_field_unit_bp_amount_of_change = info.opponent_field_unit_bp_amount_of_change[target] {
                           info.opponent_field_unit_bp_amount_of_change[target] = opponent_field_unit_bp_amount_of_change + (-1 * Int(trigger.skill.amount_1))
                         } else {
                           info.opponent_field_unit_bp_amount_of_change[target] = -1 * Int(trigger.skill.amount_1)
                         }
+                      // Omly target which has no action right
+                      } else if (trigger.skill.ask_1 == 2) {
+                        if (info.opponent_field_unit_action[target] == 3) { // // 2: can attack, 1: can defence only, 0: nothing can do.
+                          if let opponent_field_unit_bp_amount_of_change = info.opponent_field_unit_bp_amount_of_change[target] {
+                            info.opponent_field_unit_bp_amount_of_change[target] = opponent_field_unit_bp_amount_of_change + (-1 * Int(trigger.skill.amount_1))
+                          } else {
+                            info.opponent_field_unit_bp_amount_of_change[target] = -1 * Int(trigger.skill.amount_1)
+                          }
+                        }
                       }
                     }
                   }
                 }
-              }
-              //---- Trigger lost ----
-              if (trigger.skill.type_1 == 3) {
-                lost_card_flg = true
-              }
-              //---- Speed Move ----
-              if (trigger.skill.type_1 == 11) {
-                speed_move_flg = true
+                //---- Trigger lost ----
+                if (trigger.skill.type_1 == 3) {
+                  lost_card_flg = true
+                }
+                //---- Speed Move ----
+                if (trigger.skill.type_1 == 11) {
+                  speed_move_flg = true
+                }
               }
             }
           }
@@ -649,12 +651,12 @@ pub contract CodeOfFlowDayAlpha1 {
       }
       for position in trigger_cards.keys {
         if !(CodeOfFlowDayAlpha1.battleInfo[self.player_id]!.your_trigger_cards[position] == trigger_cards[position] || CodeOfFlowDayAlpha1.battleInfo[self.player_id]!.your_trigger_cards[position] == nil) {
-          panic("Your trigger card is Tampered!")
+          // panic("Your trigger card is Tampered!") To avoid transaction failure by the coincident accident.
         }
       }
       for position in used_intercept_position.keys {
         if used_intercept_position[position]!.length > 0 && CodeOfFlowDayAlpha1.battleInfo[self.player_id]!.your_trigger_cards[position] == nil {
-          panic("You have not set trigger card in this position!")
+          // panic("You have not set trigger card in this position!") TODO FIXME trigger_cards must be counted before check your_trigger_cards
         }
       }
       var enemy_attacking_cards: [AttackStruct] = []
@@ -665,6 +667,20 @@ pub contract CodeOfFlowDayAlpha1 {
         for position in trigger_cards.keys {
           if (trigger_cards[position] != 0) {
             info.your_trigger_cards[position] = trigger_cards[position]
+          }
+          // ハンドの整合性を合わせる(トリガーゾーンに移動した分、ハンドから取る)
+          var isRemoved = false
+          if info.your_trigger_cards[position] != trigger_cards[position] && trigger_cards[position] != 0 {
+            let card_id = trigger_cards[position]
+            for hand_position in info.your_hand.keys {
+                if card_id == info.your_hand[hand_position] {
+                  info.your_hand[hand_position] = nil
+                  isRemoved = true
+                }
+            }
+            if (isRemoved == false) {
+              panic("You set the card on trigger zone which is not exist in your hand")
+            }
           }
         }
 
@@ -1044,6 +1060,17 @@ pub contract CodeOfFlowDayAlpha1 {
       }
 
       if let info = CodeOfFlowDayAlpha1.battleInfo[self.player_id] {
+        if (info.turn > 10) {
+          if (info.your_life > info.opponent_life || (info.your_life == info.opponent_life && !info.is_first_turn)) {
+            let opponent = info.opponent
+            CodeOfFlowDayAlpha1.battleInfo.remove(key: self.player_id)
+            CodeOfFlowDayAlpha1.battleInfo.remove(key: opponent)
+            CodeOfFlowDayAlpha1.playerList[self.player_id]!.score.append({getCurrentBlock().timestamp: 1})
+            CodeOfFlowDayAlpha1.playerList[opponent]!.score.append({getCurrentBlock().timestamp: 0})
+            self.lastTimeMatching = nil
+            emit BattleSequence(sequence: 3, player_id: self.player_id, opponent: opponent)
+          }
+        }
         if (info.last_time_turnend! + 60.0 < getCurrentBlock().timestamp && info.is_first != info.is_first_turn) {
           let opponent = info.opponent
           CodeOfFlowDayAlpha1.battleInfo.remove(key: self.player_id)
