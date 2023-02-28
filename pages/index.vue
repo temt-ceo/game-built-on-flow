@@ -141,7 +141,8 @@
                     @click="showCardInfo(opponent_field_unit[n], 4, n)"
                   ></v-img>
                   <div style="position: absolute; top: 60px; font-size: 12px;">
-                    <div v-if="opponent_field_unit_bp_amount_of_change && opponent_field_unit_bp_amount_of_change[n]" style="position: absolute; left: 4px; font-size: 13px; bottom: 58px; color: red; text-align: center; font-weight: bold; line-height: 0.8;" class="your_damage">{{ opponent_field_unit_bp_amount_of_change[n] }}</div>
+                    <div v-if="opponent_field_unit_bp_amount_of_change && parseInt(opponent_field_unit_bp_amount_of_change[n]) > 0" style="position: absolute; left: 4px; font-size: 13px; bottom: 58px; color: red; text-align: center; font-weight: bold; line-height: 0.8;" class="your_damage">+{{ opponent_field_unit_bp_amount_of_change[n] }}</div>
+                    <div v-if="opponent_field_unit_bp_amount_of_change && parseInt(opponent_field_unit_bp_amount_of_change[n]) < 0" style="position: absolute; left: 4px; font-size: 13px; bottom: 58px; color: red; text-align: center; font-weight: bold; line-height: 0.8;" class="your_damage">{{ opponent_field_unit_bp_amount_of_change[n] }}</div>
                     <v-icon v-if="opponent_field_unit_action[n] >= 1" color="green-accent-2" icon="mdi-shield-cross-outline"></v-icon>
                     <v-icon v-if="opponent_field_unit_action[n] >= 2" color="white" icon="mdi-fencing" style="position: absolute; left: 18px;"></v-icon>
                   </div>
@@ -161,7 +162,8 @@
                     @click="showCardInfo(your_field_unit[n], 3, n)"
                   ></v-img>
                   <div style="position: absolute; bottom: 0px; font-size: 12px;">
-                    <div v-if="your_field_unit_bp_amount_of_change && your_field_unit_bp_amount_of_change[n]" style="position: absolute; left: 4px; font-size: 13px; bottom: 58px; color: red; text-align: center; font-weight: bold; line-height: 0.8;" class="your_damage">{{ your_field_unit_bp_amount_of_change[n] }}</div>
+                    <div v-if="your_field_unit_bp_amount_of_change && parseInt(your_field_unit_bp_amount_of_change[n]) > 0" style="position: absolute; left: 4px; font-size: 13px; bottom: 58px; color: blue; text-align: center; font-weight: bold; line-height: 0.8;" class="your_damage">+{{ your_field_unit_bp_amount_of_change[n] }}</div>
+                    <div v-if="your_field_unit_bp_amount_of_change && parseInt(your_field_unit_bp_amount_of_change[n]) < 0" style="position: absolute; left: 4px; font-size: 13px; bottom: 58px; color: red; text-align: center; font-weight: bold; line-height: 0.8;" class="your_damage">{{ your_field_unit_bp_amount_of_change[n] }}</div>
                     <v-icon v-if="your_field_unit_action[n] >= 1" color="green-accent-2" icon="mdi-shield-cross-outline"></v-icon>
                     <v-icon v-if="your_field_unit_action[n] >= 2" color="white" icon="mdi-fencing" style="position: absolute; left: 18px;"></v-icon>
                     <v-icon v-if="your_field_unit_attack_action[n] == 1" color="red-darken-3" icon="mdi-fencing" style="position: absolute; left: 10px;    bottom: 90px;    font-size: 40px;"></v-icon>
@@ -410,7 +412,7 @@
     <div v-if="gameEndDialog" class="v-overlay v-overlay--active v-theme--light v-locale--is-ltr v-dialog v-overlay--scroll-blocked" aria-role="dialog" aria-modal="true" style="z-index: 2400;"><div class="v-overlay__content" style="width: auto; height: 290px;">
       <v-card color="yellow-lighten-1">
         <v-card-text color="yellow-lighten-1">
-          <div class="text-h6 pa-12">A.C.T.I.S:<br>Congratulation, your victory is confirmed!<br><br>Return to operational headquarters..</div>
+          <div class="text-h6 pa-12">A.C.T.I.S:<br>Congratulation, your victory is confirmed!<br><br>Return to the operation center..</div>
         </v-card-text>
         <v-btn
           color="success"
@@ -454,19 +456,13 @@
       </v-card>
     </div></div>
     <div v-if="show_surrendar_dialog" class="v-overlay v-overlay--active v-theme--light v-locale--is-ltr v-dialog v-overlay--scroll-blocked" aria-role="dialog" aria-modal="true" style="z-index: 9900;"><div class="v-overlay__content" style="width: auto; height: 360px;">
-      <v-card color="light-blue">
+      <v-card color="red-darken-4">
         <v-card-text color="light-blue">
-          <div class="text-h6 pa-12">Do you want to surrender?</div>
+          <div v-if="your_life > 0" class="text-h6 pa-12">Do you want to surrender?</div>
+          <div v-if="your_life <= 0" class="text-h6 pa-12">The activity limit has been reached. Returning to the operation center.</div>
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn
-            color="white"
-            size="x-large"
-            @click="show_surrendar_dialog = false"
-          >
-            No
-          </v-btn>
           <v-btn
             size="x-large"
             color="red"
@@ -483,7 +479,7 @@
       </v-card>
     </div></div>
 
-    <div v-if="show_game_dialog" class="v-overlay v-overlay--active v-theme--light v-locale--is-ltr v-dialog v-overlay--scroll-blocked" aria-role="dialog" aria-modal="true" style="z-index: 2400;"><div class="v-overlay__content" style="width: auto;">
+    <div v-if="show_game_dialog && !(battleDialogText === `Your turn! Draw two cards!` && this.turn === '11')" class="v-overlay v-overlay--active v-theme--light v-locale--is-ltr v-dialog v-overlay--scroll-blocked" aria-role="dialog" aria-modal="true" style="z-index: 2400;"><div class="v-overlay__content" style="width: auto;">
       <div class="game_dialog">
         <div v-if=!battleDialogText>To start a game, click Game Start button</div>
         {{ battleDialogText }}
@@ -532,7 +528,7 @@
             </template>
           </v-btn>
           <v-btn
-            v-if="battleDialogText === `Your turn! Draw two cards!`"
+            v-if="battleDialogText === `Your turn! Draw two cards!` && this.turn !== '11'"
             :loading="customLoading"
             :disabled="customLoading"
             size="x-large"
@@ -599,13 +595,6 @@
         <v-card-actions v-if="!enemyAttack">
           <v-spacer></v-spacer>
           <v-btn
-            color="green-darken-1"
-            size="x-large"
-            @click="show_battle_dialog = false"
-          >
-            No
-          </v-btn>
-          <v-btn
             size="x-large"
             color="info"
             @click="cardMoveDecided"
@@ -616,6 +605,13 @@
                 <v-icon light>mdi-cached</v-icon>
               </span>
             </template>
+          </v-btn>
+          <v-btn
+            color="green-darken-1"
+            size="x-large"
+            @click="show_battle_dialog = false"
+          >
+            No
           </v-btn>
         </v-card-actions>
         <div v-if="enemyAttack" class="your_cards enemy_attack" style="margin: 1px">
@@ -639,7 +635,7 @@
           <div v-if="battleActionObj.result === 3" style="position: absolute; left: 45px; font-size: 70px; bottom: 150px; color: #FFEE58">FAILED</div>
           <div v-if="battleActionObj.result === 2" style="position: absolute; left: 45px; font-size: 70px; bottom: 150px; color: #FFEE58">DRAW</div>
           <div v-if="battleActionObj.enemyBP" style="position: absolute; left: 38%; font-size: 25px; bottom: 300px; color: white;">{{ battleActionObj.enemyBP }}BP</div>
-          <div v-if="battleActionObj.enemyPump && battleActionObj.enemyPump != '0'" style="position: absolute; left: 100px; font-size: 25px; bottom: 200px; color: white;">+ {{ battleActionObj.enemyPump }}BP</div>
+          <div v-if="battleActionObj.enemyPump && battleActionObj.enemyPump != '0'" style="position: absolute; left: 38%; font-size: 25px; bottom: 200px; color: white;">+ {{ battleActionObj.enemyPump }}BP</div>
           <v-icon v-if="defence_executed" class="defence_executed" color="white" icon="mdi-fencing" style="position: absolute; left: 155px; font-size: 100px; bottom: 100px;"></v-icon>
           <v-row>
             <v-col
@@ -670,7 +666,6 @@
 import confirm from '../components/confirm'
 import flame from '../components/flame'
 import { Auth, API } from 'aws-amplify'
-import { createTodo } from '~/src/graphql/mutations'
 import { onCreateTodo } from '~/src/graphql/subscriptions'
 import FlowTransactions from '~/cadence/transactions'
 import FlowScripts from '~/cadence/scripts'
@@ -746,8 +741,8 @@ export default {
       opponent_life: 7,
       your_cp: 2,
       opponent_cp: 2,
-      your_remain_deck: 36,
-      opponent_remain_deck: 36,
+      your_remain_deck: 30,
+      opponent_remain_deck: 30,
       your_hand: {},
       opponent_hand: 0,
       triggers_boxes: 4,
@@ -793,6 +788,8 @@ export default {
       defenced_unit: {},
       defenced_used_intercept: {},
       current_win_count: null,
+      winClaimed: false,
+      used_triggers_on_turn_change: [],
       address: '',
       hasNFT: false,
       nftType: 'human',
@@ -818,6 +815,13 @@ export default {
     onMatching (val) {
       if (val === 1) {
         this.getPlayersScore()
+        this.your_hand = {}
+        this.opponent_hand = 0
+        this.triggers_boxes = 4
+        this.your_trigger_cards = {1: null, 2: null, 3: null, 4: null}
+        this.opponent_trigger_cards = 0
+        this.your_field_unit = {1: null, 2: null, 3: null, 4: null, 5: null}
+        this.opponent_field_unit = {1: null, 2: null, 3: null, 4: null, 5: null}
       }
     },
   },
@@ -898,7 +902,6 @@ export default {
           info += '"' + d.name + '"  ' + (d.bp > 0 ? `BP: ${d.bp}` : '')
           info += ` ${d.skill.description}`
         }
-        console.log('CARD:', d)
         this.display_cardinfo = info
         this.selected_card_cost = parseInt(d.cost)
         this.selected_card_category = parseInt(d.category)
@@ -908,7 +911,9 @@ export default {
       }
     },
     showBattleDialogWindow() {
-      // this.selected_card_cost = 11 // ２重で置くのを防ぐため
+      if (this.loadingDialog) {
+        this.selected_card_cost = 11 // ２重で置くのを防ぐため
+      }
       if ((this.display_card_type === 1 || this.display_card_type === 3) && this.is_first === this.is_first_turn && this.turn_timer !== '00') {
         this.show_battle_dialog = true
       } else if (this.turn_timer === '00') {
@@ -930,6 +935,7 @@ export default {
         limit: 999
       })
       console.log(`TransactionId: ${transactionId}`)
+      this.winClaimed = true
       this.show_game_dialog = false
       this.loadingDialog = true
       this.checkTransactionComplete('claimWin')
@@ -956,7 +962,6 @@ export default {
           arg(this.nftSeller, t.Address)
         ]
       })
-      console.log(result)
     },
     async setupWalletInfo (user) {
       this.walletUser = user
@@ -1170,7 +1175,6 @@ export default {
           args: (arg, t) => [
           ]
         })
-        console.log(result)
         this.card_information = result
     },
     async get_matching_limits() {
@@ -1179,7 +1183,6 @@ export default {
           args: (arg, t) => [
           ]
         })
-        console.log(result)
         result.forEach((t) => {
           const d = new Date(parseFloat(t) * 1000)
           const n = new Date()
@@ -1214,7 +1217,7 @@ export default {
               if (!isNaN(parseFloat(result))) {
                 if (this.onMatching === 3) {
                   // 対戦相手が勝利申請した可能性がある
-                  if (this.is_first_turn == this.is_first && this.onMatching === 3) {
+                  if (this.is_first_turn == this.is_first || this.your_life > this.opponent_life) {
                     this.gameEndedByOpponentDialog = true
                     this.show_game_dialog = false
                     this.show_battle_dialog = false
@@ -1228,7 +1231,7 @@ export default {
                 if (d.getTime() / 1000 - matchingTime > 60) {
                   if (d.getTime() / 1000 - matchingTime > 100){
                     // 古い情報。
-                    if (transactionName !== 'watchCurrentStatus') {
+                    if (transactionName !== 'watchCurrentStatus' && transactionName !== 'matchingStart') {
                       clearInterval(timerID)
                     }
                     return
@@ -1266,13 +1269,12 @@ export default {
                 // ゲーム開始済み
                 } else if (this.game_started === true) {
                   this.turn = result.turn
-                  if (this.turn == '11') {
+                  if (this.turn == '11' && this.winClaimed === false) {
                     this.onMatching = 3
                     if (result.your_life > result.opponent_life) {
                       this.battleDialogText = 'You Win!'
                       this.show_game_dialog = true
                     } else if (result.your_life == result.opponent_life && !result.is_first) {
-                      console.log(222)
                       this.battleDialogText = 'You Win!'
                       this.show_game_dialog = true
                     }
@@ -1298,7 +1300,6 @@ export default {
                     this.opponent_field_unit_bp_amount_of_change = result.opponent_field_unit_bp_amount_of_change
                     clearInterval(timerID)
                   } else if(transactionName === 'startYourTurn' && (Object.keys(this.your_hand).length !== Object.keys(result.your_hand).length || Object.keys(this.your_hand).length === 7)) {
-                    console.log('startYourTurn:', this.your_hand, result.your_hand)
                     this.loadingDialog = false
                     this.your_remain_deck = result.your_remain_deck?.length
                     this.your_hand = result.your_hand
@@ -1324,7 +1325,7 @@ export default {
                         if (this.enemy_attacking_cards.length < result.enemy_attacking_cards.length) {
                           this.enemy_attacking_cards = result.enemy_attacking_cards
                           this.enemyAttack = true
-                          this.battleAction()
+                          this.battleAction(true)
                         } else {
                           this.enemyAttack = false
                         }
@@ -1340,6 +1341,9 @@ export default {
                   // 自ターン時は更新せずあとで更新
                   if (this.turn !== result.turn || this.is_first_turn !== result.is_first_turn || result.is_first !== result.is_first_turn) {
                     this.your_life = parseInt(result.your_life)
+                    if (this.your_life <= 0) {
+                      this.show_surrendar_dialog = true
+                    }
                     this.your_remain_deck = result.your_remain_deck?.length
                     this.your_hand = result.your_hand
                     this.your_field_unit = result.your_field_unit
@@ -1354,6 +1358,7 @@ export default {
                     this.opponent_field_unit_action = result.opponent_field_unit_action
                     this.opponent_field_unit_bp_amount_of_change = result.opponent_field_unit_bp_amount_of_change
                     this.enemy_skill_target = {}
+                    this.used_triggers_on_turn_change = []
                   }
                   this.your_cp = parseInt(result.your_cp)
                   this.opponent_cp = parseInt(result.opponent_cp)
@@ -1403,7 +1408,7 @@ export default {
       const timerID = setInterval(func, 3000)
       func()
     },
-    battleAction() {
+    battleAction(isFirstBattle) {
       setTimeout(()=> {
         const attackingCard = this.enemy_attacking_cards.shift()
         this.defence_executed = false
@@ -1415,14 +1420,14 @@ export default {
           this.battleActionObj.result = 0
           this.enemyAttack = true
           this.enemy_attacking_card_id = card.card_id
-          this.battleActionObj.enemyTrigger1 = attackingCard.used_trigger_cards.length >= 1 ? attackingCard.used_trigger_cards[0] : null
-          this.battleActionObj.enemyTrigger2 = attackingCard.used_trigger_cards.length >= 2 ? attackingCard.used_trigger_cards[1] : null
+          this.battleActionObj.enemyTrigger1 = isFirstBattle && attackingCard.used_trigger_cards.length >= 1 ? attackingCard.used_trigger_cards[0] : null
+          this.battleActionObj.enemyTrigger2 = isFirstBattle && attackingCard.used_trigger_cards.length >= 2 ? attackingCard.used_trigger_cards[1] : null
           this.battleActionObj.enemyPump = attackingCard.pump
           this.battleActionObj.enemyBP = attackingCard.bp
           this.battleActionObj.yourBP = {}
           this.battleActionObj.yourPump = {}
           this.battleActionObj.yourDamage = {}
-          this.used_intercept_position[this.display_card_position]
+          // this.used_intercept_position[this.display_card_position]
           Object.keys(this.your_field_unit).forEach((key) => {
             const card = this.card_information[parseInt(this.your_field_unit[key])]
             this.battleActionObj.yourBP[key] = card.bp
@@ -1442,14 +1447,14 @@ export default {
           let counter = 0
           const stopTimer = setInterval(async () => {
             counter += 50
-            attack_time_second = Math.floor((500000 - counter) / 1000)
+            attack_time_second = Math.floor((5500 - counter) / 1000)
             if (counter % 100 === 0) {
               attack_time_millisecond_1 = counter % 1000 / 100
               attack_time_millisecond_2 = 0
             } else {
               attack_time_millisecond_2 = 5
             }
-            if (attack_time_second === 0 || this.battleActionObj.result > 0) {
+            if ((attack_time_second === 0 && attack_time_millisecond_1 === 0) || this.battleActionObj.result > 0) {
               attack_time_millisecond_2 = 0
               this.show_battle_dialog = false
               clearInterval(stopTimer)
@@ -1464,11 +1469,15 @@ export default {
                     await this.confirmRef.alert('Nice!', `How's that!`, {color: 'green'})
                   }
                 }
-                setTimeout(this.battleAction, 1000)
+                this.battleAction()
               } else {
                 this.your_life = this.your_life - 1
-                await this.confirmRef.alert('Geez!!', `You took 1 damage to life`, {color: 'red'})
-                setTimeout(this.battleAction, 1000)
+                await this.confirmRef.alert('Geez!!', `1 damage to life`, {color: 'red'})
+                if (this.your_life <= 0) {
+                  this.show_surrendar_dialog = true
+                } else {
+                  this.battleAction()
+                }
               }
             }
             this.attack_timer = attack_time_second + ':' + attack_time_millisecond_1 + attack_time_millisecond_2
@@ -1503,7 +1512,6 @@ export default {
 
       for (let i = 1; i <= 4; i++){
         // トリガーゾーンにカードをセットしている場合
-        console.log(this.defenced_used_intercept[i], 9999)
         if (this.your_trigger_cards[i] && !this.defenced_used_intercept[i]) {
           const card = this.card_information[this.your_trigger_cards[i]]
           // インターセプトカードの場合
@@ -1602,7 +1610,7 @@ export default {
       this.attack_unit_cards.forEach((card_position) => {
         this.enemy_skill_target[card_position] = this.enemy_skill_target[card_position] || 0
       })
-      console.log(999999, parseInt(this.enemy_skill_target[3]), 'attack_unit_cards', this.attack_unit_cards, 'enemy_skill_target', this.enemy_skill_target, 'used_intercept_position', this.used_intercept_position)
+      console.log('DEBUG TurnChange', 'attack_unit_cards', this.attack_unit_cards, 'enemy_skill_target', this.enemy_skill_target, 'used_intercept_position', this.used_intercept_position, 'your_trigger_cards', this.your_trigger_cards)
       const transactionId = await this.$fcl.mutate({
         cadence: FlowTransactions.turnChange,
         args: (arg, t) => [
@@ -1621,11 +1629,11 @@ export default {
             {key: 4, value: parseInt(this.your_trigger_cards[4]) || 0},
           ], t.Dictionary({ key: t.UInt8, value: t.UInt16 })), // trigger_cards
           arg([
-            {key: 1, value: this.used_intercept_position[1] ? this.used_intercept_position : []},
-            {key: 2, value: this.used_intercept_position[2] ? this.used_intercept_position : []},
-            {key: 3, value: this.used_intercept_position[3] ? this.used_intercept_position : []},
-            {key: 4, value: this.used_intercept_position[4] ? this.used_intercept_position : []},
-            {key: 5, value: this.used_intercept_position[5] ? this.used_intercept_position : []},
+            {key: 1, value: this.used_intercept_position[1] ? [parseInt(this.used_intercept_position[1])] : []},
+            {key: 2, value: this.used_intercept_position[2] ? [parseInt(this.used_intercept_position[2])] : []},
+            {key: 3, value: this.used_intercept_position[3] ? [parseInt(this.used_intercept_position[3])] : []},
+            {key: 4, value: this.used_intercept_position[4] ? [parseInt(this.used_intercept_position[4])] : []},
+            {key: 5, value: this.used_intercept_position[5] ? [parseInt(this.used_intercept_position[5])] : []},
           ], t.Dictionary({ key: t.UInt8, value: t.Array(t.UInt8) })) // used_intercept_position
         ],
         proposer: this.$fcl.authz,
@@ -1701,9 +1709,7 @@ export default {
     },
     async cardMoveDecided() {
       this.show_battle_dialog = false
-      console.log(111)
       const card = this.card_information[this.selected_card_id]
-      console.log(222)
       if (card) {
         switch (this.display_card_type) {
           case 1:
@@ -1741,7 +1747,6 @@ export default {
               for (let position in this.your_trigger_cards) {
                 if (this.your_trigger_cards[position] != null && this.your_trigger_cards[position] !== 0) {
                   const d = this.card_information[this.your_trigger_cards[position]]
-                  console.log(d, 555)
                   if (d) {
                     // トリガー
                     if (d.category === 1 || d.category === '1') {
@@ -1753,7 +1758,6 @@ export default {
                     }
                     // インターセプト
                     if ((d.category === 2 || d.category === '2') && parseInt(d.cost) <= this.your_cp) {
-                      console.log(d, 666)
                       // 無色 color
                       if (d.type === 4 || d.type === '4') {
                         // The card trigger is when the unit is put on the field
@@ -1789,36 +1793,36 @@ export default {
                         }
                         // The card trigger is when the unit is put on the field
                         if (same_color_on_the_field && (d.skill.trigger_1 === 1 || d.skill.trigger_1 === '1')) {
-                          console.log(d, 888)
-                          if (await this.confirmRef.confirm('Intercept Card can be invoked', `Do you use "${d.name}" Intercept Card?`, {color: 'red'})) {
-                            console.log(d, 999)
-                            used_intercept_cards.push(position)
-                            if (d.skill.ask_1 === 1 || d.skill.ask_1 === '1') {
-                              let enemy_targets = []
-                              Object.keys(this.opponent_field_unit).forEach((position) => {
-                                if (this.opponent_field_unit[position] && this.opponent_field_unit[position] != '0') {
-                                  const unit3 = this.card_information[this.opponent_field_unit[position]]
-                                  enemy_targets.push({position: position, name: unit3.name})
-                                }
-                              })
-                              if (enemy_targets.length > 0) {
-                                enemy_skill_target = await this.confirmRef.prompt('Choose the unit target', enemy_targets, {color: 'red'})
-                              } else {
-                                await this.confirmRef.alert('Sorry, in this field, there is no target of this trigger card. Do again.')
+                          if (d.skill.ask_1 === 1 || d.skill.ask_1 === '1') {
+                            let enemy_targets = []
+                            Object.keys(this.opponent_field_unit).forEach((position) => {
+                              if (this.opponent_field_unit[position] && this.opponent_field_unit[position] != '0') {
+                                const unit3 = this.card_information[this.opponent_field_unit[position]]
+                                enemy_targets.push({position: position, name: unit3.name})
                               }
-                            } else if (d.skill.ask_1 === 3 || d.skill.ask_1 === '3') {
-                              let enemy_targets = []
-                              Object.keys(this.opponent_field_unit_action).forEach((position) => {
-                                if (this.opponent_field_unit_action[position] == 2) {
-                                  const unit3 = this.card_information[this.opponent_field_unit[position]]
-                                  enemy_targets.push({position: position, name: unit3.name})
-                                }
-                              })
-                              if (enemy_targets.length > 0) {
+                            })
+                            if (enemy_targets.length > 0) {
+                              if (await this.confirmRef.confirm('Intercept Card can be invoked', `Do you use "${d.name}" Intercept Card?`, {color: 'red'})) {
+                              used_intercept_cards.push(position)
                                 enemy_skill_target = await this.confirmRef.prompt('Choose the unit target', enemy_targets, {color: 'red'})
-                              } else {
-                                await this.confirmRef.alert('Sorry, in this field, there is no target of this trigger card. Do again.')
                               }
+                            }
+                          } else if (d.skill.ask_1 === 3 || d.skill.ask_1 === '3') {
+                            let enemy_targets = []
+                            Object.keys(this.opponent_field_unit_action).forEach((position) => {
+                              if (this.opponent_field_unit_action[position] == 2) {
+                                const unit3 = this.card_information[this.opponent_field_unit[position]]
+                                enemy_targets.push({position: position, name: unit3.name})
+                              }
+                            })
+                            if (enemy_targets.length > 0) {
+                              if (await this.confirmRef.confirm('Intercept Card can be invoked', `Do you use "${d.name}" Intercept Card?`, {color: 'red'})) {
+                                enemy_skill_target = await this.confirmRef.prompt('Choose the unit target', enemy_targets, {color: 'red'})
+                              }
+                            }
+                          } else {
+                            if (await this.confirmRef.confirm('Intercept Card can be invoked', `Do you use "${d.name}" Intercept Card?`, {color: 'red'})) {
+                              used_intercept_cards.push(position)
                             }
                           }
                         }
@@ -1872,56 +1876,85 @@ export default {
             // }
             break
           case 3:
-            console.log('display_card_type', this.display_card_type, 'display_card_position', this.display_card_position, 'selected_card_id', this.selected_card_id, card)
-            console.log('your_hand:', this.your_hand, 'opponent_field_unit:', this.opponent_field_unit, this.display_card_position)
+            console.log('DEBUG cardMoveDecided:3', 'display_card_type', this.display_card_type, 'display_card_position', this.display_card_position, 'selected_card_id', this.selected_card_id, card)
+            console.log('DEBUG cardMoveDecided:3', 'your_hand:', this.your_hand, 'opponent_field_unit:', this.opponent_field_unit, this.display_card_position)
             this.your_field_unit_attack_action[this.display_card_position] = 1
             let skill_target = 0
-            if (card.skill.ask_1 === 1 || card.skill.ask_1 === '1') {
-              let enemy_targets = []
-              Object.keys(this.opponent_field_unit).forEach((position) => {
-                if (this.opponent_field_unit[position] && this.opponent_field_unit[position] != '0') {
-                  const unit3 = this.card_information[this.opponent_field_unit[position]]
-                  enemy_targets.push({position: position, name: unit3.name})
-                }
-              })
-              if (enemy_targets.length > 0) {
-                skill_target = await this.confirmRef.prompt('Choose the unit target', enemy_targets, {color: 'red'})
-                if (this.opponent_field_unit_bp_amount_of_change[skill_target]) {
-                  this.opponent_field_unit_bp_amount_of_change[skill_target] = parseInt(this.opponent_field_unit_bp_amount_of_change[skill_target]) - parseInt(card.skill.amount_1) // 表示用
+            // The card trigger_1 is when the unit is put on the field
+            if (card.skill.trigger_1 === 2 || card.skill.trigger_1 === '2') {
+              if (card.skill.type_1 == 2 || card.skill.type_1 == '2') {
+                if (this.your_field_unit_bp_amount_of_change[position]) {
+                  this.your_field_unit_bp_amount_of_change[position] = parseInt(this.your_field_unit_bp_amount_of_change[position]) + parseInt(card.skill.amount_1)
                 } else {
-                  this.opponent_field_unit_bp_amount_of_change[skill_target] = -1 * parseInt(card.skill.amount_1) // 表示用
+                  this.your_field_unit_bp_amount_of_change[position] = parseInt(card.skill.amount_1)
                 }
               }
-              this.enemy_skill_target[this.display_card_position] = skill_target
+              if (card.skill.ask_1 === 1 || card.skill.ask_1 === '1') {
+                let enemy_targets = []
+                Object.keys(this.opponent_field_unit).forEach((position) => {
+                  if (this.opponent_field_unit[position] && this.opponent_field_unit[position] != '0') {
+                    const unit3 = this.card_information[this.opponent_field_unit[position]]
+                    enemy_targets.push({position: position, name: unit3.name})
+                  }
+                })
+                if (enemy_targets.length > 0) {
+                  skill_target = await this.confirmRef.prompt('Choose the unit target', enemy_targets, {color: 'red'})
+                  if (this.opponent_field_unit_bp_amount_of_change[skill_target]) {
+                    this.opponent_field_unit_bp_amount_of_change[skill_target] = parseInt(this.opponent_field_unit_bp_amount_of_change[skill_target]) - parseInt(card.skill.amount_1) // 表示用
+                  } else {
+                    this.opponent_field_unit_bp_amount_of_change[skill_target] = -1 * parseInt(card.skill.amount_1) // 表示用
+                  }
+                }
+                this.enemy_skill_target[this.display_card_position] = skill_target
+              }
+            }
+            // The card trigger_2 is when the unit is put on the field
+            if (card.skill.trigger_2 === 2 || card.skill.trigger_2 === '2') {
+              // トリガーロスト
+              if (card.skill.type_1 == 3 || card.skill.type_1 == '3') {
+                this.opponent_trigger_cards = this.opponent_trigger_cards - 1
+              }
             }
             if (!this.attack_unit_cards.includes(this.display_card_position)) {
               this.attack_unit_cards.push(this.display_card_position)
               for (let i = 1; i <= 4; i++){
                 // トリガーゾーンにカードをセットしている場合
-                if (this.your_trigger_cards[i]) {
+                if (this.your_trigger_cards[i] && !this.used_triggers_on_turn_change.includes(i)) {
                   const card = this.card_information[this.your_trigger_cards[i]]
                   // インターセプトカードの場合
-                  if (card.category == 2) {
-                    if (card.skill.trigger_1 == 2 || card.skill.trigger_1 == 5) {
+                  if (card.category == 2 || card.category == '2' && parseInt(card.cost) <= this.your_cp) {
+                    if (parseInt(card.skill.trigger_1) == 2 || parseInt(card.skill.trigger_1) == 5) {
                       if (await this.confirmRef.confirm('Intercept Card can be invoked', `Do you use "${card.name}" Intercept Card?`, {color: 'red'})) {
-                        if (card.skill.type_1 == 2) {
-                          if (!this.used_intercept_position[this.display_card_position]) {
-                            this.used_intercept_position[this.display_card_position] = []
-                            this.used_intercept_position[this.display_card_position].push(card.card_id)
+                        if (!this.used_intercept_position[this.display_card_position]) {
+                          this.used_intercept_position[this.display_card_position] = []
+                          this.used_intercept_position[this.display_card_position].push(i)
+                        } else {
+                          this.used_intercept_position[this.display_card_position].push(i)
+                        }
+                        if (card.skill.type_1 == 2 || card.skill.type_1 == '2') {
+                          if (this.your_field_unit_bp_amount_of_change[position]) {
+                            this.your_field_unit_bp_amount_of_change[position] = parseInt(this.your_field_unit_bp_amount_of_change[position]) + parseInt(card.skill.amount_1)
                           } else {
-                            this.used_intercept_position[this.display_card_position].push(card.card_id)
+                            this.your_field_unit_bp_amount_of_change[position] = parseInt(card.skill.amount_1)
+                          }
+                        }
+                        if (card.skill.type_1 == 5 || card.skill.type_1 == '5') {
+                          for (let position in this.opponent_field_unit_action) {
+                            console.log('Judgement', this.opponent_field_unit_action, position)
+                            this.opponent_field_unit_action[position] = 0
                           }
                         }
                       }
                     }
-                  } else if (card.category == 1 && card.skill.trigger_1 == 2) {
+                  } else if (parseInt(card.category) == 1 && parseInt(card.skill.trigger_1) == 2) {
                     await this.confirmRef.alert('Trigger Card has been invoked', `${card.name} Trigger Card is activated!`, {color: 'red'})
                     if (!this.used_intercept_position[this.display_card_position]) {
                       this.used_intercept_position[this.display_card_position] = []
-                      this.used_intercept_position[this.display_card_position].push(card.card_id)
+                      this.used_intercept_position[this.display_card_position].push(i)
                     } else {
-                      this.used_intercept_position[this.display_card_position].push(card.card_id)
+                      this.used_intercept_position[this.display_card_position].push(i)
                     }
+                    this.used_triggers_on_turn_change.push(i)
                   }
                 }
               }
@@ -1929,22 +1962,6 @@ export default {
             break
         }
       }
-    },
-    async createTodo() {
-      const { name, description } = this
-      if (!name || !description) return false
-      const todo = { name, description }
-      console.log(todo)
-      await API.graphql({
-        query: createTodo,
-        variables: { input: todo },
-      }).then((res) => {
-        console.log(res)
-      }).catch((err) => {
-        console.log('Error:', err)
-      })
-      this.name = ''
-      this.description = ''
     },
     subscribe() {
       API.graphql({ query: onCreateTodo }).subscribe({
