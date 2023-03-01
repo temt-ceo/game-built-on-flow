@@ -24,7 +24,50 @@ const auth = useAuthenticator()
       </template >
 
       <template v-slot:sign-in-header>
-        <h1><img src="/img/CODE_Of_Flow.png" style="height: 30px;" /></h1>
+         <!-- DIALOG BUTTON -->
+         <h1>
+          <img src="/img/CODE_Of_Flow.png" style="height: 30px;" />
+          <v-btn
+            color="red-darken-4"
+            style="position: absolute; left: 45%;"
+            @click="showDialog2 = true"
+          >Tutorial</v-btn>
+          <!-- DIALOG START -->
+          <div v-if="showDialog2" class="v-overlay v-overlay--active v-theme--light v-locale--is-ltr v-dialog v-overlay--scroll-blocked" aria-role="dialog" aria-modal="true" style="z-index: 2400;">
+            <div class="v-overlay__content" style="width: auto;">
+              <div class="v-card v-theme--light bg-primary v-card--density-default v-card--variant-elevated">
+                <div class="v-card__loader"><div class="v-progress-linear v-theme--light" role="progressbar" aria-hidden="true" aria-valuemin="0" aria-valuemax="100" style="top: 0px; height: 0px; --v-progress-linear-height:2px; left: 50%; transform: translateX(-50%);">
+                  <div class="v-progress-linear__background" style="width: 100%;"></div><div class="v-progress-linear__indeterminate"><div class="v-progress-linear__indeterminate long"></div><div class="v-progress-linear__indeterminate short"></div>
+                </div>
+                </div>
+              </div>
+              <div class="v-card-text" style="font-size: 14px;">
+                <a href="https://www.youtube.com/watch?v=tD3yP_aWlDA&list=PLqsOlIn4zb87Pzk-82mFccQsGG0zRUzzd&index=1" target="_blank" style="color: white;">PC Tutorial</a><br>
+                <a href="https://www.youtube.com/watch?v=vBLIsxPzeCU&list=PLqsOlIn4zb87Pzk-82mFccQsGG0zRUzzd&index=2" target="_blank" style="color: white;">SmartPhone(portrait) Tutorial</a><br>
+                <a href="https://www.youtube.com/watch?v=icNegdUYlx4&list=PLqsOlIn4zb87Pzk-82mFccQsGG0zRUzzd&index=3" target="_blank" style="color: white;">SmartPhone(landscape) Tutorial</a><br><br><br><br><br>
+                  (CODE-Of-Flow is an homage to SEGA's "Code Of Joker")
+                  <div><br>
+                    If you don't know Code Of Joker👇<br>
+                    <a href="https://m.youtube.com/watch?v=tYioSA10Ckc" target="_blank" style="color:aqua;">https://m.youtube.com/watch?v=tYioSA10Ckc</a><br>
+                  </div><br>
+                  <v-btn
+                    class="ma-1"
+                    @click="showDialog2 = false"
+                  >Close</v-btn><br><br>
+
+                <div class="v-progress-linear v-progress-linear--active v-theme--light mb-0" role="progressbar" aria-hidden="false" aria-valuemin="0" aria-valuemax="100" style="top: 0px; height: 4px; --v-progress-linear-height:4px; left: 50%; transform: translateX(-50%);">
+                  <div class="v-progress-linear__background bg-white" style="width: 100%;"></div>
+                  <div class="v-progress-linear__indeterminate">
+                    <div class="v-progress-linear__indeterminate long bg-white"></div>
+                    <div class="v-progress-linear__indeterminate short bg-white"></div>
+                  </div>
+                </div>
+                </div><span class="v-card__underlay"></span>
+              </div>
+            </div>
+          </div>
+          <!-- DIALOG SEND -->
+        </h1>
       </template >
 
       <template v-slot:sign-up-header>
@@ -49,12 +92,12 @@ const auth = useAuthenticator()
                   (CODE-Of-Flow is an homage to SEGA's "Code Of Joker")
                   <div><br><br><br><br>
                     If you don't know Code Of Joker👇<br>
-                    <a href="https://m.youtube.com/watch?v=tYioSA10Ckc">https://m.youtube.com/watch?v=tYioSA10Ckc</a><br>
+                    <a href="https://m.youtube.com/watch?v=tYioSA10Ckc" target="_blank">https://m.youtube.com/watch?v=tYioSA10Ckc</a><br>
                   </div><br>
                   <v-btn
                     class="ma-1"
                     @click="showDialog = false"
-                  >Close</v-btn><br>
+                  >Close</v-btn><br><br>
 
                 <div class="v-progress-linear v-progress-linear--active v-theme--light mb-0" role="progressbar" aria-hidden="false" aria-valuemin="0" aria-valuemax="100" style="top: 0px; height: 4px; --v-progress-linear-height:4px; left: 50%; transform: translateX(-50%);">
                   <div class="v-progress-linear__background bg-white" style="width: 100%;"></div>
@@ -90,7 +133,8 @@ export default {
   data() {
     return {
       mission_tab: 'en',
-      showDialog: false
+      showDialog: false,
+      showDialog2: false,
     }
   },
   methods: {
