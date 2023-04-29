@@ -38,6 +38,9 @@
               <v-btn v-if="!address" prepend-icon="mdi-vuetify" @click="flowWalletSignIn">
                 CONNECT
               </v-btn>
+              <v-btn v-if="address" prepend-icon="mdi-vuetify" @click="flowWalletSignOut">
+                DISCONNECT
+              </v-btn>
             </span>
             <span style="margin: 20px auto; display: block; width: 170px;">
               <v-btn v-if="address && !registered" prepend-icon="mdi-vuetify" @click="createPlayer">
@@ -702,11 +705,6 @@ export default {
       onMatching: 1,
       timeline: [
         {
-          color: 'red-lighten-2',
-          icon: 'mdi-star',
-          message: 'Initial registration completed.'
-        },
-        {
           color: 'purple-lighten-2',
           icon: 'mdi-book-variant',
           message: 'Blockchain connection NOT completed.'
@@ -827,12 +825,12 @@ export default {
   },
   async created() {
     this.$fcl.currentUser.subscribe(this.setupWalletInfo)
-    // Amplify Auth
-    const currentAuthUser = await Auth.currentAuthenticatedUser();
-    const session = await Auth.userSession(currentAuthUser);
-    if (!session?.isValid()) {
-      console.error('セッションが無効です。')
-    };
+    // Amplify Auth (冗長なので削除)
+    // const currentAuthUser = await Auth.currentAuthenticatedUser();
+    // const session = await Auth.userSession(currentAuthUser);
+    // if (!session?.isValid()) {
+    //   console.error('セッションが無効です。')
+    // };
     this.subscribe()
     // const ret = await this.confirmRef.prompt('Choose the target', 'Are you sure?', { color: 'red' })
     // this.flameRef.show()
@@ -845,11 +843,6 @@ export default {
       await this.$fcl.unauthenticate()
       this.address = ''
       this.timeline = [
-        {
-          color: 'red-lighten-2',
-          icon: 'mdi-star',
-          message: 'Initial registration completed.'
-        },
         {
           color: 'purple-lighten-2',
           icon: 'mdi-book-variant',
@@ -968,11 +961,6 @@ export default {
       if (this.walletUser?.addr) {
         this.address = this.walletUser?.addr
         this.timeline = [
-          {
-            color: 'red-lighten-2',
-            icon: 'mdi-star',
-            message: 'Initial registration completed.'
-          },
           {
             color: 'purple-lighten-2',
             icon: 'mdi-book-variant',
@@ -1964,6 +1952,7 @@ export default {
       }
     },
     subscribe() {
+      console.log('GraphQL subscription')
       API.graphql({ query: onCreateTodo }).subscribe({
         next: (eventData) => {
           const flowEv = eventData.value.data.onCreateTodo
@@ -2109,7 +2098,7 @@ export default {
 }
 .matching-screen {
   width: 100%;
-  min-height: 400px;
+  min-height: 640px;
   color: #FF4081;
   padding-top: 40px;
   background-image: url(https://cdn.vuetifyjs.com/images/backgrounds/bg-2.jpg);

@@ -5,7 +5,8 @@ const auth = useAuthenticator()
 </script>top-screen
 <template>
   <div>
-    <authenticator variation="modal">
+    <NuxtPage :player="{username: 'TestPlayer'}" />
+    <!-- <authenticator variation="modal">
       <template v-slot="{ user }">
         <nav
           class="navbar header has-shadow"
@@ -24,7 +25,6 @@ const auth = useAuthenticator()
       </template >
 
       <template v-slot:sign-in-header>
-         <!-- DIALOG BUTTON -->
          <h1>
           <img src="/img/CODE_Of_Flow.png" style="height: 30px;" />
           <v-btn
@@ -32,7 +32,6 @@ const auth = useAuthenticator()
             style="position: absolute; left: 45%;"
             @click="showDialog2 = true"
           >Tutorial</v-btn>
-          <!-- DIALOG START -->
           <div v-if="showDialog2" class="v-overlay v-overlay--active v-theme--light v-locale--is-ltr v-dialog v-overlay--scroll-blocked" aria-role="dialog" aria-modal="true" style="z-index: 2400;">
             <div class="v-overlay__content" style="width: auto;">
               <div class="v-card v-theme--light bg-primary v-card--density-default v-card--variant-elevated">
@@ -66,19 +65,16 @@ const auth = useAuthenticator()
               </div>
             </div>
           </div>
-          <!-- DIALOG SEND -->
         </h1>
       </template >
 
       <template v-slot:sign-up-header>
         <h1>
           <img src="/img/CODE_Of_Flow.png" style="height: 30px;" />
-          <!-- DIALOG BUTTON -->
           <v-btn
             color="red-darken-4"
             @click="showDialog = true"
           >Mission Description</v-btn>
-          <!-- DIALOG START -->
           <div v-if="showDialog" class="v-overlay v-overlay--active v-theme--light v-locale--is-ltr v-dialog v-overlay--scroll-blocked" aria-role="dialog" aria-modal="true" style="z-index: 2400;">
             <div class="v-overlay__content" style="width: auto;">
               <div class="v-card v-theme--light bg-primary v-card--density-default v-card--variant-elevated">
@@ -110,7 +106,6 @@ const auth = useAuthenticator()
               </div>
             </div>
           </div>
-          <!-- DIALOG SEND -->
         </h1>
       </template >
 
@@ -119,7 +114,7 @@ const auth = useAuthenticator()
 
       <template v-slot:sign-up-footer>
       </template >
-    </Authenticator>
+    </Authenticator> -->
   </div>
 </template>
 <script>
