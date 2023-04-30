@@ -669,7 +669,8 @@
 import confirm from '../components/confirm'
 import flame from '../components/flame'
 import { Auth, API } from 'aws-amplify'
-import { onCreateTodo } from '~/src/graphql/subscriptions'
+import { createBCGGameServerProcess } from '~/src/graphql/mutations'
+import { onCreateTodo, onCreateByPlayerid } from '~/src/graphql/subscriptions'
 import FlowTransactions from '~/cadence/transactions'
 import FlowScripts from '~/cadence/scripts'
 import { useAttrs } from 'vue'
@@ -692,6 +693,7 @@ export default {
   },
   data() {
     return {
+      player_id: null,
       walletUser: {},
       watchCurrentStatusFlg: false,
       loadingDialog: false,
@@ -992,6 +994,20 @@ export default {
             arg(this.address, t.Address)
           ]
         })
+        if (result !== null && !this.player_id) {
+          this.player_id = result.player_id
+          // GraphQL Subscription
+          API.graphql({
+            query: onCreateByPlayerid,
+            variables: {
+              playerId: this.player_id
+            }
+          }).subscribe({
+            next: (serverData) => {
+              console.log('BCGGameServerProcess Data:', serverData)
+            },
+          })
+        }
         return result
     },
     async createPlayer () {
@@ -1019,18 +1035,31 @@ export default {
         await this.confirmRef.alert('Please sign in a Flow Wallet.')
         return
       } else {
+        console.log("Call a GraphQL mutation method to run Direct Lambda Resolver function (which located in serverside).")
+        const callProcess = { 
+          type: 'player_matching',
+          message: '',
+          playerId: this.player_id
+        }
+        await API.graphql({
+          query: createBCGGameServerProcess,
+          variables: { input: callProcess },
+        }).then((res) => {
+        }).catch((err) => {
+          console.log('Error:', err)
+        })
         this.matchingTimeup = false
         this.matchingStartFlg = true
-        const transactionId = await this.$fcl.mutate({
-          cadence: FlowTransactions.matchingStart,
-          args: (arg, t) => [
-          ],
-          proposer: this.$fcl.authz,
-          payer: this.$fcl.authz,
-          authorizations: [this.$fcl.authz],
-          limit: 999
-        })
-        console.log(`TransactionId: ${transactionId}`)
+        // const transactionId = await this.$fcl.mutate({
+        //   cadence: FlowTransactions.matchingStart,
+        //   args: (arg, t) => [
+        //   ],
+        //   proposer: this.$fcl.authz,
+        //   payer: this.$fcl.authz,
+        //   authorizations: [this.$fcl.authz],
+        //   limit: 999
+        // })
+        // console.log(`TransactionId: ${transactionId}`)
         this.matchingDialog = true
         let counter = 60
         const stopTimer1 = setInterval(() => {

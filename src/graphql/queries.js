@@ -38,3 +38,38 @@ export const listTodos = /* GraphQL */ `
     }
   }
 `;
+export const getBCGGameServerProcess = /* GraphQL */ `
+  query GetBCGGameServerProcess($id: ID!) {
+    getBCGGameServerProcess(id: $id) {
+      id
+      type
+      message
+      playerId
+      createdAt
+      updatedAt
+    }
+  }
+`;
+export const listBCGGameServerProcesses = /* GraphQL */ `
+  query ListBCGGameServerProcesses(
+    $filter: ModelBCGGameServerProcessFilterInput
+    $limit: Int
+    $nextToken: String
+  ) {
+    listBCGGameServerProcesses(
+      filter: $filter
+      limit: $limit
+      nextToken: $nextToken
+    ) {
+      items {
+        id
+        type
+        message
+        playerId
+        createdAt
+        updatedAt
+      }
+      nextToken
+    }
+  }
+`;

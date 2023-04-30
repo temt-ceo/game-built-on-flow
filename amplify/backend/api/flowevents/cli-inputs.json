@@ -4,20 +4,12 @@
     "apiName": "flowevents",
     "serviceName": "AppSync",
     "defaultAuthType": {
-      "mode": "AMAZON_COGNITO_USER_POOLS",
-      "cognitoUserPoolId": "authflowevents26abbf01"
+      "mode": "API_KEY",
+      "expirationTime": 365,
+      "apiKeyExpirationDate": "2024-04-29T02:58:23.914Z",
+      "keyDescription": ""
     },
     "conflictResolution": {},
-    "additionalAuthTypes": [
-      {
-        "mode": "API_KEY",
-        "expirationTime": 365,
-        "apiKeyExpirationDate": "2024-02-21T00:41:02.835Z",
-        "keyDescription": "To create a game for Hackathon"
-      },
-      {
-        "mode": "AWS_IAM"
-      }
-    ]
+    "additionalAuthTypes": []
   }
 }
