@@ -38,9 +38,6 @@
               <v-btn v-if="!address" prepend-icon="mdi-vuetify" @click="flowWalletSignIn">
                 CONNECT
               </v-btn>
-              <v-btn v-if="address" prepend-icon="mdi-vuetify" @click="flowWalletSignOut">
-                DISCONNECT
-              </v-btn>
             </span>
             <span style="margin: 20px auto; display: block; width: 170px;">
               <v-btn v-if="address && !registered" prepend-icon="mdi-vuetify" @click="createPlayer">
@@ -283,7 +280,12 @@
       </div>
     </div>
     <div class="header-bar">
-      <div class="your_score">{{ your_score }}</div>
+      <div class="your_score">
+        {{ your_score }}<br>
+        <v-btn v-if="address" prepend-icon="mdi-vuetify" size="x-small" @click="flowWalletSignOut">
+          DISCONNECT
+        </v-btn>
+      </div>
       <div v-if="onMatching === 3 && game_started === true" class="remaining_time" :class="is_first == is_first_turn ? 'you' : 'opponent'">
         {{ current_turn }} | TIME: {{ turn_timer }}
       </div>
@@ -1035,7 +1037,7 @@ export default {
         await this.confirmRef.alert('Please sign in a Flow Wallet.')
         return
       } else {
-        console.log("Call a GraphQL mutation method to run Direct Lambda Resolver function (which located in serverside).")
+        console.log("LOG: Call a GraphQL mutation method to run Direct Lambda Resolver function (which located in serverside).")
         const callProcess = { 
           type: 'player_matching',
           message: '',
@@ -1045,6 +1047,7 @@ export default {
           query: createBCGGameServerProcess,
           variables: { input: callProcess },
         }).then((res) => {
+          console.log('LOG: GraphQL', res)
         }).catch((err) => {
           console.log('Error:', err)
         })
@@ -1181,7 +1184,8 @@ export default {
         const result = await this.$fcl.query({
           cadence: FlowScripts.getMariganCards,
           args: (arg, t) => [
-            arg(this.address, t.Address)
+            arg(this.address, t.Address),
+            arg(this.player_id, t.UInt32)
           ]
         })
         return result
@@ -1230,6 +1234,9 @@ export default {
             ) {
             const result = await this.getCurrentStatus()
             console.log(transactionName, result)
+            if (transactionName === 'matchingStart') {
+              console.log('LOG:', result)
+            }
             if (result) {
               if (!isNaN(parseFloat(result))) {
                 if (this.onMatching === 3) {
@@ -1981,7 +1988,7 @@ export default {
       }
     },
     subscribe() {
-      console.log('GraphQL subscription')
+      console.log('GraphQL Subscription Start.')
       API.graphql({ query: onCreateTodo }).subscribe({
         next: (eventData) => {
           const flowEv = eventData.value.data.onCreateTodo
@@ -2210,6 +2217,7 @@ video {
 
 .header-bar {
   font-size: 20px;
+  /* display: flex; */
 }
 
 .remaining_time {
@@ -2222,7 +2230,10 @@ video {
 .your_score {
   font-size: 10px;
   margin-right: 20px;
-  text-align: right;
+  text-align: center;
+  position: absolute;
+  right: 20px;
+  line-height: 20px;
 }
 
 .remaining_time.opponent {
