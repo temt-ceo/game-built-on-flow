@@ -5,7 +5,9 @@ const auth = useAuthenticator()
 </script>top-screen
 <template>
   <div>
-    <NuxtPage :player="{username: 'TestPlayer'}" />
+    <section class="section top-screen">
+      <NuxtPage :player="{username: 'TestPlayer'}" />
+    </section>
     <!-- <authenticator variation="modal">
       <template v-slot="{ user }">
         <nav
