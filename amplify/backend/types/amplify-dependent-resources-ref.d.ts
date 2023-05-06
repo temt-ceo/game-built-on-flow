@@ -6,17 +6,6 @@ export type AmplifyDependentResourcesAttributes = {
             "GraphQLAPIEndpointOutput": "string"
         }
     },
-    "auth": {
-        "flowevents26abbf01": {
-            "IdentityPoolId": "string",
-            "IdentityPoolName": "string",
-            "UserPoolId": "string",
-            "UserPoolArn": "string",
-            "UserPoolName": "string",
-            "AppClientIDWeb": "string",
-            "AppClientID": "string"
-        }
-    },
     "function": {
         "hackathon": {
             "Name": "string",

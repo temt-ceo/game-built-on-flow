@@ -15,10 +15,10 @@ export default {
     `,
     getMariganCards: `
     import CodeOfFlowAlpha4 from 0xCOF
-    pub fun main(address: Address, player_id: UInt32): [[UInt16]] {
+    pub fun main(address: Address): [[UInt16]] {
         let cap = getAccount(address).getCapability<&CodeOfFlowAlpha4.Player{CodeOfFlowAlpha4.IPlayerPublic}>(CodeOfFlowAlpha4.PlayerPublicPath).borrow()
           ?? panic("Doesn't have capability!")
-        return cap.get_marigan_cards(player_id: player_id)
+        return cap.get_marigan_cards()
     }
     `,
     getCardInfo: `

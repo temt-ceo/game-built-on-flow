@@ -280,7 +280,12 @@
       </div>
     </div>
     <div class="header-bar">
-      <div class="your_score">{{ your_score }}</div>
+      <div class="your_score">
+        {{ your_score }}<br>
+        <v-btn v-if="address" prepend-icon="mdi-vuetify" size="x-small" @click="flowWalletSignOut">
+          DISCONNECT
+        </v-btn>
+      </div>
       <div v-if="onMatching === 3 && game_started === true" class="remaining_time" :class="is_first == is_first_turn ? 'you' : 'opponent'">
         {{ current_turn }} | TIME: {{ turn_timer }}
       </div>
@@ -666,7 +671,8 @@
 import confirm from '../components/confirm'
 import flame from '../components/flame'
 import { Auth, API } from 'aws-amplify'
-import { onCreateTodo } from '~/src/graphql/subscriptions'
+import { createBCGGameServerProcess } from '~/src/graphql/mutations'
+import { onCreateTodo, onCreateByPlayerid } from '~/src/graphql/subscriptions'
 import FlowTransactions from '~/cadence/transactions'
 import FlowScripts from '~/cadence/scripts'
 import { useAttrs } from 'vue'
@@ -689,6 +695,7 @@ export default {
   },
   data() {
     return {
+      player_id: null,
       walletUser: {},
       watchCurrentStatusFlg: false,
       loadingDialog: false,
@@ -701,11 +708,6 @@ export default {
       newEventAlertChip: [],
       onMatching: 1,
       timeline: [
-        {
-          color: 'red-lighten-2',
-          icon: 'mdi-star',
-          message: 'Initial registration completed.'
-        },
         {
           color: 'purple-lighten-2',
           icon: 'mdi-book-variant',
@@ -827,12 +829,12 @@ export default {
   },
   async created() {
     this.$fcl.currentUser.subscribe(this.setupWalletInfo)
-    // Amplify Auth
-    const currentAuthUser = await Auth.currentAuthenticatedUser();
-    const session = await Auth.userSession(currentAuthUser);
-    if (!session?.isValid()) {
-      console.error('セッションが無効です。')
-    };
+    // Amplify Auth (冗長なので削除)
+    // const currentAuthUser = await Auth.currentAuthenticatedUser();
+    // const session = await Auth.userSession(currentAuthUser);
+    // if (!session?.isValid()) {
+    //   console.error('セッションが無効です。')
+    // };
     this.subscribe()
     // const ret = await this.confirmRef.prompt('Choose the target', 'Are you sure?', { color: 'red' })
     // this.flameRef.show()
@@ -845,11 +847,6 @@ export default {
       await this.$fcl.unauthenticate()
       this.address = ''
       this.timeline = [
-        {
-          color: 'red-lighten-2',
-          icon: 'mdi-star',
-          message: 'Initial registration completed.'
-        },
         {
           color: 'purple-lighten-2',
           icon: 'mdi-book-variant',
@@ -969,11 +966,6 @@ export default {
         this.address = this.walletUser?.addr
         this.timeline = [
           {
-            color: 'red-lighten-2',
-            icon: 'mdi-star',
-            message: 'Initial registration completed.'
-          },
-          {
             color: 'purple-lighten-2',
             icon: 'mdi-book-variant',
             message: 'Blockchain connection completed.'
@@ -1004,6 +996,20 @@ export default {
             arg(this.address, t.Address)
           ]
         })
+        if (result !== null && !this.player_id) {
+          this.player_id = result.player_id
+          // GraphQL Subscription
+          API.graphql({
+            query: onCreateByPlayerid,
+            variables: {
+              playerId: this.player_id
+            }
+          }).subscribe({
+            next: (serverData) => {
+              console.log('BCGGameServerProcess Data:', serverData)
+            },
+          })
+        }
         return result
     },
     async createPlayer () {
@@ -1031,18 +1037,32 @@ export default {
         await this.confirmRef.alert('Please sign in a Flow Wallet.')
         return
       } else {
+        console.log("LOG: Call a GraphQL mutation method to run Direct Lambda Resolver function (which located in serverside).")
+        const callProcess = { 
+          type: 'player_matching',
+          message: '',
+          playerId: this.player_id
+        }
+        await API.graphql({
+          query: createBCGGameServerProcess,
+          variables: { input: callProcess },
+        }).then((res) => {
+          console.log('LOG: GraphQL', res)
+        }).catch((err) => {
+          console.log('Error:', err)
+        })
         this.matchingTimeup = false
         this.matchingStartFlg = true
-        const transactionId = await this.$fcl.mutate({
-          cadence: FlowTransactions.matchingStart,
-          args: (arg, t) => [
-          ],
-          proposer: this.$fcl.authz,
-          payer: this.$fcl.authz,
-          authorizations: [this.$fcl.authz],
-          limit: 999
-        })
-        console.log(`TransactionId: ${transactionId}`)
+        // const transactionId = await this.$fcl.mutate({
+        //   cadence: FlowTransactions.matchingStart,
+        //   args: (arg, t) => [
+        //   ],
+        //   proposer: this.$fcl.authz,
+        //   payer: this.$fcl.authz,
+        //   authorizations: [this.$fcl.authz],
+        //   limit: 999
+        // })
+        // console.log(`TransactionId: ${transactionId}`)
         this.matchingDialog = true
         let counter = 60
         const stopTimer1 = setInterval(() => {
@@ -1164,7 +1184,8 @@ export default {
         const result = await this.$fcl.query({
           cadence: FlowScripts.getMariganCards,
           args: (arg, t) => [
-            arg(this.address, t.Address)
+            arg(this.address, t.Address),
+            arg(this.player_id, t.UInt32)
           ]
         })
         return result
@@ -1213,6 +1234,9 @@ export default {
             ) {
             const result = await this.getCurrentStatus()
             console.log(transactionName, result)
+            if (transactionName === 'matchingStart') {
+              console.log('LOG:', result)
+            }
             if (result) {
               if (!isNaN(parseFloat(result))) {
                 if (this.onMatching === 3) {
@@ -1964,6 +1988,7 @@ export default {
       }
     },
     subscribe() {
+      console.log('GraphQL Subscription Start.')
       API.graphql({ query: onCreateTodo }).subscribe({
         next: (eventData) => {
           const flowEv = eventData.value.data.onCreateTodo
@@ -2109,7 +2134,7 @@ export default {
 }
 .matching-screen {
   width: 100%;
-  min-height: 400px;
+  min-height: 640px;
   color: #FF4081;
   padding-top: 40px;
   background-image: url(https://cdn.vuetifyjs.com/images/backgrounds/bg-2.jpg);
@@ -2192,6 +2217,7 @@ video {
 
 .header-bar {
   font-size: 20px;
+  /* display: flex; */
 }
 
 .remaining_time {
@@ -2204,7 +2230,10 @@ video {
 .your_score {
   font-size: 10px;
   margin-right: 20px;
-  text-align: right;
+  text-align: center;
+  position: absolute;
+  right: 20px;
+  line-height: 20px;
 }
 
 .remaining_time.opponent {

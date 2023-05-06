@@ -68,13 +68,10 @@
       "AmplifyAppId": "d8gpbl0qw42np"
     },
     "categories": {
-      "auth": {
-        "flowevents26abbf01": {}
-      },
       "function": {
         "hackathon": {
           "deploymentBucketName": "amplify-flowgamebuiltonflow-devtest-94328-deployment",
-          "s3Key": "amplify-builds/hackathon-66704c53372b49315569-build.zip"
+          "s3Key": "amplify-builds/hackathon-466132492f6559686c51-build.zip"
         },
         "flowevents": {},
         "flowevents26abbf01": {}
