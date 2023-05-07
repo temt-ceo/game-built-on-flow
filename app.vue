@@ -185,17 +185,17 @@ h6 {
 }
 
 .section {
-  height: calc(100vh - 53px);
+  height: calc(100vh - 13px);
   padding: 1.0rem 0.3rem 0 2.5rem;
-  max-width: 1300px;
+  max-width: 1400px;
   margin: 0 auto;
   position: relative;
 }
 
 .section .game-screen {
   width: 100%;
-  max-width: 1300px;
-  height: calc(100vh - 70px);
+  max-width: 1400px;
+  height: calc(100vh - 30px);
   margin: 0 auto;
   background: rgba(255, 255, 255, 0.1);
   border-radius: 30px;

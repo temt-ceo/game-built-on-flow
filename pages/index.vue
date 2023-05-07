@@ -14,22 +14,22 @@
       <div class="top-screen">
         <div v-if="onMatching === 1" class="matching-screen">
           <h1>A.C.T.I.S:</h1>
-          <div style="padding: 0 20px;">
+          <div style="padding: 0 20px; font-weight: 500; color: cyan;">
             You will infiltrate Arcana.<br>
             Your mission is to search for the enemy and keep Arcana safe.<br>
             <br>
           </div>
-          <div v-if="!address" style="padding: 0 20px; font-weight: bold; color: #311B92;">
+          <div v-if="!address" style="padding: 0 20px; font-weight: 500; color: floralwhite; font-size: 13px;">
             To fight the enemy and earn rewards, you register your battle record information in the blockchain.<br>
             Connect to the blockchain and register your information on the blockchain.
           </div>
-          <div v-if="address && registered" style="padding: 0 20px; font-weight: bold; color: #311B92;">
+          <div v-if="address && registered" style="padding: 0 20px; font-weight: 500; color: floralwhite; font-size: 13px;">
             Press the matching button below.
           </div>
-          <div v-if="address && !registered" style="padding: 0 20px; font-weight: bold; color: #311B92;">
+          <div v-if="address && !registered" style="padding: 0 20px; font-weight: 500; color: floralwhite; font-size: 13px;">
             Player information has not yet been created on the blockchain.<br>Please press the Create Player button below.
           </div>
-          <div v-if="matchingTimeup" style="padding: 0 20px; font-weight: bold; color: #311B92;">
+          <div v-if="matchingTimeup" style="padding: 0 20px; font-weight: 500; color: springgreen; font-size: 13px;">
             Time Expired. Please press the Matching button again.
             If you have friends, invite them to join the game.
           </div>
@@ -89,7 +89,7 @@
                   Now on task
                 </v-card-title>
                 <v-card-text class="bg-white text--primary">
-                  <p style="font-style:italic">{{ item.message }}</p>
+                  <p style="padding-top: 10px; font-family: serif;">{{ item.message }}</p>
                 </v-card-text>
               </v-card>
             </v-timeline-item>
@@ -226,13 +226,13 @@
         </div>
 
         <div>
-          <h2 v-if="!registered">Hello! {{ attrs.player.username }}</h2>
-          <div v-if="!registered" style="margin: 10px;">
+          <h2 v-if="!registered" style="color: coral;">Hello! {{ attrs.player.username }}</h2>
+          <div v-if="!registered" style="margin: 10px; color: aliceblue;">
             Welcome. My name is Actis. I am here to support you and your agents. Your mission as agents is to keep cyberspace safe. Your role is to infiltrate the cyberspace, Arcana, and fight off hackers and others who try to destroy the cyberspace Arcana. Register your agent name and register on the Flow Blockchain to infiltrate Arcana. If you are matched with other opponents, the game will switch to battle mode. I will support you and you will have to use your abilities to fight them off to keep Arkana safe. <br><br>
             (CODE-Of-Flow is an homage to SEGA's "Code Of Joker")
-            <div><br><br><br><br>
+            <div><br><br><br>
               If you don't know Code Of Joker👇<br>
-              <a href="https://m.youtube.com/watch?v=tYioSA10Ckc">https://m.youtube.com/watch?v=tYioSA10Ckc</a><br><br><br><br><br>
+              <a href="https://m.youtube.com/watch?v=tYioSA10Ckc" style="color: aliceblue;">https://m.youtube.com/watch?v=tYioSA10Ckc</a><br><br>
             </div>
           </div>
           <p v-if="address && hasNFT">
@@ -385,8 +385,8 @@
       </div><!----><!----><span class="v-card__underlay"></span>
     </div></div></div>
     <div v-if="loadingDialog" class="v-overlay v-overlay--active v-theme--light v-locale--is-ltr v-dialog v-overlay--scroll-blocked" aria-role="dialog" aria-modal="true" style="z-index: 2400;"><div class="v-overlay__content" style="width: auto; height: 160px;">
-      <v-card color="purple">
-        <v-card-text color="purple">
+      <v-card color="teal" style="border-radius: 20px;">
+        <v-card-text color="teal">
           <div class="text-h6 pa-12">Loading... Please wait</div>
         </v-card-text>
         <div class="v-progress-linear v-progress-linear--active v-theme--light mb-0" role="progressbar" aria-hidden="false" aria-valuemin="0" aria-valuemax="100" style="top: 0px; height: 4px; --v-progress-linear-height:4px; left: 50%; transform: translateX(-50%);">
@@ -672,7 +672,7 @@ import confirm from '../components/confirm'
 import flame from '../components/flame'
 import { Auth, API } from 'aws-amplify'
 import { createBCGGameServerProcess } from '~/src/graphql/mutations'
-import { onCreateTodo, onCreateByPlayerid } from '~/src/graphql/subscriptions'
+import { onCreateTodo, onCreateByPlayerid, onCreateBCGGameServerProcess } from '~/src/graphql/subscriptions'
 import FlowTransactions from '~/cadence/transactions'
 import FlowScripts from '~/cadence/scripts'
 import { useAttrs } from 'vue'
@@ -876,19 +876,33 @@ export default {
     async gameStart() {
       this.show_game_dialog = false
       this.defence_executed = false
-      const arg1 = [this.your_hand[1], this.your_hand[2], this.your_hand[3], this.your_hand[4]]
-      const transactionId = await this.$fcl.mutate({
-        cadence: FlowTransactions.gameStart,
-        args: (arg, t) => [
-          arg(arg1, t.Array(t.UInt16))
-        ],
-        proposer: this.$fcl.authz,
-        payer: this.$fcl.authz,
-        authorizations: [this.$fcl.authz],
-        limit: 999
-      })
-      console.log(`TransactionId: ${transactionId}`)
       this.loadingDialog = true
+      const arg1 = [this.your_hand[1], this.your_hand[2], this.your_hand[3], this.your_hand[4]]
+      console.log("LOG: Call a GraphQL mutation method to run Direct Lambda Resolver function (which located in serverside).")
+      const callProcess = {
+        type: 'game_start',
+        message: JSON.stringify(arg1),
+        playerId: this.player_id
+      }
+      await API.graphql({
+        query: createBCGGameServerProcess,
+        variables: { input: callProcess },
+      }).then((res) => {
+        console.log('LOG: GraphQL', res)
+      }).catch((err) => {
+        console.log('Error:', err)
+      })
+      // const transactionId = await this.$fcl.mutate({
+      //   cadence: FlowTransactions.gameStart,
+      //   args: (arg, t) => [
+      //     arg(arg1, t.Array(t.UInt16))
+      //   ],
+      //   proposer: this.$fcl.authz,
+      //   payer: this.$fcl.authz,
+      //   authorizations: [this.$fcl.authz],
+      //   limit: 999
+      // })
+      // console.log(`TransactionId: ${transactionId}`)
       this.checkTransactionComplete('gameStart')
     },
     showCardInfo(card_id, display_card_type, display_card_position) {
@@ -922,34 +936,63 @@ export default {
     async claimWin() {
       this.customLoading = true
       setTimeout(() => (this.customLoading = false), 5000)
-      const transactionId = await this.$fcl.mutate({
-        cadence: FlowTransactions.claimWin,
-        args: (arg, t) => [
-        ],
-        proposer: this.$fcl.authz,
-        payer: this.$fcl.authz,
-        authorizations: [this.$fcl.authz],
-        limit: 999
+      this.loadingDialog = true
+      console.log("LOG: Call a GraphQL mutation method to run Direct Lambda Resolver function (which located in serverside).")
+      const callProcess = {
+        type: 'claim_win',
+        message: '',
+        playerId: this.player_id
+      }
+      await API.graphql({
+        query: createBCGGameServerProcess,
+        variables: { input: callProcess },
+      }).then((res) => {
+        console.log('LOG: GraphQL', res)
+      }).catch((err) => {
+        console.log('Error:', err)
       })
-      console.log(`TransactionId: ${transactionId}`)
+      // const transactionId = await this.$fcl.mutate({
+      //   cadence: FlowTransactions.claimWin,
+      //   args: (arg, t) => [
+      //   ],
+      //   proposer: this.$fcl.authz,
+      //   payer: this.$fcl.authz,
+      //   authorizations: [this.$fcl.authz],
+      //   limit: 999
+      // })
+      // console.log(`TransactionId: ${transactionId}`)
       this.winClaimed = true
       this.show_game_dialog = false
       this.loadingDialog = true
       this.checkTransactionComplete('claimWin')
     },
     async surrendar() {
-      const transactionId = await this.$fcl.mutate({
-        cadence: FlowTransactions.surrendar,
-        args: (arg, t) => [
-        ],
-        proposer: this.$fcl.authz,
-        payer: this.$fcl.authz,
-        authorizations: [this.$fcl.authz],
-        limit: 999
-      })
-      console.log(`TransactionId: ${transactionId}`)
-      this.show_surrendar_dialog = false
       this.loadingDialog = true
+      console.log("LOG: Call a GraphQL mutation method to run Direct Lambda Resolver function (which located in serverside).")
+      const callProcess = {
+        type: 'surrendar',
+        message: '',
+        playerId: this.player_id
+      }
+      await API.graphql({
+        query: createBCGGameServerProcess,
+        variables: { input: callProcess },
+      }).then((res) => {
+        console.log('LOG: GraphQL', res)
+      }).catch((err) => {
+        console.log('Error:', err)
+      })
+      // const transactionId = await this.$fcl.mutate({
+      //   cadence: FlowTransactions.surrendar,
+      //   args: (arg, t) => [
+      //   ],
+      //   proposer: this.$fcl.authz,
+      //   payer: this.$fcl.authz,
+      //   authorizations: [this.$fcl.authz],
+      //   limit: 999
+      // })
+      // console.log(`TransactionId: ${transactionId}`)
+      this.show_surrendar_dialog = false
       this.checkTransactionComplete('surrendar')
     },
     async showListings () {
@@ -973,7 +1016,7 @@ export default {
           {
             color: 'green-lighten-1',
             icon: 'mdi-airballoon',
-            message: 'Matching Standby'
+            message: 'Matching Standby.. (Your Game Is Ready.)'
           }
         ]
         if (this.watchCurrentStatusFlg === false) {
@@ -999,14 +1042,16 @@ export default {
         if (result !== null && !this.player_id) {
           this.player_id = result.player_id
           // GraphQL Subscription
+          // API.graphql({
+          //   query: onCreateByPlayerid,
+          //   variables: {
+          //     playerId: this.player_id
+          //   }
           API.graphql({
-            query: onCreateByPlayerid,
-            variables: {
-              playerId: this.player_id
-            }
+            query: onCreateBCGGameServerProcess,
           }).subscribe({
             next: (serverData) => {
-              console.log('BCGGameServerProcess Data:', serverData)
+              console.log('BCGGameServerProcess SubscriptionData:', serverData)
             },
           })
         }
@@ -1037,8 +1082,9 @@ export default {
         await this.confirmRef.alert('Please sign in a Flow Wallet.')
         return
       } else {
+        this.matchingDialog = true
         console.log("LOG: Call a GraphQL mutation method to run Direct Lambda Resolver function (which located in serverside).")
-        const callProcess = { 
+        const callProcess = {
           type: 'player_matching',
           message: '',
           playerId: this.player_id
@@ -1063,7 +1109,6 @@ export default {
         //   limit: 999
         // })
         // console.log(`TransactionId: ${transactionId}`)
-        this.matchingDialog = true
         let counter = 60
         const stopTimer1 = setInterval(() => {
           counter -= 1
@@ -1635,100 +1680,191 @@ export default {
         this.enemy_skill_target[card_position] = this.enemy_skill_target[card_position] || 0
       })
       console.log('DEBUG TurnChange', 'attack_unit_cards', this.attack_unit_cards, 'enemy_skill_target', this.enemy_skill_target, 'used_intercept_position', this.used_intercept_position, 'your_trigger_cards', this.your_trigger_cards)
-      const transactionId = await this.$fcl.mutate({
-        cadence: FlowTransactions.turnChange,
-        args: (arg, t) => [
-          arg(this.attack_unit_cards, t.Array(t.UInt8)), // attacking_cards
-          arg([
-            {key: 1, value: parseInt(this.enemy_skill_target[1]) || 0},
-            {key: 2, value: parseInt(this.enemy_skill_target[2]) || 0},
-            {key: 3, value: parseInt(this.enemy_skill_target[3]) || 0},
-            {key: 4, value: parseInt(this.enemy_skill_target[4]) || 0},
-            {key: 5, value: parseInt(this.enemy_skill_target[5]) || 0},
-          ], t.Dictionary({ key: t.UInt8, value: t.UInt8 })), // enemy_skill_target
-          arg([
-            {key: 1, value: parseInt(this.your_trigger_cards[1]) || 0},
-            {key: 2, value: parseInt(this.your_trigger_cards[2]) || 0},
-            {key: 3, value: parseInt(this.your_trigger_cards[3]) || 0},
-            {key: 4, value: parseInt(this.your_trigger_cards[4]) || 0},
-          ], t.Dictionary({ key: t.UInt8, value: t.UInt16 })), // trigger_cards
-          arg([
-            {key: 1, value: this.used_intercept_position[1] ? [parseInt(this.used_intercept_position[1])] : []},
-            {key: 2, value: this.used_intercept_position[2] ? [parseInt(this.used_intercept_position[2])] : []},
-            {key: 3, value: this.used_intercept_position[3] ? [parseInt(this.used_intercept_position[3])] : []},
-            {key: 4, value: this.used_intercept_position[4] ? [parseInt(this.used_intercept_position[4])] : []},
-            {key: 5, value: this.used_intercept_position[5] ? [parseInt(this.used_intercept_position[5])] : []},
-          ], t.Dictionary({ key: t.UInt8, value: t.Array(t.UInt8) })) // used_intercept_position
+      this.loadingDialog = true
+      console.log("LOG: Call a GraphQL mutation method to run Direct Lambda Resolver function (which located in serverside).")
+      const message = {
+        arg1: this.attack_unit_cards,
+        arg2: [
+          {key: 1, value: parseInt(this.enemy_skill_target[1]) || 0},
+          {key: 2, value: parseInt(this.enemy_skill_target[2]) || 0},
+          {key: 3, value: parseInt(this.enemy_skill_target[3]) || 0},
+          {key: 4, value: parseInt(this.enemy_skill_target[4]) || 0},
+          {key: 5, value: parseInt(this.enemy_skill_target[5]) || 0},
         ],
-        proposer: this.$fcl.authz,
-        payer: this.$fcl.authz,
-        authorizations: [this.$fcl.authz],
-        limit: 999
+        arg3: [
+          {key: 1, value: parseInt(this.your_trigger_cards[1]) || 0},
+          {key: 2, value: parseInt(this.your_trigger_cards[2]) || 0},
+          {key: 3, value: parseInt(this.your_trigger_cards[3]) || 0},
+          {key: 4, value: parseInt(this.your_trigger_cards[4]) || 0},
+        ],
+        arg4: [
+          {key: 1, value: this.used_intercept_position[1] ? [parseInt(this.used_intercept_position[1])] : []},
+          {key: 2, value: this.used_intercept_position[2] ? [parseInt(this.used_intercept_position[2])] : []},
+          {key: 3, value: this.used_intercept_position[3] ? [parseInt(this.used_intercept_position[3])] : []},
+          {key: 4, value: this.used_intercept_position[4] ? [parseInt(this.used_intercept_position[4])] : []},
+          {key: 5, value: this.used_intercept_position[5] ? [parseInt(this.used_intercept_position[5])] : []},
+        ]
+      }
+      const callProcess = {
+        type: 'turn_change',
+        message: JSON.stringify(message),
+        playerId: this.player_id
+      }
+      await API.graphql({
+        query: createBCGGameServerProcess,
+        variables: { input: callProcess },
+      }).then((res) => {
+        console.log('LOG: GraphQL', res)
+      }).catch((err) => {
+        console.log('Error:', err)
       })
+      // const transactionId = await this.$fcl.mutate({
+      //   cadence: FlowTransactions.turnChange,
+      //   args: (arg, t) => [
+      //     arg(this.attack_unit_cards, t.Array(t.UInt8)), // attacking_cards
+      //     arg([
+      //       {key: 1, value: parseInt(this.enemy_skill_target[1]) || 0},
+      //       {key: 2, value: parseInt(this.enemy_skill_target[2]) || 0},
+      //       {key: 3, value: parseInt(this.enemy_skill_target[3]) || 0},
+      //       {key: 4, value: parseInt(this.enemy_skill_target[4]) || 0},
+      //       {key: 5, value: parseInt(this.enemy_skill_target[5]) || 0},
+      //     ], t.Dictionary({ key: t.UInt8, value: t.UInt8 })), // enemy_skill_target
+      //     arg([
+      //       {key: 1, value: parseInt(this.your_trigger_cards[1]) || 0},
+      //       {key: 2, value: parseInt(this.your_trigger_cards[2]) || 0},
+      //       {key: 3, value: parseInt(this.your_trigger_cards[3]) || 0},
+      //       {key: 4, value: parseInt(this.your_trigger_cards[4]) || 0},
+      //     ], t.Dictionary({ key: t.UInt8, value: t.UInt16 })), // trigger_cards
+      //     arg([
+      //       {key: 1, value: this.used_intercept_position[1] ? [parseInt(this.used_intercept_position[1])] : []},
+      //       {key: 2, value: this.used_intercept_position[2] ? [parseInt(this.used_intercept_position[2])] : []},
+      //       {key: 3, value: this.used_intercept_position[3] ? [parseInt(this.used_intercept_position[3])] : []},
+      //       {key: 4, value: this.used_intercept_position[4] ? [parseInt(this.used_intercept_position[4])] : []},
+      //       {key: 5, value: this.used_intercept_position[5] ? [parseInt(this.used_intercept_position[5])] : []},
+      //     ], t.Dictionary({ key: t.UInt8, value: t.Array(t.UInt8) })) // used_intercept_position
+      //   ],
+      //   proposer: this.$fcl.authz,
+      //   payer: this.$fcl.authz,
+      //   authorizations: [this.$fcl.authz],
+      //   limit: 999
+      // })
       console.log(`TransactionId: ${transactionId}`)
       this.show_game_dialog = false
       this.turnChangeActionDone = true
       this.customLoading = false
-      this.loadingDialog = true
       this.checkTransactionComplete('turnChange')
     },
     async startYourTurn() {
-      this.customLoading = true
-      const transactionId = await this.$fcl.mutate({
-        cadence: FlowTransactions.startYourTurn,
-        args: (arg, t) => [
-          arg([
-            {key: 1, value: this.defenced_unit[1] || 0},
-            {key: 2, value: this.defenced_unit[2] || 0},
-            {key: 3, value: this.defenced_unit[3] || 0},
-            {key: 4, value: this.defenced_unit[4] || 0},
-            {key: 5, value: this.defenced_unit[4] || 0},
-          ], t.Dictionary({ key: t.UInt8, value: t.UInt8 })), // blocked_unit
-          arg([
-            {key: 1, value: this.defenced_used_intercept[1] || 0},
-            {key: 2, value: this.defenced_used_intercept[2] || 0},
-            {key: 3, value: this.defenced_used_intercept[3] || 0},
-            {key: 4, value: this.defenced_used_intercept[4] || 0},
-          ], t.Dictionary({ key: t.UInt8, value: t.UInt8 })), // used_intercept_position
+      // this.customLoading = true
+      this.loadingDialog = true
+      console.log("LOG: Call a GraphQL mutation method to run Direct Lambda Resolver function (which located in serverside).")
+      const message = {
+        arg1: [
+          {key: 1, value: this.defenced_unit[1] || 0},
+          {key: 2, value: this.defenced_unit[2] || 0},
+          {key: 3, value: this.defenced_unit[3] || 0},
+          {key: 4, value: this.defenced_unit[4] || 0},
+          {key: 5, value: this.defenced_unit[4] || 0},
         ],
-        proposer: this.$fcl.authz,
-        payer: this.$fcl.authz,
-        authorizations: [this.$fcl.authz],
-        limit: 999
+        arg2: [
+          {key: 1, value: this.defenced_used_intercept[1] || 0},
+          {key: 2, value: this.defenced_used_intercept[2] || 0},
+          {key: 3, value: this.defenced_used_intercept[3] || 0},
+          {key: 4, value: this.defenced_used_intercept[4] || 0},
+        ]
+      }
+      const callProcess = {
+        type: 'start_your_turn',
+        message: JSON.stringify(message),
+        playerId: this.player_id
+      }
+      await API.graphql({
+        query: createBCGGameServerProcess,
+        variables: { input: callProcess },
+      }).then((res) => {
+        console.log('LOG: GraphQL', res)
+      }).catch((err) => {
+        console.log('Error:', err)
       })
-      console.log(`TransactionId: ${transactionId}`)
+      // const transactionId = await this.$fcl.mutate({
+      //   cadence: FlowTransactions.startYourTurn,
+      //   args: (arg, t) => [
+      //     arg([
+      //       {key: 1, value: this.defenced_unit[1] || 0},
+      //       {key: 2, value: this.defenced_unit[2] || 0},
+      //       {key: 3, value: this.defenced_unit[3] || 0},
+      //       {key: 4, value: this.defenced_unit[4] || 0},
+      //       {key: 5, value: this.defenced_unit[4] || 0},
+      //     ], t.Dictionary({ key: t.UInt8, value: t.UInt8 })), // blocked_unit
+      //     arg([
+      //       {key: 1, value: this.defenced_used_intercept[1] || 0},
+      //       {key: 2, value: this.defenced_used_intercept[2] || 0},
+      //       {key: 3, value: this.defenced_used_intercept[3] || 0},
+      //       {key: 4, value: this.defenced_used_intercept[4] || 0},
+      //     ], t.Dictionary({ key: t.UInt8, value: t.UInt8 })), // used_intercept_position
+      //   ],
+      //   proposer: this.$fcl.authz,
+      //   payer: this.$fcl.authz,
+      //   authorizations: [this.$fcl.authz],
+      //   limit: 999
+      // })
+      // console.log(`TransactionId: ${transactionId}`)
       this.show_game_dialog = false
       this.turnChangeActionDone = true
-      this.customLoading = false
-      this.loadingDialog = true
+      // this.customLoading = false
       this.checkTransactionComplete('startYourTurn')
     },
     async putCardOnTheField(field_position, card_id, used_intercept_card, enemy_skill_target) {
       this.customLoading = true
       setTimeout(() => (this.customLoading = false), 5000)
       console.log("DEBUG The Card Put on the Field:", this.your_trigger_cards, enemy_skill_target, used_intercept_card)
-      const transactionId = await this.$fcl.mutate({
-        cadence: FlowTransactions.putCardOnField,
-        args: (arg, t) => [
-          arg([{key: field_position, value: card_id }], t.Dictionary({ key: t.UInt8, value: t.UInt16 })), // unit_card
-          arg(enemy_skill_target || 0, t.UInt8), // enemy_skill_target
-          arg([
-            {key: 1, value: this.your_trigger_cards[1] || 0},
-            {key: 2, value: this.your_trigger_cards[2] || 0},
-            {key: 3, value: this.your_trigger_cards[4] || 0},
-            {key: 4, value: this.your_trigger_cards[4] || 0},
-          ], t.Dictionary({ key: t.UInt8, value: t.UInt16 })), // trigger_cards
-          arg(used_intercept_card, t.Array(t.UInt8)) // used_intercept_positions
+      this.loadingDialog = true
+      console.log("LOG: Call a GraphQL mutation method to run Direct Lambda Resolver function (which located in serverside).")
+      const message = {
+        arg1: [{key: field_position, value: card_id }],
+        arg2: enemy_skill_target || 0,
+        arg3: [
+          {key: 1, value: this.your_trigger_cards[1] || 0},
+          {key: 2, value: this.your_trigger_cards[2] || 0},
+          {key: 3, value: this.your_trigger_cards[4] || 0},
+          {key: 4, value: this.your_trigger_cards[4] || 0},
         ],
-        proposer: this.$fcl.authz,
-        payer: this.$fcl.authz,
-        authorizations: [this.$fcl.authz],
-        limit: 999
+        arg4: used_intercept_card
+      }
+      const callProcess = {
+        type: 'put_card_on_the_field',
+        message: JSON.stringify(message),
+        playerId: this.player_id
+      }
+      await API.graphql({
+        query: createBCGGameServerProcess,
+        variables: { input: callProcess },
+      }).then((res) => {
+        console.log('LOG: GraphQL', res)
+      }).catch((err) => {
+        console.log('Error:', err)
       })
-      console.log(`TransactionId: ${transactionId}`)
+      // const transactionId = await this.$fcl.mutate({
+      //   cadence: FlowTransactions.putCardOnField,
+      //   args: (arg, t) => [
+      //     arg([{key: field_position, value: card_id }], t.Dictionary({ key: t.UInt8, value: t.UInt16 })), // unit_card
+      //     arg(enemy_skill_target || 0, t.UInt8), // enemy_skill_target
+      //     arg([
+      //       {key: 1, value: this.your_trigger_cards[1] || 0},
+      //       {key: 2, value: this.your_trigger_cards[2] || 0},
+      //       {key: 3, value: this.your_trigger_cards[4] || 0},
+      //       {key: 4, value: this.your_trigger_cards[4] || 0},
+      //     ], t.Dictionary({ key: t.UInt8, value: t.UInt16 })), // trigger_cards
+      //     arg(used_intercept_card, t.Array(t.UInt8)) // used_intercept_positions
+      //   ],
+      //   proposer: this.$fcl.authz,
+      //   payer: this.$fcl.authz,
+      //   authorizations: [this.$fcl.authz],
+      //   limit: 999
+      // })
+      // console.log(`TransactionId: ${transactionId}`)
       this.show_game_dialog = false
       this.turnChangeActionDone = true
-      this.loadingDialog = true
       this.checkTransactionComplete('putCardOnTheField')
     },
     async cardMoveDecided() {
@@ -2134,9 +2270,9 @@ export default {
 }
 .matching-screen {
   width: 100%;
-  min-height: 640px;
+  min-height: 605px;
   color: #FF4081;
-  padding-top: 40px;
+  padding-top: 20px;
   background-image: url(https://cdn.vuetifyjs.com/images/backgrounds/bg-2.jpg);
   background-repeat: repeat;
 }
@@ -2230,10 +2366,13 @@ video {
 .your_score {
   font-size: 10px;
   margin-right: 20px;
-  text-align: center;
+  text-align: right;
   position: absolute;
-  right: 20px;
+  right: 0px;
   line-height: 20px;
+  color: cornsilk;
+  font-weight: 500;
+  font-size: 11px;
 }
 
 .remaining_time.opponent {
@@ -2244,6 +2383,8 @@ video {
 .macthing_time {
   width: 28px;
   margin: 0 auto;
+  color: springgreen;
+  padding-top: 17px;
 }
 
 .dialog_title {
@@ -2386,7 +2527,7 @@ video {
     top: 50px;
   }
   .section .game-screen {
-    height: calc(100vh - 35px);
+    height: calc(100vh - 30px);
   }
   .your_hands {
     margin-top: 5px;
