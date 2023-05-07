@@ -1,3 +1,4 @@
+const fs = require('fs');
 const fcl = require("@onflow/fcl");
 const t = require("@onflow/types");
 const { SecretsManagerClient, GetSecretValueCommand } = require("@aws-sdk/client-secrets-manager");
@@ -26,6 +27,10 @@ exports.handler = async function (event) {
 
   let player_id = input.playerId ? parseInt(input.playerId) : 0
   let message = ""
+  var KEY_ID_IT = 1
+  if (fs.existsSync('/tmp/sequence.txt')) {
+    KEY_ID_IT = parseInt(fs.readFileSync('/tmp/sequence.txt', {encoding: 'utf8'}));
+  }
   try {
     if (input.type === "player_matching") {
 
@@ -60,7 +65,7 @@ exports.handler = async function (event) {
         sha.update(Buffer.from(message, "hex"));
         return sha.digest();
       }
-      
+
       async function authorizationFunction(account) {
         return {
           ...account,
@@ -76,13 +81,29 @@ exports.handler = async function (event) {
           }
         }
       }
-      
+      async function authorizationFunctionProposer(account) {
+        KEY_ID_IT = !KEY_ID_IT || KEY_ID_IT > 5 ? 1 : KEY_ID_IT + 1
+        fs.writeFileSync('/tmp/sequence.txt', KEY_ID_IT.toString());
+        return {
+          ...account,
+          tempId: `${ADDRESS}-${KEY_ID_IT}`,
+          addr: fcl.sansPrefix(ADDRESS),
+          keyId: Number(KEY_ID_IT),
+          signingFunction: async (signable) => {
+            return {
+              addr: fcl.withPrefix(ADDRESS),
+              keyId: Number(KEY_ID_IT),
+              signature: sign(signable.message)
+            }
+          }
+        }
+      }
       const transactionId = await fcl.mutate({
         cadence: FlowTransactions.matchingStart,
         args: (arg, t) => [
           arg(player_id, t.UInt32)
         ],
-        proposer: authorizationFunction,
+        proposer: authorizationFunctionProposer,
         payer: authorizationFunction,
         authorizations: [authorizationFunction],
         limit: 999
@@ -97,7 +118,7 @@ exports.handler = async function (event) {
     return {
       id: new Date().getTime(),
       type: input.type || "",
-      message: message,
+      message: KEY_ID_IT + " : " + message,
       playerId: player_id,
       createdAt: new Date(),
       updatedAt: new Date()
