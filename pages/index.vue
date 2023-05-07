@@ -282,7 +282,7 @@
     <div class="header-bar">
       <div class="your_score">
         {{ your_score }}<br>
-        <v-btn v-if="address" prepend-icon="mdi-vuetify" size="x-small" @click="flowWalletSignOut">
+        <v-btn v-if="address && onMatching === 1" prepend-icon="mdi-vuetify" size="x-small" @click="flowWalletSignOut">
           DISCONNECT
         </v-btn>
       </div>
