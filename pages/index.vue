@@ -1818,7 +1818,7 @@ export default {
       this.customLoading = true
       setTimeout(() => (this.customLoading = false), 5000)
       console.log("DEBUG The Card Put on the Field:", this.your_trigger_cards, enemy_skill_target, used_intercept_card)
-      this.loadingDialog = true
+      // this.loadingDialog = true
       console.log("LOG: Call a GraphQL mutation method to run Direct Lambda Resolver function (which located in serverside).")
       const message = {
         arg1: [{key: field_position, value: card_id }],
