@@ -1004,6 +1004,7 @@ export default {
       })
     },
     async setupWalletInfo (user) {
+      console.log(user);
       this.walletUser = user
       if (this.walletUser?.addr) {
         this.address = this.walletUser?.addr

@@ -63,7 +63,7 @@ const mutate = /* GraphQL */ `
   console.log(`EVENT: ${JSON.stringify(event)}`);
 
   const address = '9e447fb949c3f1b6'
-  const contractName = 'CodeOfFlowAlpha4'
+  const contractName = 'CodeOfFlowAlpha6'
   const eventName = 'BattleSequence'
   const flowEventData = []
 
