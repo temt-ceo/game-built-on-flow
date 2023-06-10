@@ -1,7 +1,7 @@
 import FlowToken from 0x7e60df042a9c0868
 import FungibleToken from 0x9a0766d93b6608b7
 
-pub contract CodeOfFlowAlpha10 {
+pub contract CodeOfFlowAlpha12 {
 
   // Events
   pub event PlayerRegistered(player_id: UInt32)
@@ -148,7 +148,7 @@ pub contract CodeOfFlowAlpha10 {
     pub(set) var your_hand: {UInt8: UInt16}
     pub(set) var your_attacks_count: {UInt8: UInt8}
     pub(set) var card_draw_in_this_turn: Bool
-    pub(set) var enemy_attacking_cards: [AttackStruct]
+    pub(set) var enemy_attacking_card: AttackStruct?
 
     init(is_first: Bool, opponent: UInt32, matched_time: UFix64) {
       self.turn = 1
@@ -176,7 +176,7 @@ pub contract CodeOfFlowAlpha10 {
       self.your_hand = {}
       self.your_attacks_count = {}
       self.card_draw_in_this_turn = false
-      self.enemy_attacking_cards = []
+      self.enemy_attacking_card = nil
     }
   }
 
@@ -233,24 +233,24 @@ pub contract CodeOfFlowAlpha10 {
     pub fun matching_start(player_id: UInt32) {
       pre {
         // preの中の条件に合わない場合はエラーメッセージが返ります。 ここでは"Still matching."。
-        CodeOfFlowAlpha10.playerMatchingInfo[player_id] == nil ||
-        CodeOfFlowAlpha10.playerMatchingInfo[player_id]!.lastTimeMatching == nil ||
-        CodeOfFlowAlpha10.playerMatchingInfo[player_id]!.lastTimeMatching! + 60.0 <= getCurrentBlock().timestamp : "Still matching."
+        CodeOfFlowAlpha12.playerMatchingInfo[player_id] == nil ||
+        CodeOfFlowAlpha12.playerMatchingInfo[player_id]!.lastTimeMatching == nil ||
+        CodeOfFlowAlpha12.playerMatchingInfo[player_id]!.lastTimeMatching! + 60.0 <= getCurrentBlock().timestamp : "Still matching."
       }
       var counter = 0
       var outdated = -1
       let current_time = getCurrentBlock().timestamp
-      if let obj = CodeOfFlowAlpha10.playerMatchingInfo[player_id] {
+      if let obj = CodeOfFlowAlpha12.playerMatchingInfo[player_id] {
         obj.lastTimeMatching = current_time
-        CodeOfFlowAlpha10.playerMatchingInfo[player_id] = obj // save
+        CodeOfFlowAlpha12.playerMatchingInfo[player_id] = obj // save
       } else {
         let newObj = PlayerMatchingStruct()
         newObj.lastTimeMatching = current_time
-        CodeOfFlowAlpha10.playerMatchingInfo[player_id] = newObj
+        CodeOfFlowAlpha12.playerMatchingInfo[player_id] = newObj
       }
 
       // Search where matching times are already past 60 seconds
-      for time in CodeOfFlowAlpha10.matchingLimits {
+      for time in CodeOfFlowAlpha12.matchingLimits {
         if outdated == -1 && current_time > time + 60.0 {
           outdated = counter
         }
@@ -261,45 +261,45 @@ pub contract CodeOfFlowAlpha10 {
       if outdated > -1 {
         // Save only valid matchin times
         if (outdated == 0) {
-          CodeOfFlowAlpha10.matchingLimits = []
-          CodeOfFlowAlpha10.matchingPlayers = []
+          CodeOfFlowAlpha12.matchingLimits = []
+          CodeOfFlowAlpha12.matchingPlayers = []
         } else {
-          CodeOfFlowAlpha10.matchingLimits = CodeOfFlowAlpha10.matchingLimits.slice(from: 0, upTo: outdated)
-          CodeOfFlowAlpha10.matchingPlayers = CodeOfFlowAlpha10.matchingPlayers.slice(from: 0, upTo: outdated)
+          CodeOfFlowAlpha12.matchingLimits = CodeOfFlowAlpha12.matchingLimits.slice(from: 0, upTo: outdated)
+          CodeOfFlowAlpha12.matchingPlayers = CodeOfFlowAlpha12.matchingPlayers.slice(from: 0, upTo: outdated)
         }
       }
 
-      if CodeOfFlowAlpha10.matchingLimits.length >= 1 {
+      if CodeOfFlowAlpha12.matchingLimits.length >= 1 {
         // Pick the opponent from still matching players.
-        let time = CodeOfFlowAlpha10.matchingLimits.removeLast()
-        let opponent = CodeOfFlowAlpha10.matchingPlayers.removeLast()
+        let time = CodeOfFlowAlpha12.matchingLimits.removeLast()
+        let opponent = CodeOfFlowAlpha12.matchingPlayers.removeLast()
 
         var is_first = false
         // Decides which is first
-        if (CodeOfFlowAlpha10.matchingLimits.length % 2 == 1) {
+        if (CodeOfFlowAlpha12.matchingLimits.length % 2 == 1) {
           is_first = true
         }
 
-        CodeOfFlowAlpha10.playerMatchingInfo[player_id] = PlayerMatchingStruct() // マッチング成立したのでnilで初期化
-        CodeOfFlowAlpha10.battleInfo[player_id] = BattleStruct(is_first: is_first, opponent: opponent, matched_time: current_time)
-        CodeOfFlowAlpha10.battleInfo[opponent] = BattleStruct(is_first: !is_first, opponent: player_id, matched_time: current_time)
+        CodeOfFlowAlpha12.playerMatchingInfo[player_id] = PlayerMatchingStruct() // マッチング成立したのでnilで初期化
+        CodeOfFlowAlpha12.battleInfo[player_id] = BattleStruct(is_first: is_first, opponent: opponent, matched_time: current_time)
+        CodeOfFlowAlpha12.battleInfo[opponent] = BattleStruct(is_first: !is_first, opponent: player_id, matched_time: current_time)
 
         // charge the play fee (料金徴収)
-        if let cyberScore = CodeOfFlowAlpha10.playerList[player_id] {
+        if let cyberScore = CodeOfFlowAlpha12.playerList[player_id] {
           cyberScore.cyber_energy = cyberScore.cyber_energy - 30
-          CodeOfFlowAlpha10.playerList[player_id] = cyberScore
+          CodeOfFlowAlpha12.playerList[player_id] = cyberScore
         }
 
         // charge the play fee (料金徴収)
-        if let cyberScore = CodeOfFlowAlpha10.playerList[opponent] {
+        if let cyberScore = CodeOfFlowAlpha12.playerList[opponent] {
           cyberScore.cyber_energy = cyberScore.cyber_energy - 30
-          CodeOfFlowAlpha10.playerList[opponent] = cyberScore
+          CodeOfFlowAlpha12.playerList[opponent] = cyberScore
         }
         emit BattleSequence(sequence: 1, player_id: player_id, opponent: opponent)
       } else {
         // Put player_id in the matching list.
-        CodeOfFlowAlpha10.matchingLimits.append(current_time)
-        CodeOfFlowAlpha10.matchingPlayers.append(player_id)
+        CodeOfFlowAlpha12.matchingLimits.append(current_time)
+        CodeOfFlowAlpha12.matchingPlayers.append(player_id)
         emit BattleSequence(sequence: 0, player_id: player_id, opponent: 0)
       }
 
@@ -353,7 +353,7 @@ pub contract CodeOfFlowAlpha10 {
       let withdrawPosition19 = pseudorandomNumber19 % 28
       let withdrawPosition20 = pseudorandomNumber20 % 27
 
-      if let playerMatchingInfo = CodeOfFlowAlpha10.playerMatchingInfo[player_id] {
+      if let playerMatchingInfo = CodeOfFlowAlpha12.playerMatchingInfo[player_id] {
         playerMatchingInfo.marigan_cards = [
           [withdrawPosition1, withdrawPosition2, withdrawPosition3, withdrawPosition4],
           [withdrawPosition5, withdrawPosition6, withdrawPosition7, withdrawPosition8],
@@ -361,7 +361,7 @@ pub contract CodeOfFlowAlpha10 {
           [withdrawPosition13, withdrawPosition14, withdrawPosition15, withdrawPosition16],
           [withdrawPosition17, withdrawPosition18, withdrawPosition19, withdrawPosition20]
         ]
-        CodeOfFlowAlpha10.playerMatchingInfo[player_id] = playerMatchingInfo // save
+        CodeOfFlowAlpha12.playerMatchingInfo[player_id] = playerMatchingInfo // save
       }
     }
 
@@ -371,12 +371,12 @@ pub contract CodeOfFlowAlpha10 {
     pub fun game_start(player_id: UInt32, drawed_cards: [UInt16]) {
       pre {
         drawed_cards.length == 4 : "Invalid argument."
-        CodeOfFlowAlpha10.battleInfo[player_id] != nil && CodeOfFlowAlpha10.battleInfo[player_id]!.game_started == false : "Game already started."
+        CodeOfFlowAlpha12.battleInfo[player_id] != nil && CodeOfFlowAlpha12.battleInfo[player_id]!.game_started == false : "Game already started."
       }
       var drawed_pos: [UInt8] = []
-      if let playerMatchingInfo = CodeOfFlowAlpha10.playerMatchingInfo[player_id] {
+      if let playerMatchingInfo = CodeOfFlowAlpha12.playerMatchingInfo[player_id] {
         for arr in playerMatchingInfo.marigan_cards {
-          if (CodeOfFlowAlpha10.deck[arr[0]] == drawed_cards[0] && CodeOfFlowAlpha10.deck[arr[1]] == drawed_cards[1] && CodeOfFlowAlpha10.deck[arr[2]] == drawed_cards[2] && CodeOfFlowAlpha10.deck[arr[3]] == drawed_cards[3]) {
+          if (CodeOfFlowAlpha12.deck[arr[0]] == drawed_cards[0] && CodeOfFlowAlpha12.deck[arr[1]] == drawed_cards[1] && CodeOfFlowAlpha12.deck[arr[2]] == drawed_cards[2] && CodeOfFlowAlpha12.deck[arr[3]] == drawed_cards[3]) {
             drawed_pos = arr
           }
         }
@@ -387,9 +387,9 @@ pub contract CodeOfFlowAlpha10 {
       }
 
 
-      if let info = CodeOfFlowAlpha10.battleInfo[player_id] {
+      if let info = CodeOfFlowAlpha12.battleInfo[player_id] {
         info.game_started = true
-        info.your_remain_deck = CodeOfFlowAlpha10.deck
+        info.your_remain_deck = CodeOfFlowAlpha12.deck
         info.last_time_turnend = getCurrentBlock().timestamp
         // Set hand
         var key: UInt8 = 1
@@ -409,10 +409,10 @@ pub contract CodeOfFlowAlpha10 {
           emit GameStart(first: info.opponent, second: player_id)
         }
         // Save
-        CodeOfFlowAlpha10.battleInfo[player_id] = info
+        CodeOfFlowAlpha12.battleInfo[player_id] = info
 
         let opponent = info.opponent
-        if let opponentInfo = CodeOfFlowAlpha10.battleInfo[opponent] {
+        if let opponentInfo = CodeOfFlowAlpha12.battleInfo[opponent] {
           // if opponentInfo.last_time_turnend != nil { // これだとハンドがセットされないのでコメントアウト.
             opponentInfo.last_time_turnend = info.last_time_turnend // set time same time
             // opponentInfo.game_started = true
@@ -420,7 +420,7 @@ pub contract CodeOfFlowAlpha10 {
             opponentInfo.opponent_hand = info.your_hand.keys.length
             opponentInfo.opponent_cp = info.your_cp
             // Save
-            CodeOfFlowAlpha10.battleInfo[opponent] = opponentInfo
+            CodeOfFlowAlpha12.battleInfo[opponent] = opponentInfo
             emit BattleSequence(sequence: 2, player_id: player_id, opponent: opponent)
           // }
         }
@@ -429,17 +429,17 @@ pub contract CodeOfFlowAlpha10 {
 
     pub fun put_card_on_the_field(player_id: UInt32, unit_card: {UInt8: UInt16}, enemy_skill_target: UInt8?, trigger_cards: {UInt8: UInt16?}, used_intercept_positions: [UInt8]) {
       for position in unit_card.keys {
-        if CodeOfFlowAlpha10.battleInfo[player_id]!.your_field_unit[position] != nil {
+        if CodeOfFlowAlpha12.battleInfo[player_id]!.your_field_unit[position] != nil {
           panic("You can't put unit in this position!")
         }
       }
       for position in trigger_cards.keys {
-        if CodeOfFlowAlpha10.battleInfo[player_id]!.your_trigger_cards[position] != nil && CodeOfFlowAlpha10.battleInfo[player_id]!.your_trigger_cards[position] != trigger_cards[position] {
+        if CodeOfFlowAlpha12.battleInfo[player_id]!.your_trigger_cards[position] != nil && CodeOfFlowAlpha12.battleInfo[player_id]!.your_trigger_cards[position] != trigger_cards[position] {
           panic("Your trigger card is Tampered!")
         }
       }
       for position in used_intercept_positions {
-        if CodeOfFlowAlpha10.battleInfo[player_id]!.your_trigger_cards[position] == nil {
+        if CodeOfFlowAlpha12.battleInfo[player_id]!.your_trigger_cards[position] == nil {
           // panic("You have not set trigger card in this position!") TODO FIXME trigger_cards must be counted before check your_trigger_cards
         }
       }
@@ -450,8 +450,9 @@ pub contract CodeOfFlowAlpha10 {
       }
 
       var your_hand_count: Int = 0
-      if let info = CodeOfFlowAlpha10.battleInfo[player_id] {
-        // ハンドの整合性を合わせる(トリガーゾーンに移動した分、ハンドから取る)
+      if let info = CodeOfFlowAlpha12.battleInfo[player_id] {
+        // Match the consistency of the hand (take from the hand the amount moved to the trigger zone)
+        // (ハンドの整合性を合わせる(トリガーゾーンに移動した分、ハンドから取る))
         var isRemoved = false
         for trigger_position in trigger_cards.keys {
           if info.your_trigger_cards[trigger_position] != trigger_cards[trigger_position] && trigger_cards[trigger_position] != 0 {
@@ -473,7 +474,7 @@ pub contract CodeOfFlowAlpha10 {
         // Process Card Skills
         for field_position in unit_card.keys { // Usually this is only one card
           let card_id: UInt16 = unit_card[field_position]!
-          let unit = CodeOfFlowAlpha10.cardInfo[card_id]!
+          let unit = CodeOfFlowAlpha12.cardInfo[card_id]!
           if (unit.category != 0) {
             panic("The card you put on the field is not a Unit Card!")
           }
@@ -495,7 +496,7 @@ pub contract CodeOfFlowAlpha10 {
                   // assess is this damage enough to beat the unit.
                   if let opponent = info.opponent_field_unit[opponent_position] {
                     let card_id: UInt16 = info.opponent_field_unit[opponent_position]!
-                    let unit = CodeOfFlowAlpha10.cardInfo[card_id]!
+                    let unit = CodeOfFlowAlpha12.cardInfo[card_id]!
                     if Int(unit.bp) < info.opponent_field_unit_bp_amount_of_change[opponent_position]! * -1 {
                       // beat the opponent
                       info.opponent_field_unit[opponent_position] = nil
@@ -514,7 +515,7 @@ pub contract CodeOfFlowAlpha10 {
                     // assess is this damage enough to beat the unit.
                     if let opponent = info.opponent_field_unit[target] {
                       let card_id: UInt16 = info.opponent_field_unit[target]!
-                      let unit = CodeOfFlowAlpha10.cardInfo[card_id]!
+                      let unit = CodeOfFlowAlpha12.cardInfo[card_id]!
                       if Int(unit.bp) < info.opponent_field_unit_bp_amount_of_change[target]! * -1 {
                         // beat the opponent
                         info.opponent_field_unit[target] = nil
@@ -577,7 +578,7 @@ pub contract CodeOfFlowAlpha10 {
           for card_position in used_intercept_positions {
             if (info.your_trigger_cards[card_position] != nil) { // To avoid transaction error which interrupt the game.
               let trigger_card_id = info.your_trigger_cards[card_position]!
-              let trigger = CodeOfFlowAlpha10.cardInfo[trigger_card_id]!
+              let trigger = CodeOfFlowAlpha12.cardInfo[trigger_card_id]!
               info.your_trigger_cards[card_position] = nil
 
               if (trigger.skill.trigger_1 == 1) {
@@ -597,7 +598,7 @@ pub contract CodeOfFlowAlpha10 {
                         // assess is this damage enough to beat the unit.
                         if let opponent = info.opponent_field_unit[target] {
                           let card_id: UInt16 = info.opponent_field_unit[target]!
-                          let unit = CodeOfFlowAlpha10.cardInfo[card_id]!
+                          let unit = CodeOfFlowAlpha12.cardInfo[card_id]!
                           if Int(unit.bp) < info.opponent_field_unit_bp_amount_of_change[target]! * -1 {
                             // beat the opponent
                             info.opponent_field_unit[target] = nil
@@ -655,7 +656,8 @@ pub contract CodeOfFlowAlpha10 {
           }
           info.your_cp = info.your_cp - unit.cost
 
-          // ハンドの整合性を合わせる(フィールドに移動した分、ハンドから取る)
+          // Match the consistency of the hand (take from the hand the amount moved to the trigger zone)
+          // (ハンドの整合性を合わせる(フィールドに移動した分、ハンドから取る))
           var isRemoved2 = false
           for hand_position in info.your_hand.keys {
               if card_id == info.your_hand[hand_position] {
@@ -672,13 +674,13 @@ pub contract CodeOfFlowAlpha10 {
         }
 
         // Save
-        CodeOfFlowAlpha10.battleInfo[player_id] = info
+        CodeOfFlowAlpha12.battleInfo[player_id] = info
 
         let opponent = info.opponent
-        if target > 0 && CodeOfFlowAlpha10.battleInfo[opponent]!.your_field_unit[target] == nil {
+        if target > 0 && CodeOfFlowAlpha12.battleInfo[opponent]!.your_field_unit[target] == nil {
           panic("You can not use skill for the target of this position!")
         }
-        if let infoOpponent = CodeOfFlowAlpha10.battleInfo[opponent] {
+        if let infoOpponent = CodeOfFlowAlpha12.battleInfo[opponent] {
           infoOpponent.opponent_remain_deck = info.your_remain_deck.length
           infoOpponent.opponent_hand = your_hand_count
           infoOpponent.opponent_trigger_cards = info.your_trigger_cards.keys.length
@@ -695,34 +697,33 @@ pub contract CodeOfFlowAlpha10 {
             infoOpponent.your_trigger_cards[withdrawPosition1] = info.your_trigger_cards.remove(key: withdrawPosition1)
           }
           // Save
-          CodeOfFlowAlpha10.battleInfo[opponent] = infoOpponent
+          CodeOfFlowAlpha12.battleInfo[opponent] = infoOpponent
         }
       }
     }
 
-    pub fun turn_change(player_id: UInt32, attacking_cards: [UInt8], enemy_skill_target: {UInt8: UInt8}, trigger_cards: {UInt8: UInt16}, used_intercept_position: {UInt8: [UInt8]}) {
-      for position in attacking_cards {
-        if CodeOfFlowAlpha10.battleInfo[player_id]!.your_field_unit[position] == nil {
-          panic("You have not set unit card in this position!")
-        }
+    pub fun attack(player_id: UInt32, attack_unit: UInt8, enemy_skill_target: {UInt8: UInt8}, trigger_cards: {UInt8: UInt16}, used_intercept_position: {UInt8: [UInt8]}) {
+      if CodeOfFlowAlpha12.battleInfo[player_id]!.your_field_unit[attack_unit] == nil {
+        panic("You have not set unit card in this position!")
       }
       for position in trigger_cards.keys {
-        if !(CodeOfFlowAlpha10.battleInfo[player_id]!.your_trigger_cards[position] == trigger_cards[position] || CodeOfFlowAlpha10.battleInfo[player_id]!.your_trigger_cards[position] == nil) {
+        if !(CodeOfFlowAlpha12.battleInfo[player_id]!.your_trigger_cards[position] == trigger_cards[position] || CodeOfFlowAlpha12.battleInfo[player_id]!.your_trigger_cards[position] == nil) {
           // panic("Your trigger card is Tampered!") To avoid transaction failure by the coincident accident.
         }
       }
       for position in used_intercept_position.keys {
-        if used_intercept_position[position]!.length > 0 && CodeOfFlowAlpha10.battleInfo[player_id]!.your_trigger_cards[position] == nil {
+        if used_intercept_position[position]!.length > 0 && CodeOfFlowAlpha12.battleInfo[player_id]!.your_trigger_cards[position] == nil {
           // panic("You have not set trigger card in this position!") TODO FIXME trigger_cards must be counted before check your_trigger_cards
         }
       }
-      var enemy_attacking_cards: [AttackStruct] = []
+
+      var attacking_card_to_enemy: AttackStruct? = nil
       var your_trigger_cards_count: Int = 0
-      if let info = CodeOfFlowAlpha10.battleInfo[player_id] {
-        info.last_time_turnend = getCurrentBlock().timestamp
-        // トリガーゾーンのカードを合わせる
+
+      if let info = CodeOfFlowAlpha12.battleInfo[player_id] {
+
+        // Match the consistency of the hand (take from the hand the amount moved to the trigger zone) (ハンドの整合性を合わせる(トリガーゾーンに移動した分、ハンドから取る))
         for position in trigger_cards.keys {
-          // ハンドの整合性を合わせる(トリガーゾーンに移動した分、ハンドから取る)
           var isRemoved = false
           if info.your_trigger_cards[position] != trigger_cards[position] && trigger_cards[position] != 0 {
             let card_id = trigger_cards[position]
@@ -741,221 +742,194 @@ pub contract CodeOfFlowAlpha10 {
           }
         }
 
-        // Set Field Unit Actions To Defence Only
-        for position in info.your_field_unit.keys {
-          info.your_field_unit_action[position] = 1 // 2: can attack, 1: can defence only, 0: nothing can do.
-          if info.your_field_unit[position] != nil && info.your_field_unit[position] != 0 {
-            let card_id: UInt16 = info.your_field_unit[position]!
-            let unit = CodeOfFlowAlpha10.cardInfo[card_id]!
-            ///////////////attribute evaluation///////////////
-            // trigger when the turn is changing
-            if (unit.skill.trigger_1 == 4) {
-                //---- indomitable spirit ----
-              if (unit.skill.type_1 == 8) {
-                  info.your_field_unit_action[position] = 1
-              }
-            }
-          }
-          ///////////////attribute evaluation///////////////
-        }
-
-        // Process Battle Action
+        //////////////////////////////////////////////////
+        // Process Battle Action START
+        //////////////////////////////////////////////////
         var lost_card_flg = false
         var speed_move_flg = false
         let used_trigger_cards: [UInt16] = []
-        for position in attacking_cards {
-          info.your_field_unit_action[position] = 0 // 2: can attack, 1: can defence only, 0: nothing can do.
+        info.your_field_unit_action[attack_unit] = 0 // 2: can attack, 1: can defence only, 0: nothing can do.
 
-          //////////////////////////////////////////////////
-          ///////////////attribute evaluation///////////////
-          //////////////////////////////////////////////////
-          let card_id: UInt16 = info.your_field_unit[position]!
-          let unit = CodeOfFlowAlpha10.cardInfo[card_id]!
-          // trigger when the unit is attacking
-          if (unit.skill.trigger_1 == 2) {
-            //---- BP Pump ----
-            if (unit.skill.type_1 == 2) {
-              if let your_field_unit_bp_amount_of_change = info.your_field_unit_bp_amount_of_change[position] {
-                info.your_field_unit_bp_amount_of_change[position] = your_field_unit_bp_amount_of_change + Int(unit.skill.amount_1)
-              } else {
-                info.your_field_unit_bp_amount_of_change[position] = Int(unit.skill.amount_1)
-              }
+        ///////////////attribute evaluation///////////////
+        let card_id: UInt16 = info.your_field_unit[attack_unit]!
+        let unit = CodeOfFlowAlpha12.cardInfo[card_id]!
+        // trigger when the unit is attacking
+        if (unit.skill.trigger_1 == 2) {
+          //---- BP Pump ----
+          if (unit.skill.type_1 == 2) {
+            if let your_field_unit_bp_amount_of_change = info.your_field_unit_bp_amount_of_change[attack_unit] {
+              info.your_field_unit_bp_amount_of_change[attack_unit] = your_field_unit_bp_amount_of_change + Int(unit.skill.amount_1)
+            } else {
+              info.your_field_unit_bp_amount_of_change[attack_unit] = Int(unit.skill.amount_1)
             }
+          }
 
-            //---- Damage ----
-            if (unit.skill.type_1 == 1 || unit.skill.type_1 == 4) {
-              // Damage to all unit
-              if (unit.skill.ask_1 == 0 && unit.skill.type_1 == 4) {
-                for opponent_position in info.opponent_field_unit.keys {
-                  if let opponent_field_unit_bp_amount_of_change = info.opponent_field_unit_bp_amount_of_change[opponent_position] {
-                    info.opponent_field_unit_bp_amount_of_change[opponent_position] = opponent_field_unit_bp_amount_of_change + (-1 * Int(unit.skill.amount_1))
-                  } else {
-                    info.opponent_field_unit_bp_amount_of_change[opponent_position] = -1 * Int(unit.skill.amount_1)
-                  }
+          //---- Damage ----
+          if (unit.skill.type_1 == 1 || unit.skill.type_1 == 4) {
+            // Damage to all unit
+            if (unit.skill.ask_1 == 0 && unit.skill.type_1 == 4) {
+              for opponent_position in info.opponent_field_unit.keys {
+                if let opponent_field_unit_bp_amount_of_change = info.opponent_field_unit_bp_amount_of_change[opponent_position] {
+                  info.opponent_field_unit_bp_amount_of_change[opponent_position] = opponent_field_unit_bp_amount_of_change + (-1 * Int(unit.skill.amount_1))
+                } else {
+                  info.opponent_field_unit_bp_amount_of_change[opponent_position] = -1 * Int(unit.skill.amount_1)
                 }
-              // Damage to one target unit
-              } else if (unit.skill.ask_1 == 1) {
-                var target: UInt8 = 1
-                if enemy_skill_target[position] != nil && enemy_skill_target[position] != 0 {
-                  target = enemy_skill_target[position]!
-                }
+              }
+            // Damage to one target unit
+            } else if (unit.skill.ask_1 == 1) {
+              var target: UInt8 = 1
+              if enemy_skill_target[attack_unit] != nil && enemy_skill_target[attack_unit] != 0 {
+                target = enemy_skill_target[attack_unit]!
+              }
+              if let opponent_field_unit_bp_amount_of_change = info.opponent_field_unit_bp_amount_of_change[target] {
+                info.opponent_field_unit_bp_amount_of_change[target] = opponent_field_unit_bp_amount_of_change + (-1 * Int(unit.skill.amount_1))
+              } else {
+                info.opponent_field_unit_bp_amount_of_change[target] = -1 * Int(unit.skill.amount_1)
+              }
+            // Omly target which has no action right
+            } else if (unit.skill.ask_1 == 2) {
+              var target: UInt8 = 1
+              if enemy_skill_target[attack_unit] != nil && enemy_skill_target[attack_unit] != 0 {
+                target = enemy_skill_target[attack_unit]!
+              }
+              if (info.opponent_field_unit_action[target] == 3) { // // 2: can attack, 1: can defence only, 0: nothing can do.
                 if let opponent_field_unit_bp_amount_of_change = info.opponent_field_unit_bp_amount_of_change[target] {
                   info.opponent_field_unit_bp_amount_of_change[target] = opponent_field_unit_bp_amount_of_change + (-1 * Int(unit.skill.amount_1))
                 } else {
                   info.opponent_field_unit_bp_amount_of_change[target] = -1 * Int(unit.skill.amount_1)
                 }
-              // Omly target which has no action right
-              } else if (unit.skill.ask_1 == 2) {
-                var target: UInt8 = 1
-                if enemy_skill_target[position] != nil && enemy_skill_target[position] != 0 {
-                  target = enemy_skill_target[position]!
-                }
-                if (info.opponent_field_unit_action[target] == 3) { // // 2: can attack, 1: can defence only, 0: nothing can do.
-                  if let opponent_field_unit_bp_amount_of_change = info.opponent_field_unit_bp_amount_of_change[target] {
-                    info.opponent_field_unit_bp_amount_of_change[target] = opponent_field_unit_bp_amount_of_change + (-1 * Int(unit.skill.amount_1))
-                  } else {
-                    info.opponent_field_unit_bp_amount_of_change[target] = -1 * Int(unit.skill.amount_1)
-                  }
-                }
               }
             }
-            //---- Trigger lost ----
-            if (unit.skill.type_1 == 3) {
-              lost_card_flg = true
+          }
+          //---- Trigger lost ----
+          if (unit.skill.type_1 == 3) {
+            lost_card_flg = true
+          }
+          //---- Remove action right ----
+          if (unit.skill.type_1 == 5) {
+            var target: UInt8 = 1
+            if enemy_skill_target[attack_unit] != nil {
+              target = enemy_skill_target[attack_unit]!
             }
-            //---- Remove action right ----
-            if (unit.skill.type_1 == 5) {
+            info.opponent_field_unit_action[target] = 0 // // 2: can attack, 1: can defence only, 0: nothing can do.
+          }
+          //---- Draw card ----
+          if (unit.skill.type_1 == 7) {
+            let blockCreatedAt = getCurrentBlock().timestamp.toString().slice(from: 0, upTo: 10)
+            let decodedArray = blockCreatedAt.decodeHex()
+            let pseudorandomNumber1 = Int(decodedArray[decodedArray.length - 1])
+            let withdrawPosition1 = pseudorandomNumber1 % (info.your_remain_deck.length - 1)
+            var isSetCard1 = false
+            var handCnt = 0
+            let handPositions: [UInt8] = [1, 2, 3, 4, 5 ,6, 7]
+            for hand_position in handPositions {
+              if info.your_hand[hand_position] == nil && isSetCard1 == false {
+                info.your_hand[hand_position] = info.your_remain_deck.remove(at: withdrawPosition1)
+                isSetCard1 = true
+              }
+            }
+          }
+          //---- Speed Move ----
+          if (unit.skill.type_1 == 11) {
+            speed_move_flg = true
+          }
+        }
+        // trigger when the unit is attacking
+        if (unit.skill.trigger_2 == 2) { // currently there is no card which has trigger_3 and trigger_4
+          if (unit.skill.type_2 == 3) {
+            lost_card_flg = true
+          }
+        }
+        if (used_intercept_position[attack_unit] != nil) {
+          // Used Trigger or Intercept Card
+          for card_position in used_intercept_position[attack_unit]! {
+            let trigger_card_id = info.your_trigger_cards[card_position]!
+            let trigger = CodeOfFlowAlpha12.cardInfo[trigger_card_id]!
+            info.your_trigger_cards[card_position] = nil
+            // trigger when the unit is attacking
+            if (trigger.skill.trigger_1 == 2 || trigger.skill.trigger_1 == 5) {
+              //---- BP Pump ----
+              if (trigger.skill.type_1 == 2) {
+                if let your_field_unit_bp_amount_of_change = info.your_field_unit_bp_amount_of_change[attack_unit] {
+                  info.your_field_unit_bp_amount_of_change[attack_unit] = your_field_unit_bp_amount_of_change + Int(trigger.skill.amount_1)
+                } else {
+                  info.your_field_unit_bp_amount_of_change[attack_unit] = Int(trigger.skill.amount_1)
+                }
+              }
+              // Enemy Unit Target
               var target: UInt8 = 1
-              if enemy_skill_target[position] != nil {
-                target = enemy_skill_target[position]!
+              if (enemy_skill_target[attack_unit] != nil) {
+                target = enemy_skill_target[attack_unit]!
               }
-              info.opponent_field_unit_action[target] = 0 // // 2: can attack, 1: can defence only, 0: nothing can do.
-            }
-            //---- Draw card ----
-            if (unit.skill.type_1 == 7) {
-              let blockCreatedAt = getCurrentBlock().timestamp.toString().slice(from: 0, upTo: 10)
-              let decodedArray = blockCreatedAt.decodeHex()
-              let pseudorandomNumber1 = Int(decodedArray[decodedArray.length - 1])
-              let withdrawPosition1 = pseudorandomNumber1 % (info.your_remain_deck.length - 1)
-              var isSetCard1 = false
-              var handCnt = 0
-              let handPositions: [UInt8] = [1, 2, 3, 4, 5 ,6, 7]
-              for hand_position in handPositions {
-                if info.your_hand[hand_position] == nil && isSetCard1 == false {
-                  info.your_hand[hand_position] = info.your_remain_deck.remove(at: withdrawPosition1)
-                  isSetCard1 = true
-                }
-              }
-            }
-            //---- Speed Move ----
-            if (unit.skill.type_1 == 11) {
-              speed_move_flg = true
-            }
-          }
-          // trigger when the unit is attacking
-          if (unit.skill.trigger_2 == 2) { // currently there is no card which has trigger_3 and trigger_4
-            if (unit.skill.type_2 == 3) {
-              lost_card_flg = true
-            }
-          }
-          if (used_intercept_position[position] != nil) {
-            // Used Trigger or Intercept Card
-            for card_position in used_intercept_position[position]! {
-              let trigger_card_id = info.your_trigger_cards[card_position]!
-              let trigger = CodeOfFlowAlpha10.cardInfo[trigger_card_id]!
-              info.your_trigger_cards[card_position] = nil
-              // trigger when the unit is attacking
-              if (trigger.skill.trigger_1 == 2 || trigger.skill.trigger_1 == 5) {
-                //---- BP Pump ----
-                if (trigger.skill.type_1 == 2) {
-                  if let your_field_unit_bp_amount_of_change = info.your_field_unit_bp_amount_of_change[position] {
-                    info.your_field_unit_bp_amount_of_change[position] = your_field_unit_bp_amount_of_change + Int(trigger.skill.amount_1)
+              //---- Damage ----
+              if (trigger.skill.type_1 == 1 || trigger.skill.type_1 == 4) {
+                // Damage to one target unit
+                if (trigger.skill.ask_1 == 1) {
+                  if let opponent_field_unit_bp_amount_of_change = info.opponent_field_unit_bp_amount_of_change[target] {
+                    info.opponent_field_unit_bp_amount_of_change[target] = opponent_field_unit_bp_amount_of_change + (-1 * Int(trigger.skill.amount_1))
                   } else {
-                    info.your_field_unit_bp_amount_of_change[position] = Int(trigger.skill.amount_1)
+                    info.opponent_field_unit_bp_amount_of_change[target] = -1 * Int(trigger.skill.amount_1)
                   }
-                }
-                // Enemy Unit Target
-                var target: UInt8 = 1
-                if (enemy_skill_target[position] != nil) {
-                  target = enemy_skill_target[position]!
-                }
-                //---- Damage ----
-                if (trigger.skill.type_1 == 1 || trigger.skill.type_1 == 4) {
-                  // Damage to one target unit
-                  if (trigger.skill.ask_1 == 1) {
+                // Omly target which has no action right
+                } else if (trigger.skill.ask_1 == 2) {
+                  if (info.opponent_field_unit_action[target] == 3) { // // 2: can attack, 1: can defence only, 0: nothing can do.
                     if let opponent_field_unit_bp_amount_of_change = info.opponent_field_unit_bp_amount_of_change[target] {
                       info.opponent_field_unit_bp_amount_of_change[target] = opponent_field_unit_bp_amount_of_change + (-1 * Int(trigger.skill.amount_1))
                     } else {
                       info.opponent_field_unit_bp_amount_of_change[target] = -1 * Int(trigger.skill.amount_1)
                     }
-                  // Omly target which has no action right
-                  } else if (trigger.skill.ask_1 == 2) {
-                    if (info.opponent_field_unit_action[target] == 3) { // // 2: can attack, 1: can defence only, 0: nothing can do.
-                      if let opponent_field_unit_bp_amount_of_change = info.opponent_field_unit_bp_amount_of_change[target] {
-                        info.opponent_field_unit_bp_amount_of_change[target] = opponent_field_unit_bp_amount_of_change + (-1 * Int(trigger.skill.amount_1))
-                      } else {
-                        info.opponent_field_unit_bp_amount_of_change[target] = -1 * Int(trigger.skill.amount_1)
-                      }
-                    }
-                  }
-                }
-                //---- Trigger lost ----
-                if (trigger.skill.type_1 == 3) {
-                  lost_card_flg = true
-                }
-                //---- Remove action right ----
-                if (trigger.skill.type_1 == 5) {
-                  if trigger.skill.amount_1 == 1 {
-                    info.opponent_field_unit_action[target] = 0 // // 2: can attack, 1: can defence only, 0: nothing can do.
-                  } else if (trigger.skill.amount_1 == 5) {
-                    for enemy_position in info.opponent_field_unit_action.keys {
-                      info.opponent_field_unit_action[enemy_position] = 0
-                    }
                   }
                 }
               }
-              used_trigger_cards.append(trigger_card_id)
+              //---- Trigger lost ----
+              if (trigger.skill.type_1 == 3) {
+                lost_card_flg = true
+              }
+              //---- Remove action right ----
+              if (trigger.skill.type_1 == 5) {
+                if trigger.skill.amount_1 == 1 {
+                  info.opponent_field_unit_action[target] = 0 // // 2: can attack, 1: can defence only, 0: nothing can do.
+                } else if (trigger.skill.amount_1 == 5) {
+                  for enemy_position in info.opponent_field_unit_action.keys {
+                    info.opponent_field_unit_action[enemy_position] = 0
+                  }
+                }
+              }
             }
+            used_trigger_cards.append(trigger_card_id)
           }
-          //////////////////////////////////////////////////
-          ///////////////↑↑attribute evaluation↑↑///////////
-          //////////////////////////////////////////////////
-          var unit_pump: UInt32 = 0
-          if (info.your_field_unit_bp_amount_of_change[position] != nil) {
-            unit_pump = UInt32(info.your_field_unit_bp_amount_of_change[position]!)
-          }
-          if (info.your_attacks_count[info.turn] == nil) {
-            info.your_attacks_count[info.turn] = 1
-          } else {
-            info.your_attacks_count[info.turn] = info.your_attacks_count[info.turn]! + 1
-          }
-          enemy_attacking_cards.append(AttackStruct(card_id: unit.card_id, bp: unit.bp, pump: unit_pump, field_position: position, used_trigger_cards: used_trigger_cards))
         }
+        ///////////////↑↑attribute evaluation↑↑///////////
 
-        // Process Turn Change
-        info.last_time_turnend = getCurrentBlock().timestamp
-        info.is_first_turn = !info.is_first_turn
-        if (info.is_first_turn) {
-          info.turn = info.turn + 1
+        var unit_pump: UInt32 = 0
+        if (info.your_field_unit_bp_amount_of_change[attack_unit] != nil) {
+          unit_pump = UInt32(info.your_field_unit_bp_amount_of_change[attack_unit]!)
         }
-        info.card_draw_in_this_turn = false
+        if (info.your_attacks_count[info.turn] == nil) {
+          info.your_attacks_count[info.turn] = 1
+        } else {
+          info.your_attacks_count[info.turn] = info.your_attacks_count[info.turn]! + 1
+        }
+        attacking_card_to_enemy = AttackStruct(card_id: unit.card_id, bp: unit.bp, pump: unit_pump, field_position: attack_unit, used_trigger_cards: used_trigger_cards)
+        //////////////////////////////////////////////////
+        // Process Battle Action END
+        //////////////////////////////////////////////////
+
         // save
-        CodeOfFlowAlpha10.battleInfo[player_id] = info
+        CodeOfFlowAlpha12.battleInfo[player_id] = info
 
         let opponent = info.opponent
         for position in enemy_skill_target.values {
           if (position != 0) {
-            if CodeOfFlowAlpha10.battleInfo[opponent]!.your_field_unit[position] == nil {
+            if CodeOfFlowAlpha12.battleInfo[opponent]!.your_field_unit[position] == nil {
               panic("You can not use skill for the target of this position!")
             }
           }
         }
-        if let infoOpponent = CodeOfFlowAlpha10.battleInfo[opponent] {
+
+        if let infoOpponent = CodeOfFlowAlpha12.battleInfo[opponent] {
           // Turn Change
-          infoOpponent.last_time_turnend = info.last_time_turnend
-          infoOpponent.is_first_turn = !infoOpponent.is_first_turn
-          infoOpponent.turn = info.turn
-          infoOpponent.enemy_attacking_cards = enemy_attacking_cards
+          infoOpponent.enemy_attacking_card = attacking_card_to_enemy
           infoOpponent.opponent_remain_deck = info.your_remain_deck.length
           infoOpponent.opponent_trigger_cards = info.your_trigger_cards.keys.length
           infoOpponent.opponent_field_unit = info.your_field_unit
@@ -970,47 +944,48 @@ pub contract CodeOfFlowAlpha10 {
             let withdrawPosition1 = pseudorandomNumber1 % (UInt8(infoOpponent.your_trigger_cards.keys.length) - 1)
             infoOpponent.your_trigger_cards[withdrawPosition1] = info.your_trigger_cards.remove(key: withdrawPosition1)
           }
-          CodeOfFlowAlpha10.battleInfo[opponent] = infoOpponent
+          CodeOfFlowAlpha12.battleInfo[opponent] = infoOpponent
         }
       }
     }
 
-    pub fun start_your_turn_and_draw_two_cards(player_id: UInt32, blocked_unit: {UInt8: UInt8}, used_intercept_position: {UInt8: UInt8}) {
+    pub fun defence_action(player_id: UInt32, blocked_unit: UInt8?, used_intercept_positions: [UInt8]) {
 
-      if let info = CodeOfFlowAlpha10.battleInfo[player_id] {
-        for position in blocked_unit.keys {
-          //////////////////////////////////////////////////
-          ///////////////attribute evaluation///////////////
-          //////////////////////////////////////////////////
-          if position != 0  && info.your_field_unit[position] != nil {
-            let card_id: UInt16 = info.your_field_unit[position]!
-            let unit = CodeOfFlowAlpha10.cardInfo[card_id]!
+      if let info = CodeOfFlowAlpha12.battleInfo[player_id] {
+        //////////////////////////////////////////////////
+        ///////////////attribute evaluation///////////////
+        //////////////////////////////////////////////////
+        if blocked_unit != nil {
+          if info.your_field_unit[blocked_unit!] != nil {
+            let card_id: UInt16 = info.your_field_unit[blocked_unit!]!
+            let unit = CodeOfFlowAlpha12.cardInfo[card_id]!
+
             // trigger when the unit is blocking
             if (unit.skill.trigger_1 == 3) {
               //---- BP Pump ----
               if (unit.skill.type_1 == 2) {
-                if let your_field_unit_bp_amount_of_change = info.your_field_unit_bp_amount_of_change[position] {
-                  info.your_field_unit_bp_amount_of_change[position] = your_field_unit_bp_amount_of_change + Int(unit.skill.amount_1)
+                if let your_field_unit_bp_amount_of_change = info.your_field_unit_bp_amount_of_change[blocked_unit!] {
+                  info.your_field_unit_bp_amount_of_change[blocked_unit!] = your_field_unit_bp_amount_of_change + Int(unit.skill.amount_1)
                 } else {
-                  info.your_field_unit_bp_amount_of_change[position] = Int(unit.skill.amount_1)
+                  info.your_field_unit_bp_amount_of_change[blocked_unit!] = Int(unit.skill.amount_1)
                 }
               }
             }
-            if (used_intercept_position[position] != nil && used_intercept_position[position] != 0) {
+
+            for card_position in used_intercept_positions {
               // Used Trigger or Intercept Card
-              let card_position = used_intercept_position[position]!
               let trigger_card_id = info.your_trigger_cards[card_position]!
-              let trigger = CodeOfFlowAlpha10.cardInfo[trigger_card_id]!
+              let trigger = CodeOfFlowAlpha12.cardInfo[trigger_card_id]!
               info.your_trigger_cards[card_position] = nil
 
               // trigger when the unit is blocking
               if (trigger.skill.trigger_1 == 3 || unit.skill.trigger_1 == 5) {
                 //---- BP Pump ----
                 if (trigger.skill.type_1 == 2) {
-                  if let your_field_unit_bp_amount_of_change = info.your_field_unit_bp_amount_of_change[position] {
-                    info.your_field_unit_bp_amount_of_change[position] = your_field_unit_bp_amount_of_change + Int(trigger.skill.amount_1)
+                  if let your_field_unit_bp_amount_of_change = info.your_field_unit_bp_amount_of_change[blocked_unit!] {
+                    info.your_field_unit_bp_amount_of_change[blocked_unit!] = your_field_unit_bp_amount_of_change + Int(trigger.skill.amount_1)
                   } else {
-                    info.your_field_unit_bp_amount_of_change[position] = Int(trigger.skill.amount_1)
+                    info.your_field_unit_bp_amount_of_change[blocked_unit!] = Int(trigger.skill.amount_1)
                   }
                 }
               }
@@ -1019,41 +994,119 @@ pub contract CodeOfFlowAlpha10 {
             ///////////////↑↑attribute evaluation↑↑///////////
             //////////////////////////////////////////////////
           }
+
+          //////////////// Battle Result ////////////////
+          if info.enemy_attacking_card != nil {
+            var winFlg = false
+            // when each unit's position is matched
+            if info.your_field_unit[blocked_unit!] != nil && CodeOfFlowAlpha12.cardInfo[info.your_field_unit[blocked_unit!]!] != nil {
+              let unit = CodeOfFlowAlpha12.cardInfo[info.your_field_unit[blocked_unit!]!]!
+              var pump = 0
+              if info.your_field_unit_bp_amount_of_change[blocked_unit!] != nil {
+                pump = info.your_field_unit_bp_amount_of_change[blocked_unit!]!
+              }
+              if Int(unit.bp) + pump > Int(info.enemy_attacking_card!.bp + info.enemy_attacking_card!.pump) {
+                winFlg = true
+              }
+            }
+            if (winFlg) {
+              info.opponent_field_unit[info.enemy_attacking_card!.field_position] = nil
+            } else {
+              info.your_field_unit[blocked_unit!] = nil
+            }
+            info.enemy_attacking_card = nil
+          }
+        } else {
+          info.your_life = info.your_life - 1
         }
 
-        //////////////// Battle Result ////////////////
-        for enemy_attacking_card in info.enemy_attacking_cards {
-          var battleFlg = false
-          var winFlg = false
-          for b_position in blocked_unit.keys {
-            // when each unit's position is matched
-            if blocked_unit[b_position] == enemy_attacking_card.field_position {
-              battleFlg = true
-              if info.your_field_unit[b_position] != nil && CodeOfFlowAlpha10.cardInfo[info.your_field_unit[b_position]!] != nil {
-                let unit = CodeOfFlowAlpha10.cardInfo[info.your_field_unit[b_position]!]!
-                var pump = 0
-                if info.your_field_unit_bp_amount_of_change[b_position] != nil {
-                  pump = info.your_field_unit_bp_amount_of_change[b_position]!
-                }
-                if Int(unit.bp) + pump > Int(enemy_attacking_card.bp + enemy_attacking_card.pump) {
-                  winFlg = true
-                }
-              }
-              if (winFlg) {
-                info.opponent_field_unit[enemy_attacking_card.field_position] = nil
-              } else {
-                info.your_field_unit[b_position] = nil
+        // save
+        CodeOfFlowAlpha12.battleInfo[player_id] = info
+        ////////////// ↑↑Battle Result↑↑ //////////////
+
+        var handCnt = 0
+        let handPositions: [UInt8] = [1, 2, 3, 4, 5 ,6, 7]
+        for hand_position in handPositions {
+          if info.your_hand[hand_position] != nil {
+            handCnt = handCnt + 1
+          }
+        }
+
+        let opponent = info.opponent
+        if let infoOpponent = CodeOfFlowAlpha12.battleInfo[opponent] {
+          infoOpponent.opponent_hand = handCnt
+          infoOpponent.opponent_remain_deck = info.your_remain_deck.length
+          infoOpponent.opponent_trigger_cards = info.your_trigger_cards.keys.length
+          infoOpponent.opponent_field_unit = info.your_field_unit
+          infoOpponent.opponent_field_unit_action = info.your_field_unit_action
+          infoOpponent.opponent_field_unit_bp_amount_of_change = info.your_field_unit_bp_amount_of_change
+          infoOpponent.opponent_cp = info.your_cp
+          CodeOfFlowAlpha12.battleInfo[opponent] = infoOpponent
+        }
+      }
+    }
+
+    pub fun turn_change(player_id: UInt32) {
+      if let info = CodeOfFlowAlpha12.battleInfo[player_id] {
+        info.last_time_turnend = getCurrentBlock().timestamp
+
+        // Set Field Unit Actions To Defence Only
+        for position in info.your_field_unit.keys {
+          info.your_field_unit_action[position] = 1 // 2: can attack, 1: can defence only, 0: nothing can do.
+          if info.your_field_unit[position] != nil && info.your_field_unit[position] != 0 {
+            let card_id: UInt16 = info.your_field_unit[position]!
+            let unit = CodeOfFlowAlpha12.cardInfo[card_id]!
+            ///////////////attribute evaluation///////////////
+            // trigger when the turn is changing
+            if (unit.skill.trigger_1 == 4) {
+                //---- indomitable spirit ----
+              if (unit.skill.type_1 == 8) {
+                  info.your_field_unit_action[position] = 1
               }
             }
           }
-          // Haven't defence = Life 1 Lost
-          if (battleFlg == false) {
-            info.your_life = info.your_life - 1
-          }
+          ///////////////attribute evaluation///////////////
         }
-        ////////////// ↑↑Battle Result↑↑ //////////////
+
+        // Process Turn Change
+        info.last_time_turnend = getCurrentBlock().timestamp
+        info.is_first_turn = !info.is_first_turn
+        if (info.is_first_turn) {
+          info.turn = info.turn + 1
+        }
+        info.card_draw_in_this_turn = false
+        // save
+        CodeOfFlowAlpha12.battleInfo[player_id] = info
+
+        let opponent = info.opponent
+        if let infoOpponent = CodeOfFlowAlpha12.battleInfo[opponent] {
+          // Turn Change
+          infoOpponent.last_time_turnend = info.last_time_turnend
+          infoOpponent.is_first_turn = !infoOpponent.is_first_turn
+          infoOpponent.turn = info.turn
+          infoOpponent.opponent_remain_deck = info.your_remain_deck.length
+          infoOpponent.opponent_trigger_cards = info.your_trigger_cards.keys.length
+          infoOpponent.opponent_field_unit = info.your_field_unit
+          infoOpponent.opponent_field_unit_action = info.your_field_unit_action
+          infoOpponent.opponent_field_unit_bp_amount_of_change = info.your_field_unit_bp_amount_of_change
+          infoOpponent.your_field_unit_bp_amount_of_change = info.opponent_field_unit_bp_amount_of_change
+          CodeOfFlowAlpha12.battleInfo[opponent] = infoOpponent
+        }
+        self.start_turn_and_draw_two_cards(player_id: opponent)
+      }
+    }
+
+    pub fun start_turn_and_draw_two_cards(player_id: UInt32) {
+
+      if let info = CodeOfFlowAlpha12.battleInfo[player_id] {
 
         info.last_time_turnend = getCurrentBlock().timestamp
+
+        // if defence action is not done..
+        if info.enemy_attacking_card != nil {
+          info.your_life = info.your_life - 1
+          info.enemy_attacking_card = nil
+        }
 
         // draw card
         let blockCreatedAt = getCurrentBlock().timestamp.toString().slice(from: 0, upTo: 10)
@@ -1087,7 +1140,6 @@ pub contract CodeOfFlowAlpha10 {
           }
         }
         info.card_draw_in_this_turn = true
-        info.enemy_attacking_cards = []
         info.your_field_unit_bp_amount_of_change = {} // Damage are reset
         info.opponent_field_unit_bp_amount_of_change = {}
 
@@ -1102,12 +1154,11 @@ pub contract CodeOfFlowAlpha10 {
         }
 
         // save
-        CodeOfFlowAlpha10.battleInfo[player_id] = info
+        CodeOfFlowAlpha12.battleInfo[player_id] = info
 
         let opponent = info.opponent
-        if let infoOpponent = CodeOfFlowAlpha10.battleInfo[opponent] {
+        if let infoOpponent = CodeOfFlowAlpha12.battleInfo[opponent] {
           infoOpponent.last_time_turnend = info.last_time_turnend // set time same time
-          infoOpponent.enemy_attacking_cards = info.enemy_attacking_cards
           infoOpponent.opponent_hand = handCnt
           infoOpponent.opponent_remain_deck = info.your_remain_deck.length
           infoOpponent.opponent_trigger_cards = info.your_trigger_cards.keys.length
@@ -1115,49 +1166,49 @@ pub contract CodeOfFlowAlpha10 {
           infoOpponent.opponent_field_unit_action = info.your_field_unit_action
           infoOpponent.opponent_field_unit_bp_amount_of_change = info.your_field_unit_bp_amount_of_change
           infoOpponent.opponent_cp = info.your_cp
-          CodeOfFlowAlpha10.battleInfo[opponent] = infoOpponent
+          CodeOfFlowAlpha12.battleInfo[opponent] = infoOpponent
         }
       }
     }
 
     pub fun surrendar(player_id: UInt32) {
-      if CodeOfFlowAlpha10.battleInfo[player_id] != nil {
-        let opponent = CodeOfFlowAlpha10.battleInfo[player_id]!.opponent
-        CodeOfFlowAlpha10.battleInfo.remove(key: player_id)
-        CodeOfFlowAlpha10.playerList[player_id]!.score.append({getCurrentBlock().timestamp: 0})
-        if (CodeOfFlowAlpha10.battleInfo[opponent] != nil) {
-          CodeOfFlowAlpha10.battleInfo.remove(key: opponent)
-          CodeOfFlowAlpha10.playerList[opponent]!.score.append({getCurrentBlock().timestamp: 1})
+      if CodeOfFlowAlpha12.battleInfo[player_id] != nil {
+        let opponent = CodeOfFlowAlpha12.battleInfo[player_id]!.opponent
+        CodeOfFlowAlpha12.battleInfo.remove(key: player_id)
+        CodeOfFlowAlpha12.playerList[player_id]!.score.append({getCurrentBlock().timestamp: 0})
+        if (CodeOfFlowAlpha12.battleInfo[opponent] != nil) {
+          CodeOfFlowAlpha12.battleInfo.remove(key: opponent)
+          CodeOfFlowAlpha12.playerList[opponent]!.score.append({getCurrentBlock().timestamp: 1})
         }
-        CodeOfFlowAlpha10.playerMatchingInfo[player_id] = PlayerMatchingStruct() // ゲームが終了したのでnilで初期化
+        CodeOfFlowAlpha12.playerMatchingInfo[player_id] = PlayerMatchingStruct() // ゲームが終了したのでnilで初期化
         emit BattleSequence(sequence: 3, player_id: opponent, opponent: player_id)
       }
     }
 
     pub fun claimWin(player_id: UInt32) {
       pre {
-        CodeOfFlowAlpha10.battleInfo[player_id] != nil : "This guy doesn't do match."
+        CodeOfFlowAlpha12.battleInfo[player_id] != nil : "This guy doesn't do match."
       }
 
-      if let info = CodeOfFlowAlpha10.battleInfo[player_id] {
+      if let info = CodeOfFlowAlpha12.battleInfo[player_id] {
         if (info.turn > 10) {
           if (info.your_life > info.opponent_life || (info.your_life == info.opponent_life && !info.is_first_turn)) {
             let opponent = info.opponent
-            CodeOfFlowAlpha10.battleInfo.remove(key: player_id)
-            CodeOfFlowAlpha10.battleInfo.remove(key: opponent)
-            CodeOfFlowAlpha10.playerList[player_id]!.score.append({getCurrentBlock().timestamp: 1})
-            CodeOfFlowAlpha10.playerList[opponent]!.score.append({getCurrentBlock().timestamp: 0})
-            CodeOfFlowAlpha10.playerMatchingInfo[player_id] = PlayerMatchingStruct() // ゲームが終了したのでnilで初期化
+            CodeOfFlowAlpha12.battleInfo.remove(key: player_id)
+            CodeOfFlowAlpha12.battleInfo.remove(key: opponent)
+            CodeOfFlowAlpha12.playerList[player_id]!.score.append({getCurrentBlock().timestamp: 1})
+            CodeOfFlowAlpha12.playerList[opponent]!.score.append({getCurrentBlock().timestamp: 0})
+            CodeOfFlowAlpha12.playerMatchingInfo[player_id] = PlayerMatchingStruct() // ゲームが終了したのでnilで初期化
             emit BattleSequence(sequence: 3, player_id: player_id, opponent: opponent)
           }
         }
         if (info.last_time_turnend! + 60.0 < getCurrentBlock().timestamp && info.is_first != info.is_first_turn) {
           let opponent = info.opponent
-          CodeOfFlowAlpha10.battleInfo.remove(key: player_id)
-          CodeOfFlowAlpha10.battleInfo.remove(key: opponent)
-          CodeOfFlowAlpha10.playerList[player_id]!.score.append({getCurrentBlock().timestamp: 1})
-          CodeOfFlowAlpha10.playerList[opponent]!.score.append({getCurrentBlock().timestamp: 0})
-          CodeOfFlowAlpha10.playerMatchingInfo[player_id] = PlayerMatchingStruct() // ゲームが終了したのでnilで初期化
+          CodeOfFlowAlpha12.battleInfo.remove(key: player_id)
+          CodeOfFlowAlpha12.battleInfo.remove(key: opponent)
+          CodeOfFlowAlpha12.playerList[player_id]!.score.append({getCurrentBlock().timestamp: 1})
+          CodeOfFlowAlpha12.playerList[opponent]!.score.append({getCurrentBlock().timestamp: 0})
+          CodeOfFlowAlpha12.playerMatchingInfo[player_id] = PlayerMatchingStruct() // ゲームが終了したのでnilで初期化
           emit BattleSequence(sequence: 3, player_id: player_id, opponent: opponent)
         }
       }
@@ -1185,13 +1236,13 @@ pub contract CodeOfFlowAlpha10 {
     pub let nickname: String
 
     pub fun get_marigan_cards(player_id: UInt32): [[UInt16]] {
-      if let playerMatchingInfo = CodeOfFlowAlpha10.playerMatchingInfo[player_id] {
+      if let playerMatchingInfo = CodeOfFlowAlpha12.playerMatchingInfo[player_id] {
         let ret_arr = [
-          [CodeOfFlowAlpha10.deck[playerMatchingInfo.marigan_cards[0][0]], CodeOfFlowAlpha10.deck[playerMatchingInfo.marigan_cards[0][1]], CodeOfFlowAlpha10.deck[playerMatchingInfo.marigan_cards[0][2]], CodeOfFlowAlpha10.deck[playerMatchingInfo.marigan_cards[0][3]]],
-          [CodeOfFlowAlpha10.deck[playerMatchingInfo.marigan_cards[1][0]], CodeOfFlowAlpha10.deck[playerMatchingInfo.marigan_cards[1][1]], CodeOfFlowAlpha10.deck[playerMatchingInfo.marigan_cards[1][2]], CodeOfFlowAlpha10.deck[playerMatchingInfo.marigan_cards[1][3]]],
-          [CodeOfFlowAlpha10.deck[playerMatchingInfo.marigan_cards[2][0]], CodeOfFlowAlpha10.deck[playerMatchingInfo.marigan_cards[2][1]], CodeOfFlowAlpha10.deck[playerMatchingInfo.marigan_cards[2][2]], CodeOfFlowAlpha10.deck[playerMatchingInfo.marigan_cards[2][3]]],
-          [CodeOfFlowAlpha10.deck[playerMatchingInfo.marigan_cards[3][0]], CodeOfFlowAlpha10.deck[playerMatchingInfo.marigan_cards[3][1]], CodeOfFlowAlpha10.deck[playerMatchingInfo.marigan_cards[3][2]], CodeOfFlowAlpha10.deck[playerMatchingInfo.marigan_cards[3][3]]],
-          [CodeOfFlowAlpha10.deck[playerMatchingInfo.marigan_cards[4][0]], CodeOfFlowAlpha10.deck[playerMatchingInfo.marigan_cards[4][1]], CodeOfFlowAlpha10.deck[playerMatchingInfo.marigan_cards[4][2]], CodeOfFlowAlpha10.deck[playerMatchingInfo.marigan_cards[4][3]]]
+          [CodeOfFlowAlpha12.deck[playerMatchingInfo.marigan_cards[0][0]], CodeOfFlowAlpha12.deck[playerMatchingInfo.marigan_cards[0][1]], CodeOfFlowAlpha12.deck[playerMatchingInfo.marigan_cards[0][2]], CodeOfFlowAlpha12.deck[playerMatchingInfo.marigan_cards[0][3]]],
+          [CodeOfFlowAlpha12.deck[playerMatchingInfo.marigan_cards[1][0]], CodeOfFlowAlpha12.deck[playerMatchingInfo.marigan_cards[1][1]], CodeOfFlowAlpha12.deck[playerMatchingInfo.marigan_cards[1][2]], CodeOfFlowAlpha12.deck[playerMatchingInfo.marigan_cards[1][3]]],
+          [CodeOfFlowAlpha12.deck[playerMatchingInfo.marigan_cards[2][0]], CodeOfFlowAlpha12.deck[playerMatchingInfo.marigan_cards[2][1]], CodeOfFlowAlpha12.deck[playerMatchingInfo.marigan_cards[2][2]], CodeOfFlowAlpha12.deck[playerMatchingInfo.marigan_cards[2][3]]],
+          [CodeOfFlowAlpha12.deck[playerMatchingInfo.marigan_cards[3][0]], CodeOfFlowAlpha12.deck[playerMatchingInfo.marigan_cards[3][1]], CodeOfFlowAlpha12.deck[playerMatchingInfo.marigan_cards[3][2]], CodeOfFlowAlpha12.deck[playerMatchingInfo.marigan_cards[3][3]]],
+          [CodeOfFlowAlpha12.deck[playerMatchingInfo.marigan_cards[4][0]], CodeOfFlowAlpha12.deck[playerMatchingInfo.marigan_cards[4][1]], CodeOfFlowAlpha12.deck[playerMatchingInfo.marigan_cards[4][2]], CodeOfFlowAlpha12.deck[playerMatchingInfo.marigan_cards[4][3]]]
         ]
         return ret_arr
       }
@@ -1200,19 +1251,19 @@ pub contract CodeOfFlowAlpha10 {
 
     pub fun get_players_score(): [CyberScoreStruct] {
       let retArr: [CyberScoreStruct] = []
-      retArr.append(CodeOfFlowAlpha10.playerList[self.player_id]!)
-      if let info = CodeOfFlowAlpha10.battleInfo[self.player_id] {
+      retArr.append(CodeOfFlowAlpha12.playerList[self.player_id]!)
+      if let info = CodeOfFlowAlpha12.battleInfo[self.player_id] {
         let opponent = info.opponent
-        retArr.append(CodeOfFlowAlpha10.playerList[opponent]!)
+        retArr.append(CodeOfFlowAlpha12.playerList[opponent]!)
       }
       return retArr
     }
 
     pub fun get_current_status(): AnyStruct {
-      if let info = CodeOfFlowAlpha10.battleInfo[self.player_id] {
+      if let info = CodeOfFlowAlpha12.battleInfo[self.player_id] {
         return info
       }
-      if let obj = CodeOfFlowAlpha10.playerMatchingInfo[self.player_id] {
+      if let obj = CodeOfFlowAlpha12.playerMatchingInfo[self.player_id] {
         return obj.lastTimeMatching
       }
       return nil
@@ -1221,30 +1272,30 @@ pub contract CodeOfFlowAlpha10 {
     pub fun buy_en(payment: @FlowToken.Vault) {
       pre {
         payment.balance == 1.0: "payment is not 1FLOW coin."
-        CodeOfFlowAlpha10.playerList[self.player_id] != nil: "CyberScoreStruct not found."
+        CodeOfFlowAlpha12.playerList[self.player_id] != nil: "CyberScoreStruct not found."
       }
-      CodeOfFlowAlpha10.FlowTokenVault.borrow()!.deposit(from: <- payment)
-      if let cyberScore = CodeOfFlowAlpha10.playerList[self.player_id] {
+      CodeOfFlowAlpha12.FlowTokenVault.borrow()!.deposit(from: <- payment)
+      if let cyberScore = CodeOfFlowAlpha12.playerList[self.player_id] {
         cyberScore.cyber_energy = cyberScore.cyber_energy + 100
-        CodeOfFlowAlpha10.playerList[self.player_id] = cyberScore
+        CodeOfFlowAlpha12.playerList[self.player_id] = cyberScore
       }
     }
 
     init(nickname: String) {
-      CodeOfFlowAlpha10.totalPlayers = CodeOfFlowAlpha10.totalPlayers + 1
-      self.player_id = CodeOfFlowAlpha10.totalPlayers
+      CodeOfFlowAlpha12.totalPlayers = CodeOfFlowAlpha12.totalPlayers + 1
+      self.player_id = CodeOfFlowAlpha12.totalPlayers
       self.nickname = nickname
 
-      CodeOfFlowAlpha10.playerList[self.player_id] = CyberScoreStruct(player_name: nickname)
+      CodeOfFlowAlpha12.playerList[self.player_id] = CyberScoreStruct(player_name: nickname)
       emit PlayerRegistered(player_id: self.player_id)
     }
   }
 
-  pub fun createPlayer(nickname: String, flow_vault_receiver: Capability<&FlowToken.Vault{FungibleToken.Receiver}>): @CodeOfFlowAlpha10.Player {
+  pub fun createPlayer(nickname: String, flow_vault_receiver: Capability<&FlowToken.Vault{FungibleToken.Receiver}>): @CodeOfFlowAlpha12.Player {
     let player <- create Player(nickname: nickname)
 
-    if (CodeOfFlowAlpha10.PlayerFlowTokenVault[player.player_id] == nil) {
-      CodeOfFlowAlpha10.PlayerFlowTokenVault[player.player_id] = flow_vault_receiver
+    if (CodeOfFlowAlpha12.PlayerFlowTokenVault[player.player_id] == nil) {
+      CodeOfFlowAlpha12.PlayerFlowTokenVault[player.player_id] = flow_vault_receiver
     }
     return <- player
   }
@@ -1261,10 +1312,10 @@ pub contract CodeOfFlowAlpha10 {
     self.FlowTokenVault = self.account.getCapability<&FlowToken.Vault{FungibleToken.Receiver}>(/public/flowTokenReceiver)
     self.PlayerFlowTokenVault = {}
 
-    self.AdminStoragePath = /storage/CodeOfFlowAlpha10Admin
+    self.AdminStoragePath = /storage/CodeOfFlowAlpha12Admin
     self.account.save( <- create Admin(), to: self.AdminStoragePath) // grant admin resource
-    self.PlayerStoragePath = /storage/CodeOfFlowAlpha10Player
-    self.PlayerPublicPath = /public/CodeOfFlowAlpha10Player
+    self.PlayerStoragePath = /storage/CodeOfFlowAlpha12Player
+    self.PlayerPublicPath = /public/CodeOfFlowAlpha12Player
     self.totalPlayers = 0
     self.cardInfo = {
       1: CardStruct(card_id: 1, name: "Hound", bp: 1000, cost: 0, type: 0, category: 0, skill: Skill(description: "No Skill", triggers: [0], asks: [0], types: [0], amounts: [0], skills: [])),
