@@ -702,17 +702,17 @@ pub contract CodeOfFlowAlpha12 {
       }
     }
 
-    pub fun attack(player_id: UInt32, attack_unit: UInt8, enemy_skill_target: {UInt8: UInt8}, trigger_cards: {UInt8: UInt16}, used_intercept_position: {UInt8: [UInt8]}) {
+    pub fun attack(player_id: UInt32, attack_unit: UInt8, enemy_skill_target: UInt8?, trigger_cards: {UInt8: UInt16}, used_intercept_positions: [UInt8]) {
       if CodeOfFlowAlpha12.battleInfo[player_id]!.your_field_unit[attack_unit] == nil {
         panic("You have not set unit card in this position!")
       }
-      for position in trigger_cards.keys {
-        if !(CodeOfFlowAlpha12.battleInfo[player_id]!.your_trigger_cards[position] == trigger_cards[position] || CodeOfFlowAlpha12.battleInfo[player_id]!.your_trigger_cards[position] == nil) {
+      for trigger_position in trigger_cards.keys {
+        if !(CodeOfFlowAlpha12.battleInfo[player_id]!.your_trigger_cards[trigger_position] == trigger_cards[trigger_position] || CodeOfFlowAlpha12.battleInfo[player_id]!.your_trigger_cards[trigger_position] == nil) {
           // panic("Your trigger card is Tampered!") To avoid transaction failure by the coincident accident.
         }
       }
-      for position in used_intercept_position.keys {
-        if used_intercept_position[position]!.length > 0 && CodeOfFlowAlpha12.battleInfo[player_id]!.your_trigger_cards[position] == nil {
+      for card_position in used_intercept_positions {
+        if CodeOfFlowAlpha12.battleInfo[player_id]!.your_trigger_cards[card_position] == nil {
           // panic("You have not set trigger card in this position!") TODO FIXME trigger_cards must be counted before check your_trigger_cards
         }
       }
@@ -778,19 +778,19 @@ pub contract CodeOfFlowAlpha12 {
             // Damage to one target unit
             } else if (unit.skill.ask_1 == 1) {
               var target: UInt8 = 1
-              if enemy_skill_target[attack_unit] != nil && enemy_skill_target[attack_unit] != 0 {
-                target = enemy_skill_target[attack_unit]!
+              if enemy_skill_target != nil {
+                target = enemy_skill_target!
               }
               if let opponent_field_unit_bp_amount_of_change = info.opponent_field_unit_bp_amount_of_change[target] {
                 info.opponent_field_unit_bp_amount_of_change[target] = opponent_field_unit_bp_amount_of_change + (-1 * Int(unit.skill.amount_1))
               } else {
                 info.opponent_field_unit_bp_amount_of_change[target] = -1 * Int(unit.skill.amount_1)
               }
-            // Omly target which has no action right
+            // Only target which has no action right
             } else if (unit.skill.ask_1 == 2) {
               var target: UInt8 = 1
-              if enemy_skill_target[attack_unit] != nil && enemy_skill_target[attack_unit] != 0 {
-                target = enemy_skill_target[attack_unit]!
+              if enemy_skill_target != nil {
+                target = enemy_skill_target!
               }
               if (info.opponent_field_unit_action[target] == 3) { // // 2: can attack, 1: can defence only, 0: nothing can do.
                 if let opponent_field_unit_bp_amount_of_change = info.opponent_field_unit_bp_amount_of_change[target] {
@@ -808,8 +808,8 @@ pub contract CodeOfFlowAlpha12 {
           //---- Remove action right ----
           if (unit.skill.type_1 == 5) {
             var target: UInt8 = 1
-            if enemy_skill_target[attack_unit] != nil {
-              target = enemy_skill_target[attack_unit]!
+            if enemy_skill_target != nil {
+              target = enemy_skill_target!
             }
             info.opponent_field_unit_action[target] = 0 // // 2: can attack, 1: can defence only, 0: nothing can do.
           }
@@ -840,64 +840,62 @@ pub contract CodeOfFlowAlpha12 {
             lost_card_flg = true
           }
         }
-        if (used_intercept_position[attack_unit] != nil) {
-          // Used Trigger or Intercept Card
-          for card_position in used_intercept_position[attack_unit]! {
-            let trigger_card_id = info.your_trigger_cards[card_position]!
-            let trigger = CodeOfFlowAlpha12.cardInfo[trigger_card_id]!
-            info.your_trigger_cards[card_position] = nil
-            // trigger when the unit is attacking
-            if (trigger.skill.trigger_1 == 2 || trigger.skill.trigger_1 == 5) {
-              //---- BP Pump ----
-              if (trigger.skill.type_1 == 2) {
-                if let your_field_unit_bp_amount_of_change = info.your_field_unit_bp_amount_of_change[attack_unit] {
-                  info.your_field_unit_bp_amount_of_change[attack_unit] = your_field_unit_bp_amount_of_change + Int(trigger.skill.amount_1)
+        // Used Trigger or Intercept Card
+        for card_position in used_intercept_positions {
+          let trigger_card_id = info.your_trigger_cards[card_position]!
+          let trigger = CodeOfFlowAlpha12.cardInfo[trigger_card_id]!
+          info.your_trigger_cards[card_position] = nil
+          // trigger when the unit is attacking
+          if (trigger.skill.trigger_1 == 2 || trigger.skill.trigger_1 == 5) {
+            //---- BP Pump ----
+            if (trigger.skill.type_1 == 2) {
+              if let your_field_unit_bp_amount_of_change = info.your_field_unit_bp_amount_of_change[attack_unit] {
+                info.your_field_unit_bp_amount_of_change[attack_unit] = your_field_unit_bp_amount_of_change + Int(trigger.skill.amount_1)
+              } else {
+                info.your_field_unit_bp_amount_of_change[attack_unit] = Int(trigger.skill.amount_1)
+              }
+            }
+            // Enemy Unit Target
+            var target: UInt8 = 1
+            if (enemy_skill_target != nil) {
+              target = enemy_skill_target!
+            }
+            //---- Damage ----
+            if (trigger.skill.type_1 == 1 || trigger.skill.type_1 == 4) {
+              // Damage to one target unit
+              if (trigger.skill.ask_1 == 1) {
+                if let opponent_field_unit_bp_amount_of_change = info.opponent_field_unit_bp_amount_of_change[target] {
+                  info.opponent_field_unit_bp_amount_of_change[target] = opponent_field_unit_bp_amount_of_change + (-1 * Int(trigger.skill.amount_1))
                 } else {
-                  info.your_field_unit_bp_amount_of_change[attack_unit] = Int(trigger.skill.amount_1)
+                  info.opponent_field_unit_bp_amount_of_change[target] = -1 * Int(trigger.skill.amount_1)
                 }
-              }
-              // Enemy Unit Target
-              var target: UInt8 = 1
-              if (enemy_skill_target[attack_unit] != nil) {
-                target = enemy_skill_target[attack_unit]!
-              }
-              //---- Damage ----
-              if (trigger.skill.type_1 == 1 || trigger.skill.type_1 == 4) {
-                // Damage to one target unit
-                if (trigger.skill.ask_1 == 1) {
+              // Omly target which has no action right
+              } else if (trigger.skill.ask_1 == 2) {
+                if (info.opponent_field_unit_action[target] == 3) { // // 2: can attack, 1: can defence only, 0: nothing can do.
                   if let opponent_field_unit_bp_amount_of_change = info.opponent_field_unit_bp_amount_of_change[target] {
                     info.opponent_field_unit_bp_amount_of_change[target] = opponent_field_unit_bp_amount_of_change + (-1 * Int(trigger.skill.amount_1))
                   } else {
                     info.opponent_field_unit_bp_amount_of_change[target] = -1 * Int(trigger.skill.amount_1)
                   }
-                // Omly target which has no action right
-                } else if (trigger.skill.ask_1 == 2) {
-                  if (info.opponent_field_unit_action[target] == 3) { // // 2: can attack, 1: can defence only, 0: nothing can do.
-                    if let opponent_field_unit_bp_amount_of_change = info.opponent_field_unit_bp_amount_of_change[target] {
-                      info.opponent_field_unit_bp_amount_of_change[target] = opponent_field_unit_bp_amount_of_change + (-1 * Int(trigger.skill.amount_1))
-                    } else {
-                      info.opponent_field_unit_bp_amount_of_change[target] = -1 * Int(trigger.skill.amount_1)
-                    }
-                  }
-                }
-              }
-              //---- Trigger lost ----
-              if (trigger.skill.type_1 == 3) {
-                lost_card_flg = true
-              }
-              //---- Remove action right ----
-              if (trigger.skill.type_1 == 5) {
-                if trigger.skill.amount_1 == 1 {
-                  info.opponent_field_unit_action[target] = 0 // // 2: can attack, 1: can defence only, 0: nothing can do.
-                } else if (trigger.skill.amount_1 == 5) {
-                  for enemy_position in info.opponent_field_unit_action.keys {
-                    info.opponent_field_unit_action[enemy_position] = 0
-                  }
                 }
               }
             }
-            used_trigger_cards.append(trigger_card_id)
+            //---- Trigger lost ----
+            if (trigger.skill.type_1 == 3) {
+              lost_card_flg = true
+            }
+            //---- Remove action right ----
+            if (trigger.skill.type_1 == 5) {
+              if trigger.skill.amount_1 == 1 {
+                info.opponent_field_unit_action[target] = 0 // // 2: can attack, 1: can defence only, 0: nothing can do.
+              } else if (trigger.skill.amount_1 == 5) {
+                for enemy_position in info.opponent_field_unit_action.keys {
+                  info.opponent_field_unit_action[enemy_position] = 0
+                }
+              }
+            }
           }
+          used_trigger_cards.append(trigger_card_id)
         }
         ///////////////↑↑attribute evaluation↑↑///////////
 
@@ -919,11 +917,9 @@ pub contract CodeOfFlowAlpha12 {
         CodeOfFlowAlpha12.battleInfo[player_id] = info
 
         let opponent = info.opponent
-        for position in enemy_skill_target.values {
-          if (position != 0) {
-            if CodeOfFlowAlpha12.battleInfo[opponent]!.your_field_unit[position] == nil {
-              panic("You can not use skill for the target of this position!")
-            }
+        if (enemy_skill_target != nil) {
+          if CodeOfFlowAlpha12.battleInfo[opponent]!.your_field_unit[enemy_skill_target!] == nil {
+            panic("You can not use skill for the target of this position!")
           }
         }
 
