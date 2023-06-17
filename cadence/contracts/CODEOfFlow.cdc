@@ -720,6 +720,9 @@ pub contract CodeOfFlowBeta3 {
           CodeOfFlowBeta3.battleInfo[opponent] = infoOpponent
         }
       }
+
+      // judge the winner
+      self.judgeTheWinner(player_id: player_id)
     }
 
     pub fun attack(player_id: UInt, attack_unit: UInt8, enemy_skill_target: UInt8?, trigger_cards: {UInt8: UInt16}, used_intercept_positions: [UInt8]) {
@@ -1106,6 +1109,9 @@ pub contract CodeOfFlowBeta3 {
           }
         }
       }
+
+      // judge the winner
+      self.judgeTheWinner(player_id: player_id)
     }
 
     pub fun turn_change(player_id: UInt, from_opponent: Bool) {
@@ -1164,6 +1170,9 @@ pub contract CodeOfFlowBeta3 {
         }
         self.start_turn_and_draw_two_cards(player_id: opponent)
       }
+
+      // judge the winner
+      self.judgeTheWinner(player_id: player_id)
     }
 
     pub fun start_turn_and_draw_two_cards(player_id: UInt) {
@@ -1254,10 +1263,13 @@ pub contract CodeOfFlowBeta3 {
         CodeOfFlowBeta3.playerMatchingInfo[player_id] = PlayerMatchingStruct() // ゲームが終了したのでnilで初期化
         CodeOfFlowBeta3.playerMatchingInfo[opponent] = PlayerMatchingStruct() // ゲームが終了したのでnilで初期化
         emit BattleSequence(sequence: 3, player_id: opponent, opponent: player_id)
+        // Game Reward
+        let reward <- CodeOfFlowBeta3.account.borrow<&{FungibleToken.Provider}>(from: /storage/flowTokenVault)!.withdraw(amount: 0.5) as! @FlowToken.Vault
+        CodeOfFlowBeta3.PlayerFlowTokenVault[opponent]!.borrow()!.deposit(from: <- reward)
       }
     }
 
-    pub fun claimWin(player_id: UInt) {
+    pub fun judgeTheWinner(player_id: UInt) :Bool {
       pre {
         CodeOfFlowBeta3.battleInfo[player_id] != nil : "This guy doesn't do match."
       }
@@ -1273,9 +1285,26 @@ pub contract CodeOfFlowBeta3 {
             CodeOfFlowBeta3.playerMatchingInfo[player_id] = PlayerMatchingStruct() // ゲームが終了したのでnilで初期化
             CodeOfFlowBeta3.playerMatchingInfo[opponent] = PlayerMatchingStruct() // ゲームが終了したのでnilで初期化
             emit BattleSequence(sequence: 3, player_id: player_id, opponent: opponent)
+            // Game Reward
+            let reward <- CodeOfFlowBeta3.account.borrow<&{FungibleToken.Provider}>(from: /storage/flowTokenVault)!.withdraw(amount: 0.5) as! @FlowToken.Vault
+            CodeOfFlowBeta3.PlayerFlowTokenVault[player_id]!.borrow()!.deposit(from: <- reward)
+            return true
+          } else {
+            let opponent = info.opponent
+            CodeOfFlowBeta3.battleInfo.remove(key: player_id)
+            CodeOfFlowBeta3.battleInfo.remove(key: opponent)
+            CodeOfFlowBeta3.playerList[player_id]!.score.append({getCurrentBlock().timestamp: 0})
+            CodeOfFlowBeta3.playerList[opponent]!.score.append({getCurrentBlock().timestamp: 1})
+            CodeOfFlowBeta3.playerMatchingInfo[player_id] = PlayerMatchingStruct() // ゲームが終了したのでnilで初期化
+            CodeOfFlowBeta3.playerMatchingInfo[opponent] = PlayerMatchingStruct() // ゲームが終了したのでnilで初期化
+            emit BattleSequence(sequence: 3, player_id: opponent, opponent: player_id)
+            // Game Reward
+            let reward <- CodeOfFlowBeta3.account.borrow<&{FungibleToken.Provider}>(from: /storage/flowTokenVault)!.withdraw(amount: 0.5) as! @FlowToken.Vault
+            CodeOfFlowBeta3.PlayerFlowTokenVault[opponent]!.borrow()!.deposit(from: <- reward)
+            return true
           }
         }
-        if (info.last_time_turnend! + 60.0 < getCurrentBlock().timestamp && info.is_first != info.is_first_turn) {
+        if (info.your_life == 0) {
           let opponent = info.opponent
           CodeOfFlowBeta3.battleInfo.remove(key: player_id)
           CodeOfFlowBeta3.battleInfo.remove(key: opponent)
@@ -1284,8 +1313,27 @@ pub contract CodeOfFlowBeta3 {
           CodeOfFlowBeta3.playerMatchingInfo[player_id] = PlayerMatchingStruct() // ゲームが終了したのでnilで初期化
           CodeOfFlowBeta3.playerMatchingInfo[opponent] = PlayerMatchingStruct() // ゲームが終了したのでnilで初期化
           emit BattleSequence(sequence: 3, player_id: player_id, opponent: opponent)
+          // Game Reward
+          let reward <- CodeOfFlowBeta3.account.borrow<&{FungibleToken.Provider}>(from: /storage/flowTokenVault)!.withdraw(amount: 0.5) as! @FlowToken.Vault
+          CodeOfFlowBeta3.PlayerFlowTokenVault[player_id]!.borrow()!.deposit(from: <- reward)
+          return true
+        } else if (info.opponent_life == 0) {
+          let opponent = info.opponent
+          CodeOfFlowBeta3.battleInfo.remove(key: player_id)
+          CodeOfFlowBeta3.battleInfo.remove(key: opponent)
+          CodeOfFlowBeta3.playerList[player_id]!.score.append({getCurrentBlock().timestamp: 0})
+          CodeOfFlowBeta3.playerList[opponent]!.score.append({getCurrentBlock().timestamp: 1})
+          CodeOfFlowBeta3.playerMatchingInfo[player_id] = PlayerMatchingStruct() // ゲームが終了したのでnilで初期化
+          CodeOfFlowBeta3.playerMatchingInfo[opponent] = PlayerMatchingStruct() // ゲームが終了したのでnilで初期化
+          emit BattleSequence(sequence: 3, player_id: opponent, opponent: player_id)
+          // Game Reward
+          let reward <- CodeOfFlowBeta3.account.borrow<&{FungibleToken.Provider}>(from: /storage/flowTokenVault)!.withdraw(amount: 0.5) as! @FlowToken.Vault
+
+          CodeOfFlowBeta3.PlayerFlowTokenVault[opponent]!.borrow()!.deposit(from: <- reward)
+          return true
         }
       }
+      return false
     }
 
     init() {
