@@ -386,16 +386,35 @@ pub contract CodeOfFlowBeta4 {
     /* 
     ** Game Start Transaction
     */
-    pub fun game_start(player_id: UInt, drawed_cards: [UInt8]) {
+    pub fun game_start(player_id: UInt, drawed_cards: [UInt16]) {
       pre {
         drawed_cards.length == 4 : "Invalid argument."
         CodeOfFlowBeta4.battleInfo[player_id] != nil && CodeOfFlowBeta4.battleInfo[player_id]!.game_started == false : "Game already started."
       }
       var drawed_pos: [UInt8] = []
       if let playerMatchingInfo = CodeOfFlowBeta4.playerMatchingInfo[player_id] {
+        if let deck = CodeOfFlowBeta4.playerDeck[player_id] {
+        } else {
+        }
         for arr in playerMatchingInfo.marigan_cards {
-          if (arr[0] == drawed_cards[0] && arr[1] == drawed_cards[1] && arr[2] == drawed_cards[2] && arr[3] == drawed_cards[3]) {
-            drawed_pos = drawed_cards
+          if let deck = CodeOfFlowBeta4.playerDeck[player_id] {
+            var arrCopy = deck.slice(from: 0, upTo: deck.length - 1)
+            let card_id1 = arrCopy.remove(at: arr[0])
+            let card_id2 = arrCopy.remove(at: arr[1])
+            let card_id3 = arrCopy.remove(at: arr[2])
+            let card_id4 = arrCopy.remove(at: arr[3])
+            if (card_id1 == drawed_cards[0] && card_id2 == drawed_cards[1] && card_id3 == drawed_cards[2] && card_id4 == drawed_cards[3]) {
+              drawed_pos = arr
+            }
+          } else {
+            var arrCopy = CodeOfFlowBeta4.starterDeck.slice(from: 0, upTo: CodeOfFlowBeta4.starterDeck.length - 1)
+            let card_id1 = arrCopy.remove(at: arr[0])
+            let card_id2 = arrCopy.remove(at: arr[1])
+            let card_id3 = arrCopy.remove(at: arr[2])
+            let card_id4 = arrCopy.remove(at: arr[3])
+            if (card_id1 == drawed_cards[0] && card_id2 == drawed_cards[1] && card_id3 == drawed_cards[2] && card_id4 == drawed_cards[3]) {
+              drawed_pos = arr
+            }
           }
         }
         if (drawed_pos.length == 0) {
@@ -1371,23 +1390,16 @@ pub contract CodeOfFlowBeta4 {
     pub fun get_marigan_cards(player_id: UInt): [[UInt16]] {
       if let playerMatchingInfo = CodeOfFlowBeta4.playerMatchingInfo[player_id] {
         var ret_arr: [[UInt16]] = []
-        if let deck = CodeOfFlowBeta4.playerDeck[player_id] {
-          ret_arr = [
-            [deck[playerMatchingInfo.marigan_cards[0][0]], deck[playerMatchingInfo.marigan_cards[0][1]], deck[playerMatchingInfo.marigan_cards[0][2]], deck[playerMatchingInfo.marigan_cards[0][3]]],
-            [deck[playerMatchingInfo.marigan_cards[1][0]], deck[playerMatchingInfo.marigan_cards[1][1]], deck[playerMatchingInfo.marigan_cards[1][2]], deck[playerMatchingInfo.marigan_cards[1][3]]],
-            [deck[playerMatchingInfo.marigan_cards[2][0]], deck[playerMatchingInfo.marigan_cards[2][1]], deck[playerMatchingInfo.marigan_cards[2][2]], deck[playerMatchingInfo.marigan_cards[2][3]]],
-            [deck[playerMatchingInfo.marigan_cards[3][0]], deck[playerMatchingInfo.marigan_cards[3][1]], deck[playerMatchingInfo.marigan_cards[3][2]], deck[playerMatchingInfo.marigan_cards[3][3]]],
-            [deck[playerMatchingInfo.marigan_cards[4][0]], deck[playerMatchingInfo.marigan_cards[4][1]], deck[playerMatchingInfo.marigan_cards[4][2]], deck[playerMatchingInfo.marigan_cards[4][3]]]
-          ]
-        } else {
-          ret_arr = [
-            [CodeOfFlowBeta4.starterDeck[playerMatchingInfo.marigan_cards[0][0]], CodeOfFlowBeta4.starterDeck[playerMatchingInfo.marigan_cards[0][1]], CodeOfFlowBeta4.starterDeck[playerMatchingInfo.marigan_cards[0][2]], CodeOfFlowBeta4.starterDeck[playerMatchingInfo.marigan_cards[0][3]]],
-            [CodeOfFlowBeta4.starterDeck[playerMatchingInfo.marigan_cards[1][0]], CodeOfFlowBeta4.starterDeck[playerMatchingInfo.marigan_cards[1][1]], CodeOfFlowBeta4.starterDeck[playerMatchingInfo.marigan_cards[1][2]], CodeOfFlowBeta4.starterDeck[playerMatchingInfo.marigan_cards[1][3]]],
-            [CodeOfFlowBeta4.starterDeck[playerMatchingInfo.marigan_cards[2][0]], CodeOfFlowBeta4.starterDeck[playerMatchingInfo.marigan_cards[2][1]], CodeOfFlowBeta4.starterDeck[playerMatchingInfo.marigan_cards[2][2]], CodeOfFlowBeta4.starterDeck[playerMatchingInfo.marigan_cards[2][3]]],
-            [CodeOfFlowBeta4.starterDeck[playerMatchingInfo.marigan_cards[3][0]], CodeOfFlowBeta4.starterDeck[playerMatchingInfo.marigan_cards[3][1]], CodeOfFlowBeta4.starterDeck[playerMatchingInfo.marigan_cards[3][2]], CodeOfFlowBeta4.starterDeck[playerMatchingInfo.marigan_cards[3][3]]],
-            [CodeOfFlowBeta4.starterDeck[playerMatchingInfo.marigan_cards[4][0]], CodeOfFlowBeta4.starterDeck[playerMatchingInfo.marigan_cards[4][1]], CodeOfFlowBeta4.starterDeck[playerMatchingInfo.marigan_cards[4][2]], CodeOfFlowBeta4.starterDeck[playerMatchingInfo.marigan_cards[4][3]]]
-          ]
+        for i in [0, 1, 2, 3, 4] {
+          if let deck = CodeOfFlowBeta4.playerDeck[player_id] {
+            var tmp = deck.slice(from: 0, upTo: deck.length - 1)
+            ret_arr.append([tmp.remove(at: playerMatchingInfo.marigan_cards[i][0]), tmp.remove(at: playerMatchingInfo.marigan_cards[i][1]), tmp.remove(at: playerMatchingInfo.marigan_cards[i][2]), tmp.remove(at: playerMatchingInfo.marigan_cards[i][3])])
+          } else {
+            var tmp = CodeOfFlowBeta4.starterDeck.slice(from: 0, upTo: CodeOfFlowBeta4.starterDeck.length - 1)
+            ret_arr.append([tmp.remove(at: playerMatchingInfo.marigan_cards[i][0]), tmp.remove(at: playerMatchingInfo.marigan_cards[i][1]), tmp.remove(at: playerMatchingInfo.marigan_cards[i][2]), tmp.remove(at: playerMatchingInfo.marigan_cards[i][3])])
+          }
         }
+
         return ret_arr
       }
       return []
