@@ -240,7 +240,9 @@ pub contract CodeOfFlowBeta3 {
     ** Save the Player's Card Deck
     */
     pub fun save_deck(player_id: UInt, user_deck: [UInt16]) {
-      CodeOfFlowBeta3.playerDeck[player_id] = user_deck
+      if user_deck.length == 30 {
+        CodeOfFlowBeta3.playerDeck[player_id] = user_deck
+      }
     }
 
     /*
@@ -1227,7 +1229,11 @@ pub contract CodeOfFlowBeta3 {
           info.your_field_unit_action[position] = 2 // 2: can attack, 1: can defence only, 0: nothing can do.
         }
         // Recover CP
-        info.your_cp = info.turn + 1
+        if info.turn <= 6 {
+          info.your_cp = info.turn + 1
+        } else {
+          info.your_cp = 7
+        }
         if (info.turn == 1 && !info.is_first) {
           info.your_cp = 3
         }
