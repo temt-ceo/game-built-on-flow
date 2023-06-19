@@ -398,7 +398,7 @@ pub contract CodeOfFlowBeta4 {
         }
         for arr in playerMatchingInfo.marigan_cards {
           if let deck = CodeOfFlowBeta4.playerDeck[player_id] {
-            var arrCopy = deck.slice(from: 0, upTo: deck.length - 1)
+            var arrCopy = deck.slice(from: 0, upTo: deck.length)
             let card_id1 = arrCopy.remove(at: arr[0])
             let card_id2 = arrCopy.remove(at: arr[1])
             let card_id3 = arrCopy.remove(at: arr[2])
@@ -407,7 +407,7 @@ pub contract CodeOfFlowBeta4 {
               drawed_pos = arr
             }
           } else {
-            var arrCopy = CodeOfFlowBeta4.starterDeck.slice(from: 0, upTo: CodeOfFlowBeta4.starterDeck.length - 1)
+            var arrCopy = CodeOfFlowBeta4.starterDeck.slice(from: 0, upTo: CodeOfFlowBeta4.starterDeck.length)
             let card_id1 = arrCopy.remove(at: arr[0])
             let card_id2 = arrCopy.remove(at: arr[1])
             let card_id3 = arrCopy.remove(at: arr[2])
@@ -1392,10 +1392,10 @@ pub contract CodeOfFlowBeta4 {
         var ret_arr: [[UInt16]] = []
         for i in [0, 1, 2, 3, 4] {
           if let deck = CodeOfFlowBeta4.playerDeck[player_id] {
-            var tmp = deck.slice(from: 0, upTo: deck.length - 1)
+            var tmp = deck.slice(from: 0, upTo: deck.length)
             ret_arr.append([tmp.remove(at: playerMatchingInfo.marigan_cards[i][0]), tmp.remove(at: playerMatchingInfo.marigan_cards[i][1]), tmp.remove(at: playerMatchingInfo.marigan_cards[i][2]), tmp.remove(at: playerMatchingInfo.marigan_cards[i][3])])
           } else {
-            var tmp = CodeOfFlowBeta4.starterDeck.slice(from: 0, upTo: CodeOfFlowBeta4.starterDeck.length - 1)
+            var tmp = CodeOfFlowBeta4.starterDeck.slice(from: 0, upTo: CodeOfFlowBeta4.starterDeck.length)
             ret_arr.append([tmp.remove(at: playerMatchingInfo.marigan_cards[i][0]), tmp.remove(at: playerMatchingInfo.marigan_cards[i][1]), tmp.remove(at: playerMatchingInfo.marigan_cards[i][2]), tmp.remove(at: playerMatchingInfo.marigan_cards[i][3])])
           }
         }
