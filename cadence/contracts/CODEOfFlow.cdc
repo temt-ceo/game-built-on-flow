@@ -479,11 +479,6 @@ pub contract CodeOfFlowBeta4 {
           panic("Your trigger card is Tampered!")
         }
       }
-      for position in used_intercept_positions {
-        if CodeOfFlowBeta4.battleInfo[player_id]!.your_trigger_cards[position] == nil {
-          // panic("You have not set trigger card in this position!") TODO FIXME trigger_cards must be counted before check your_trigger_cards
-        }
-      }
 
       var target:UInt8 = 0
       if enemy_skill_target != nil {
