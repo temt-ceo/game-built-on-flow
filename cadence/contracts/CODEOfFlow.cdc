@@ -498,7 +498,7 @@ pub contract CodeOfFlowBeta4 {
           if info.your_trigger_cards[trigger_position] != trigger_cards[trigger_position] && trigger_cards[trigger_position] != 0 {
             let card_id = trigger_cards[trigger_position]
             for hand_position in info.your_hand.keys {
-                if card_id == info.your_hand[hand_position] {
+                if card_id == info.your_hand[hand_position] && isRemoved == false {
                   info.your_hand[hand_position] = nil
                   isRemoved = true
                 }
@@ -700,7 +700,7 @@ pub contract CodeOfFlowBeta4 {
           // Match the consistency of the hand (take from the hand the amount moved to the trigger zone) (ハンドの整合性を合わせる(トリガーゾーンに移動した分、ハンドから取る))
           var isRemoved2 = false
           for hand_position in info.your_hand.keys {
-              if card_id == info.your_hand[hand_position] {
+              if card_id == info.your_hand[hand_position] && isRemoved2 == false {
                 info.your_hand[hand_position] = nil
                 isRemoved2 = true
               }
@@ -1142,9 +1142,7 @@ pub contract CodeOfFlowBeta4 {
     pub fun turn_change(player_id: UInt, from_opponent: Bool) {
       if let info = CodeOfFlowBeta4.battleInfo[player_id] {
         // Check is turn already changed.
-        if from_opponent == true && info.is_first == info.is_first_turn {
-          return;
-        } else if from_opponent == false && info.is_first != info.is_first_turn {
+        if info.is_first != info.is_first_turn {
           return;
         }
 
@@ -1175,11 +1173,10 @@ pub contract CodeOfFlowBeta4 {
           info.turn = info.turn + 1
         }
         info.card_draw_in_this_turn = false
-        // save
-        CodeOfFlowBeta4.battleInfo[player_id] = info
 
         let opponent = info.opponent
         if let infoOpponent = CodeOfFlowBeta4.battleInfo[opponent] {
+
           // Turn Change
           infoOpponent.last_time_turnend = info.last_time_turnend
           infoOpponent.is_first_turn = !infoOpponent.is_first_turn
@@ -1191,93 +1188,79 @@ pub contract CodeOfFlowBeta4 {
           infoOpponent.opponent_field_unit_action = info.your_field_unit_action
           infoOpponent.opponent_field_unit_bp_amount_of_change = info.your_field_unit_bp_amount_of_change
           infoOpponent.your_field_unit_bp_amount_of_change = info.opponent_field_unit_bp_amount_of_change
+
+          // if defence action is not done..
+          if infoOpponent.enemy_attacking_card != nil {
+            infoOpponent.your_life = infoOpponent.your_life - 1
+            infoOpponent.enemy_attacking_card = nil
+          }
+
+          // draw card
+          let blockCreatedAt = getCurrentBlock().timestamp.toString().slice(from: 0, upTo: 10)
+          let decodedArray = blockCreatedAt.decodeHex()
+
+          let pseudorandomNumber1 = decodedArray[decodedArray.length - 1] // as! Int
+          let pseudorandomNumber2 = decodedArray[decodedArray.length - 2] // as! Int
+
+          let cardRemainCounts = infoOpponent.your_remain_deck.length
+          let withdrawPosition1 = Int(pseudorandomNumber1) % (cardRemainCounts - 1)
+          let withdrawPosition2 = Int(pseudorandomNumber2) % (cardRemainCounts - 2)
+          var isSetCard1 = false
+          var isSetCard2 = false
+          var handCnt = 0
+          let handPositions: [UInt8] = [1, 2, 3, 4, 5 ,6, 7]
+          for hand_position in handPositions {
+            // To prevent double transaction
+            if infoOpponent.card_draw_in_this_turn == false {
+              if infoOpponent.your_hand[hand_position] == nil && isSetCard1 == false {
+                infoOpponent.your_hand[hand_position] = infoOpponent.your_remain_deck.remove(at: withdrawPosition1)
+                isSetCard1 = true
+              }
+              if infoOpponent.your_hand[hand_position] == nil && isSetCard2 == false {
+                infoOpponent.your_hand[hand_position] = infoOpponent.your_remain_deck.remove(at: withdrawPosition2)
+                isSetCard2 = true
+              }
+            }
+
+            if infoOpponent.your_hand[hand_position] != nil {
+              handCnt = handCnt + 1
+            }
+          }
+          infoOpponent.card_draw_in_this_turn = true
+          infoOpponent.your_field_unit_bp_amount_of_change = {} // Damage are reset
+          infoOpponent.opponent_field_unit_bp_amount_of_change = {}
+
+          // Recover Field Unit Actions
+          for position in infoOpponent.your_field_unit_action.keys {
+            infoOpponent.your_field_unit_action[position] = 2 // 2: can attack, 1: can defence only, 0: nothing can do.
+          }
+          // Recover CP
+          if infoOpponent.turn <= 6 {
+            infoOpponent.your_cp = infoOpponent.turn + 1
+          } else {
+            infoOpponent.your_cp = 7
+          }
+          if (infoOpponent.turn == 1 && !infoOpponent.is_first) {
+            infoOpponent.your_cp = 3
+          }
+          info.last_time_turnend = infoOpponent.last_time_turnend // set time same time
+          info.opponent_hand = handCnt
+          info.opponent_remain_deck = infoOpponent.your_remain_deck.length
+          info.opponent_trigger_cards = infoOpponent.your_trigger_cards.keys.length
+          info.opponent_field_unit = infoOpponent.your_field_unit
+          info.opponent_field_unit_length = infoOpponent.your_field_unit_length
+          info.opponent_field_unit_action = infoOpponent.your_field_unit_action
+          info.opponent_field_unit_bp_amount_of_change = infoOpponent.your_field_unit_bp_amount_of_change
+          info.opponent_cp = infoOpponent.your_cp
+
           CodeOfFlowBeta4.battleInfo[opponent] = infoOpponent
         }
-        self.start_turn_and_draw_two_cards(player_id: opponent)
+        // save
+        CodeOfFlowBeta4.battleInfo[player_id] = info
       }
 
       // judge the winner
       self.judgeTheWinner(player_id: player_id)
-    }
-
-    pub fun start_turn_and_draw_two_cards(player_id: UInt) {
-
-      if let info = CodeOfFlowBeta4.battleInfo[player_id] {
-
-        info.last_time_turnend = getCurrentBlock().timestamp
-
-        // if defence action is not done..
-        if info.enemy_attacking_card != nil {
-          info.your_life = info.your_life - 1
-          info.enemy_attacking_card = nil
-        }
-
-        // draw card
-        let blockCreatedAt = getCurrentBlock().timestamp.toString().slice(from: 0, upTo: 10)
-        let decodedArray = blockCreatedAt.decodeHex()
-
-        let pseudorandomNumber1 = decodedArray[decodedArray.length - 1] // as! Int
-        let pseudorandomNumber2 = decodedArray[decodedArray.length - 2] // as! Int
-
-        let cardRemainCounts = info.your_remain_deck.length
-        let withdrawPosition1 = Int(pseudorandomNumber1) % (cardRemainCounts - 1)
-        let withdrawPosition2 = Int(pseudorandomNumber2) % (cardRemainCounts - 2)
-        var isSetCard1 = false
-        var isSetCard2 = false
-        var handCnt = 0
-        let handPositions: [UInt8] = [1, 2, 3, 4, 5 ,6, 7]
-        for hand_position in handPositions {
-          // To prevent double transaction
-          if info.card_draw_in_this_turn == false {
-            if info.your_hand[hand_position] == nil && isSetCard1 == false {
-              info.your_hand[hand_position] = info.your_remain_deck.remove(at: withdrawPosition1)
-              isSetCard1 = true
-            }
-            if info.your_hand[hand_position] == nil && isSetCard2 == false {
-              info.your_hand[hand_position] = info.your_remain_deck.remove(at: withdrawPosition2)
-              isSetCard2 = true
-            }
-          }
-
-          if info.your_hand[hand_position] != nil {
-            handCnt = handCnt + 1
-          }
-        }
-        info.card_draw_in_this_turn = true
-        info.your_field_unit_bp_amount_of_change = {} // Damage are reset
-        info.opponent_field_unit_bp_amount_of_change = {}
-
-        // Recover Field Unit Actions
-        for position in info.your_field_unit_action.keys {
-          info.your_field_unit_action[position] = 2 // 2: can attack, 1: can defence only, 0: nothing can do.
-        }
-        // Recover CP
-        if info.turn <= 6 {
-          info.your_cp = info.turn + 1
-        } else {
-          info.your_cp = 7
-        }
-        if (info.turn == 1 && !info.is_first) {
-          info.your_cp = 3
-        }
-
-        // save
-        CodeOfFlowBeta4.battleInfo[player_id] = info
-
-        let opponent = info.opponent
-        if let infoOpponent = CodeOfFlowBeta4.battleInfo[opponent] {
-          infoOpponent.last_time_turnend = info.last_time_turnend // set time same time
-          infoOpponent.opponent_hand = handCnt
-          infoOpponent.opponent_remain_deck = info.your_remain_deck.length
-          infoOpponent.opponent_trigger_cards = info.your_trigger_cards.keys.length
-          infoOpponent.opponent_field_unit = info.your_field_unit
-          infoOpponent.opponent_field_unit_length = info.your_field_unit_length
-          infoOpponent.opponent_field_unit_action = info.your_field_unit_action
-          infoOpponent.opponent_field_unit_bp_amount_of_change = info.your_field_unit_bp_amount_of_change
-          infoOpponent.opponent_cp = info.your_cp
-          CodeOfFlowBeta4.battleInfo[opponent] = infoOpponent
-        }
-      }
     }
 
     pub fun surrender(player_id: UInt) {
