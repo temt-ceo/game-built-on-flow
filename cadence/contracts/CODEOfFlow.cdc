@@ -1134,7 +1134,7 @@ pub contract CodeOfFlowBeta4 {
       self.judgeTheWinner(player_id: player_id)
     }
 
-    pub fun turn_change(player_id: UInt, from_opponent: Bool) {
+    pub fun turn_change(player_id: UInt, from_opponent: Bool, trigger_cards: {UInt8: UInt16}) {
       if let info = CodeOfFlowBeta4.battleInfo[player_id] {
         // Check is turn already changed.
         if info.is_first != info.is_first_turn {
@@ -1142,6 +1142,35 @@ pub contract CodeOfFlowBeta4 {
         }
 
         info.last_time_turnend = getCurrentBlock().timestamp
+
+        // トリガーゾーンのカードを合わせる
+        for position in trigger_cards.keys {
+          // ハンドの整合性を合わせる(トリガーゾーンに移動した分、ハンドから取る)
+          var isRemoved = false
+          if info.your_trigger_cards[position] != trigger_cards[position] && trigger_cards[position] != 0 {
+            let card_id = trigger_cards[position]
+            for hand_position in info.your_hand.keys {
+                if card_id == info.your_hand[hand_position] {
+                  info.your_hand[hand_position] = nil
+                  isRemoved = true
+                }
+            }
+            if (isRemoved == false) {
+              panic("You set the card on trigger zone which is not exist in your hand")
+            }
+          }
+          if (trigger_cards[position] != 0) {
+            info.your_trigger_cards[position] = trigger_cards[position]
+          }
+        }
+
+        var handCnt = 0
+        let handPositions: [UInt8] = [1, 2, 3, 4, 5 ,6, 7]
+        for hand_position in handPositions {
+          if info.your_hand[hand_position] != nil {
+            handCnt = handCnt + 1
+          }
+        }
 
         // Set Field Unit Actions To Defence Only
         for position in info.your_field_unit.keys {
@@ -1176,6 +1205,7 @@ pub contract CodeOfFlowBeta4 {
           infoOpponent.last_time_turnend = info.last_time_turnend
           infoOpponent.is_first_turn = !infoOpponent.is_first_turn
           infoOpponent.turn = info.turn
+          infoOpponent.opponent_hand = handCnt
           infoOpponent.opponent_remain_deck = info.your_remain_deck.length
           infoOpponent.opponent_trigger_cards = info.your_trigger_cards.keys.length
           infoOpponent.opponent_field_unit = info.your_field_unit
@@ -1202,8 +1232,22 @@ pub contract CodeOfFlowBeta4 {
           let withdrawPosition2 = Int(pseudorandomNumber2) % (cardRemainCounts - 2)
           var isSetCard1 = false
           var isSetCard2 = false
-          var handCnt = 0
+          var handCnt2 = 0
           let handPositions: [UInt8] = [1, 2, 3, 4, 5 ,6, 7]
+          let nextPositions: [UInt8] = [1, 2, 3, 4, 5 ,6]
+          // カード位置を若い順に整列
+          for hand_position in handPositions {
+            var replaced: Bool = false
+            if infoOpponent.your_hand[hand_position] == nil {
+              for next in nextPositions {
+                if replaced == false && hand_position + next <= 7 && infoOpponent.your_hand[hand_position + next] != nil {
+                  infoOpponent.your_hand[hand_position] = infoOpponent.your_hand[hand_position + next]
+                  infoOpponent.your_hand[hand_position + next] = nil
+                  replaced = true
+                }
+              }
+            }
+          }
           for hand_position in handPositions {
             // To prevent double transaction
             if infoOpponent.card_draw_in_this_turn == false {
@@ -1218,7 +1262,7 @@ pub contract CodeOfFlowBeta4 {
             }
 
             if infoOpponent.your_hand[hand_position] != nil {
-              handCnt = handCnt + 1
+              handCnt2 = handCnt2 + 1
             }
           }
           infoOpponent.card_draw_in_this_turn = true
@@ -1239,7 +1283,7 @@ pub contract CodeOfFlowBeta4 {
             infoOpponent.your_cp = 3
           }
           info.last_time_turnend = infoOpponent.last_time_turnend // set time same time
-          info.opponent_hand = handCnt
+          info.opponent_hand = handCnt2
           info.opponent_remain_deck = infoOpponent.your_remain_deck.length
           info.opponent_trigger_cards = infoOpponent.your_trigger_cards.keys.length
           info.opponent_field_unit = infoOpponent.your_field_unit
