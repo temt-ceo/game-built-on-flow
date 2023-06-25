@@ -776,7 +776,7 @@ pub contract CodeOfFlowBeta7 {
             let decodedArray = blockCreatedAt.decodeHex()
             let pseudorandomNumber1 = decodedArray[decodedArray.length - 1]
             let withdrawPosition1 = pseudorandomNumber1 % (UInt8(infoOpponent.your_trigger_cards.keys.length) - 1)
-            infoOpponent.your_trigger_cards.remove(key: withdrawPosition1)
+            infoOpponent.your_trigger_cards.remove(key: withdrawPosition1 + 1)
             infoOpponent.your_dead_count = infoOpponent.your_dead_count + 1
             info.opponent_trigger_cards = infoOpponent.your_trigger_cards.length
             info.opponent_dead_count = info.opponent_dead_count + 1
@@ -1112,7 +1112,7 @@ pub contract CodeOfFlowBeta7 {
             let decodedArray = blockCreatedAt.decodeHex()
             let pseudorandomNumber1 = decodedArray[decodedArray.length - 1]
             let withdrawPosition1 = pseudorandomNumber1 % (UInt8(infoOpponent.your_trigger_cards.keys.length) - 1)
-            infoOpponent.your_trigger_cards.remove(key: withdrawPosition1)
+            infoOpponent.your_trigger_cards.remove(key: withdrawPosition1 + 1)
             infoOpponent.your_dead_count = infoOpponent.your_dead_count + 1
             info.opponent_trigger_cards = infoOpponent.your_trigger_cards.length
             info.opponent_dead_count = info.opponent_dead_count + 1
