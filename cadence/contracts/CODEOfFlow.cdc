@@ -810,6 +810,7 @@ pub contract CodeOfFlowBeta7 {
 
       var attacking_card_to_enemy: AttackStruct? = nil
       var your_trigger_cards_count: Int = 0
+      var attack_success_flg = false;
 
       if let info = CodeOfFlowBeta7.battleInfo[player_id] {
         info.newly_drawed_cards = []
@@ -928,6 +929,12 @@ pub contract CodeOfFlowBeta7 {
           if (unit.skill.type_1 == 3) {
             lost_card_flg = true
           }
+
+          //---- Valkyrie(This unit is not blocked.) ----
+          if (unit.skill.type_1 == 12) {
+            attack_success_flg = true
+          }
+
           //---- Remove action right ----
           if (unit.skill.type_1 == 5) {
             var target: UInt8 = 1
@@ -1121,6 +1128,11 @@ pub contract CodeOfFlowBeta7 {
         }
         // save
         CodeOfFlowBeta7.battleInfo[player_id] = info
+      }
+
+      // Valkyrie(This unit is not blocked.)
+      if (attack_success_flg == true) {
+          self.defence_action(player_id: player_id, opponent_defend_position: nil, attacker_used_intercept_positions: [], defender_used_intercept_positions: [])
       }
     }
 
@@ -1823,7 +1835,7 @@ pub contract CodeOfFlowBeta7 {
       3: CardStruct(card_id: 3, name: "Lancer", bp: 5000, cost: 2, type: 0, category: 0, skill: Skill(description: "When this unit attacks, choose an opponent's unit. Deal 1000 damage to it.", triggers: [2], asks: [1], types: [1], amounts: [1000], skills: [])),
       4: CardStruct(card_id: 4, name: "HellDog", bp: 6000, cost: 3, type: 0, category: 0, skill: Skill(description: "When this unit enters the field, a card in the opponent's trigger zone is randomly destroyed.", triggers: [1], asks: [0], types: [3], amounts: [1], skills: [])),
       5: CardStruct(card_id: 5, name: "Arty", bp: 2000, cost: 2, type: 0, category: 0, skill: Skill(description: "This unit is not affected by action restrictions for the turn it enters the field.", triggers: [1], asks: [0], types: [11], amounts: [0], skills: [])),
-      6: CardStruct(card_id: 6, name: "Valkyrie", bp: 3000, cost: 3, type: 0, category: 0, skill: Skill(description: "This unit is not blocked.", triggers: [4], asks: [0], types: [12], amounts: [0], skills: [])),
+      6: CardStruct(card_id: 6, name: "Valkyrie", bp: 3000, cost: 3, type: 0, category: 0, skill: Skill(description: "This unit is not blocked.", triggers: [2], asks: [0], types: [12], amounts: [0], skills: [])),
       7: CardStruct(card_id: 7, name: "Lilim", bp: 4000, cost: 4, type: 0, category: 0, skill: Skill(description: "When this unit enters the field, choose one of your opponent's units. Deal 4000 damage to it. \nWhen this unit attacks, destroy a card in your opponent's Trigger Zone at random.", triggers: [1,2], asks: [1,0], types: [1,3], amounts: [4000,1], skills: [])),
       8: CardStruct(card_id: 8, name: "Belial", bp: 7000, cost: 7, type: 0, category: 0, skill: Skill(description: "When this unit enters the field, it deals 3000 damage to all of your opponent's units.", triggers: [1], asks: [3], types: [1], amounts: [3000], skills: [])),
       9: CardStruct(card_id: 9, name: "Sohei", bp: 2000, cost: 1, type: 1, category: 0, skill: Skill(description: "When this unit blocks, this unit's BP is +2000 until end of turn.", triggers: [3], asks: [0], types: [2], amounts: [2000], skills: [])),
