@@ -1255,6 +1255,8 @@ pub contract CodeOfFlowBeta7 {
             infoOpponent.last_time_turnend = info.last_time_turnend
             infoOpponent.your_attacking_card = nil
             infoOpponent.enemy_attacking_card = nil
+            infoOpponent.your_life = info.opponent_life
+            infoOpponent.opponent_life = info.your_life
             infoOpponent.opponent_hand = handCnt
             infoOpponent.opponent_remain_deck = info.your_remain_deck.length
             infoOpponent.opponent_trigger_cards = info.your_trigger_cards.keys.length
