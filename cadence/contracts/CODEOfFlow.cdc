@@ -495,10 +495,11 @@ pub contract CodeOfFlowBeta7 {
         info.newly_drawed_cards = []
 
         // Match the consistency of the hand (take from the hand the amount moved to the trigger zone) (ハンドの整合性を合わせる(トリガーゾーンに移動した分、ハンドから取る))
-        var isRemoved = false
         for trigger_position in trigger_cards.keys {
+          var isRemoved = false
           if info.your_trigger_cards[trigger_position] != trigger_cards[trigger_position] && trigger_cards[trigger_position] != 0 {
             let card_id = trigger_cards[trigger_position]
+            info.your_trigger_cards[trigger_position] = card_id!
             for hand_position in info.your_hand.keys {
                 if card_id == info.your_hand[hand_position] && isRemoved == false {
                   info.your_hand[hand_position] = nil
@@ -508,7 +509,6 @@ pub contract CodeOfFlowBeta7 {
             if (isRemoved == false) {
               panic("You set the card on trigger zone which is not exist in your hand")
             }
-            info.your_trigger_cards[trigger_position] = trigger_cards[trigger_position]!!
           }
         }
         var lost_card_flg = false
@@ -519,6 +519,25 @@ pub contract CodeOfFlowBeta7 {
           let unit = CodeOfFlowBeta7.cardInfo[card_id]!
           if (unit.category != 0) {
             panic("The card you put on the field is not a Unit Card!")
+          }
+          // [FIXED]When draw the card, it requires hand is less equal than 6, so hand removing process comes here.
+          info.your_field_unit[field_position] = card_id
+          info.your_field_unit_length = info.your_field_unit.keys.length
+          info.your_cp = info.your_cp - unit.cost
+
+          // Match the consistency of the hand (take from the hand the amount moved to the field)
+          var isRemoved2 = false
+          for hand_position in info.your_hand.keys {
+            if card_id == info.your_hand[hand_position] && isRemoved2 == false {
+              info.your_hand[hand_position] = nil
+              isRemoved2 = true
+            }
+            if info.your_hand[hand_position] != nil {
+              your_hand_count = your_hand_count + 1
+            }
+          }
+          if (isRemoved2 == false) {
+            panic("You set the card on the Field which is not exist in your hand")
           }
           //////////////////////////////////////////////////
           ///////////////attribute evaluation///////////////
@@ -539,7 +558,7 @@ pub contract CodeOfFlowBeta7 {
                   if let opponent = info.opponent_field_unit[opponent_position] {
                     let card_id: UInt16 = info.opponent_field_unit[opponent_position]!
                     let unit = CodeOfFlowBeta7.cardInfo[card_id]!
-                    if Int(unit.bp) < info.opponent_field_unit_bp_amount_of_change[opponent_position]! * -1 {
+                    if Int(unit.bp) <= info.opponent_field_unit_bp_amount_of_change[opponent_position]! * -1 {
                       // beat the opponent
                       info.opponent_field_unit[opponent_position] = nil
                       info.opponent_dead_count = info.opponent_dead_count + 1
@@ -559,7 +578,7 @@ pub contract CodeOfFlowBeta7 {
                     if let opponent = info.opponent_field_unit[target] {
                       let card_id: UInt16 = info.opponent_field_unit[target]!
                       let unit = CodeOfFlowBeta7.cardInfo[card_id]!
-                      if Int(unit.bp) < info.opponent_field_unit_bp_amount_of_change[target]! * -1 {
+                      if Int(unit.bp) <= info.opponent_field_unit_bp_amount_of_change[target]! * -1 {
                         // beat the opponent
                         info.opponent_field_unit[target] = nil
                         info.opponent_dead_count = info.opponent_dead_count + 1
@@ -589,7 +608,7 @@ pub contract CodeOfFlowBeta7 {
             //---- Allie (Remove action right) ----
             if (unit.skill.type_1 == 5) {
               if target > 0 {
-                if (info.opponent_field_unit[target] != nil && info.opponent_field_unit[target]! > 0) {
+                if (info.opponent_field_unit[target] != nil && info.opponent_field_unit[target]! != 0) {
                   info.opponent_field_unit_action[target] = 0 // // 2: can attack, 1: can defence only, 0: nothing can do.
                 }
               }
@@ -660,7 +679,7 @@ pub contract CodeOfFlowBeta7 {
                         if let opponent = info.opponent_field_unit[target] {
                           let card_id: UInt16 = info.opponent_field_unit[target]!
                           let unit = CodeOfFlowBeta7.cardInfo[card_id]!
-                          if Int(unit.bp) < info.opponent_field_unit_bp_amount_of_change[target]! * -1 {
+                          if Int(unit.bp) <= info.opponent_field_unit_bp_amount_of_change[target]! * -1 {
                             // beat the opponent
                             info.opponent_field_unit[target] = nil
                             info.opponent_dead_count = info.opponent_dead_count + 1
@@ -679,7 +698,7 @@ pub contract CodeOfFlowBeta7 {
                     }
                   }
                 }
-                //---- Draw card ----
+                //---- Merchant (Draw card) ----
                 if (trigger.skill.type_1 == 7) {
                   let blockCreatedAt = getCurrentBlock().timestamp.toString().slice(from: 0, upTo: 10)
                   let decodedArray = blockCreatedAt.decodeHex()
@@ -724,30 +743,10 @@ pub contract CodeOfFlowBeta7 {
           //////////////////////////////////////////////////
           ///////////////↑↑attribute evaluation↑↑///////////
           //////////////////////////////////////////////////
-
-          info.your_field_unit[field_position] = card_id
-          info.your_field_unit_length = info.your_field_unit.keys.length
-          //if (speed_move_flg == true && !(info.turn == 1 && info.is_first_turn == true)) { To avoid misleading, take a restriction.
           if (speed_move_flg == true) {
             info.your_field_unit_action[field_position] = 2 // 2: can attack, 1: can defence only, 0: nothing can do.
           } else {
             info.your_field_unit_action[field_position] = 1
-          }
-          info.your_cp = info.your_cp - unit.cost
-
-          // Match the consistency of the hand (take from the hand the amount moved to the trigger zone) (ハンドの整合性を合わせる(トリガーゾーンに移動した分、ハンドから取る))
-          var isRemoved2 = false
-          for hand_position in info.your_hand.keys {
-              if card_id == info.your_hand[hand_position] && isRemoved2 == false {
-                info.your_hand[hand_position] = nil
-                isRemoved2 = true
-              }
-              if info.your_hand[hand_position] != nil {
-                your_hand_count = your_hand_count + 1
-              }
-          }
-          if (isRemoved2 == false) {
-            panic("You set the card on the Field which is not exist in your hand")
           }
         }
 
@@ -766,20 +765,37 @@ pub contract CodeOfFlowBeta7 {
           infoOpponent.opponent_field_unit = info.your_field_unit
           infoOpponent.opponent_field_unit_length = info.your_field_unit_length
           infoOpponent.opponent_field_unit_action = info.your_field_unit_action
+          infoOpponent.your_field_unit_action = info.opponent_field_unit_action
           infoOpponent.your_field_unit_bp_amount_of_change = info.opponent_field_unit_bp_amount_of_change
           infoOpponent.your_field_unit = info.opponent_field_unit
           infoOpponent.your_dead_count = info.opponent_dead_count
           infoOpponent.opponent_dead_count = info.your_dead_count
           // Process Trigger Lost
           if (lost_card_flg == true) {
-            let blockCreatedAt = getCurrentBlock().timestamp.toString().slice(from: 0, upTo: 10)
-            let decodedArray = blockCreatedAt.decodeHex()
-            let pseudorandomNumber1 = decodedArray[decodedArray.length - 1]
-            let withdrawPosition1 = pseudorandomNumber1 % (UInt8(infoOpponent.your_trigger_cards.keys.length) - 1)
-            infoOpponent.your_trigger_cards.remove(key: withdrawPosition1 + 1)
+            if (infoOpponent.your_trigger_cards.keys.length == 1) {
+            infoOpponent.your_trigger_cards.remove(key: infoOpponent.your_trigger_cards.keys[0])
             infoOpponent.your_dead_count = infoOpponent.your_dead_count + 1
             info.opponent_trigger_cards = infoOpponent.your_trigger_cards.length
             info.opponent_dead_count = info.opponent_dead_count + 1
+            } else if (infoOpponent.your_trigger_cards.keys.length > 0) {
+              let blockCreatedAt = getCurrentBlock().timestamp.toString().slice(from: 0, upTo: 10)
+              let decodedArray = blockCreatedAt.decodeHex()
+              let pseudorandomNumber1 = decodedArray[decodedArray.length - 1]
+              let withdrawPosition1 = pseudorandomNumber1 % (UInt8(infoOpponent.your_trigger_cards.keys.length) - 1)
+              var target: UInt8 = 0
+              for key in infoOpponent.your_trigger_cards.keys {
+                if (key == withdrawPosition1 + 1) {
+                  target = key
+                }
+              }
+              if (target == 0) {
+                target = infoOpponent.your_trigger_cards.keys[0]
+              }
+              infoOpponent.your_trigger_cards.remove(key: target)
+              infoOpponent.your_dead_count = infoOpponent.your_dead_count + 1
+              info.opponent_trigger_cards = infoOpponent.your_trigger_cards.length
+              info.opponent_dead_count = info.opponent_dead_count + 1
+            }
           }
           // Save
           CodeOfFlowBeta7.battleInfo[opponent] = infoOpponent
@@ -820,8 +836,9 @@ pub contract CodeOfFlowBeta7 {
           var isRemoved = false
           if info.your_trigger_cards[position] != trigger_cards[position] && trigger_cards[position] != 0 {
             let card_id = trigger_cards[position]
+            info.your_trigger_cards[position] = card_id
             for hand_position in info.your_hand.keys {
-                if card_id == info.your_hand[hand_position] {
+                if card_id == info.your_hand[hand_position] && isRemoved == false {
                   info.your_hand[hand_position] = nil
                   isRemoved = true
                 }
@@ -830,15 +847,12 @@ pub contract CodeOfFlowBeta7 {
               panic("You set the card on trigger zone which is not exist in your hand")
             }
           }
-          if (trigger_cards[position] != 0) {
-            info.your_trigger_cards[position] = trigger_cards[position]
-          }
         }
 
         //////////////////////////////////////////////////
         // Process Battle Action START
         //////////////////////////////////////////////////
-        var lost_card_flg = false
+        var lost_card_flg_cnt = 0
         var speed_move_flg = false
         let used_trigger_cards: [UInt16] = []
         info.your_field_unit_action[attack_unit] = 0 // 2: can attack, 1: can defence only, 0: nothing can do.
@@ -871,7 +885,7 @@ pub contract CodeOfFlowBeta7 {
                 if let opponent = info.opponent_field_unit[opponent_position] {
                   let card_id: UInt16 = info.opponent_field_unit[opponent_position]!
                   let unit = CodeOfFlowBeta7.cardInfo[card_id]!
-                  if Int(unit.bp) < info.opponent_field_unit_bp_amount_of_change[opponent_position]! * -1 {
+                  if Int(unit.bp) <= info.opponent_field_unit_bp_amount_of_change[opponent_position]! * -1 {
                     // beat the opponent
                     info.opponent_field_unit[opponent_position] = nil
                     info.opponent_dead_count = info.opponent_dead_count + 1
@@ -893,7 +907,7 @@ pub contract CodeOfFlowBeta7 {
               if let opponent = info.opponent_field_unit[target] {
                 let card_id: UInt16 = info.opponent_field_unit[target]!
                 let unit = CodeOfFlowBeta7.cardInfo[card_id]!
-                if Int(unit.bp) < info.opponent_field_unit_bp_amount_of_change[target]! * -1 {
+                if Int(unit.bp) <= info.opponent_field_unit_bp_amount_of_change[target]! * -1 {
                   // beat the opponent
                   info.opponent_field_unit[target] = nil
                   info.opponent_dead_count = info.opponent_dead_count + 1
@@ -917,7 +931,7 @@ pub contract CodeOfFlowBeta7 {
               if let opponent = info.opponent_field_unit[target] {
                 let card_id: UInt16 = info.opponent_field_unit[target]!
                 let unit = CodeOfFlowBeta7.cardInfo[card_id]!
-                if Int(unit.bp) < info.opponent_field_unit_bp_amount_of_change[target]! * -1 {
+                if Int(unit.bp) <= info.opponent_field_unit_bp_amount_of_change[target]! * -1 {
                   // beat the opponent
                   info.opponent_field_unit[target] = nil
                   info.opponent_dead_count = info.opponent_dead_count + 1
@@ -927,7 +941,7 @@ pub contract CodeOfFlowBeta7 {
           }
           //---- Trigger lost ----
           if (unit.skill.type_1 == 3) {
-            lost_card_flg = true
+            lost_card_flg_cnt = lost_card_flg_cnt + 1
           }
 
           //---- Valkyrie(This unit is not blocked.) ----
@@ -982,7 +996,7 @@ pub contract CodeOfFlowBeta7 {
         // trigger when the unit is attacking
         if (unit.skill.trigger_2 == 2) { // currently there is no card which has trigger_3 and trigger_4
           if (unit.skill.type_2 == 3) {
-            lost_card_flg = true
+            lost_card_flg_cnt = lost_card_flg_cnt + 1
           }
         }
 
@@ -1021,7 +1035,7 @@ pub contract CodeOfFlowBeta7 {
                 if let opponent = info.opponent_field_unit[target] {
                   let card_id: UInt16 = info.opponent_field_unit[target]!
                   let unit = CodeOfFlowBeta7.cardInfo[card_id]!
-                  if Int(unit.bp) < info.opponent_field_unit_bp_amount_of_change[target]! * -1 {
+                  if Int(unit.bp) <= info.opponent_field_unit_bp_amount_of_change[target]! * -1 {
                     // beat the opponent
                     info.opponent_field_unit[target] = nil
                     info.opponent_dead_count = info.opponent_dead_count + 1
@@ -1040,7 +1054,7 @@ pub contract CodeOfFlowBeta7 {
                 if let opponent = info.opponent_field_unit[target] {
                   let card_id: UInt16 = info.opponent_field_unit[target]!
                   let unit = CodeOfFlowBeta7.cardInfo[card_id]!
-                  if Int(unit.bp) < info.opponent_field_unit_bp_amount_of_change[target]! * -1 {
+                  if Int(unit.bp) <= info.opponent_field_unit_bp_amount_of_change[target]! * -1 {
                     // beat the opponent
                     info.opponent_field_unit[target] = nil
                     info.opponent_dead_count = info.opponent_dead_count + 1
@@ -1051,7 +1065,7 @@ pub contract CodeOfFlowBeta7 {
 
             //---- Trigger lost ----
             if (trigger.skill.type_1 == 3) {
-              lost_card_flg = true
+              lost_card_flg_cnt = lost_card_flg_cnt + 1
             }
             //---- Remove action right ----
             if (trigger.skill.type_1 == 5) {
@@ -1114,15 +1128,38 @@ pub contract CodeOfFlowBeta7 {
           infoOpponent.your_dead_count = info.opponent_dead_count
           infoOpponent.opponent_dead_count = info.your_dead_count
           // Process Trigger Lost
-          if (lost_card_flg == true) {
-            let blockCreatedAt = getCurrentBlock().timestamp.toString().slice(from: 0, upTo: 10)
-            let decodedArray = blockCreatedAt.decodeHex()
-            let pseudorandomNumber1 = decodedArray[decodedArray.length - 1]
-            let withdrawPosition1 = pseudorandomNumber1 % (UInt8(infoOpponent.your_trigger_cards.keys.length) - 1)
-            infoOpponent.your_trigger_cards.remove(key: withdrawPosition1 + 1)
-            infoOpponent.your_dead_count = infoOpponent.your_dead_count + 1
-            info.opponent_trigger_cards = infoOpponent.your_trigger_cards.length
-            info.opponent_dead_count = info.opponent_dead_count + 1
+          if (lost_card_flg_cnt > 0) {
+            if (infoOpponent.your_trigger_cards.keys.length == 1) {
+              infoOpponent.your_trigger_cards.remove(key: infoOpponent.your_trigger_cards.keys[0])
+              infoOpponent.your_dead_count = infoOpponent.your_dead_count + 1
+              info.opponent_trigger_cards = infoOpponent.your_trigger_cards.length
+              info.opponent_dead_count = info.opponent_dead_count + 1
+            } else if (infoOpponent.your_trigger_cards.keys.length <= lost_card_flg_cnt) {
+              for key in infoOpponent.your_trigger_cards.keys {
+                infoOpponent.your_trigger_cards.remove(key: key)
+              }
+            } else {
+              while lost_card_flg_cnt > 0 {
+                lost_card_flg_cnt = lost_card_flg_cnt - 1
+                let blockCreatedAt = getCurrentBlock().timestamp.toString().slice(from: 0, upTo: 10)
+                let decodedArray = blockCreatedAt.decodeHex()
+                let pseudorandomNumber1 = decodedArray[decodedArray.length - 1]
+                let withdrawPosition1 = pseudorandomNumber1 % (UInt8(infoOpponent.your_trigger_cards.keys.length) - 1)
+                var target: UInt8 = 0
+                for key in infoOpponent.your_trigger_cards.keys {
+                  if (key == withdrawPosition1 + 1) {
+                    target = key
+                  }
+                }
+                if (target == 0) {
+                  target = infoOpponent.your_trigger_cards.keys[0]
+                }
+                infoOpponent.your_trigger_cards.remove(key: target)
+              }
+              infoOpponent.your_dead_count = infoOpponent.your_dead_count + 1
+              info.opponent_trigger_cards = infoOpponent.your_trigger_cards.length
+              info.opponent_dead_count = info.opponent_dead_count + 1
+            }
           }
           CodeOfFlowBeta7.battleInfo[opponent] = infoOpponent
         }
@@ -1236,7 +1273,7 @@ pub contract CodeOfFlowBeta7 {
                 info.opponent_field_unit[opponent_defend_position!] = nil
                 info.opponent_dead_count = info.opponent_dead_count + 1
               } else {
-                info.your_field_unit[opponent_defend_position!] = nil
+                info.your_field_unit[info.your_attacking_card!.field_position] = nil
                 info.your_dead_count = info.your_dead_count + 1
               }
               info.your_field_unit_length = info.your_field_unit.keys.length
@@ -1365,11 +1402,15 @@ pub contract CodeOfFlowBeta7 {
               }
               if Int(unit.bp) + pump < Int(info.enemy_attacking_card!.bp + info.enemy_attacking_card!.pump) {
                 info.your_field_unit[opponent_defend_position!] = nil
+                info.your_dead_count = info.your_dead_count + 1
               } else if Int(unit.bp) + pump == Int(info.enemy_attacking_card!.bp + info.enemy_attacking_card!.pump) {
-                info.your_field_unit[info.enemy_attacking_card!.field_position] = nil
+                info.opponent_field_unit[info.enemy_attacking_card!.field_position] = nil
+                info.opponent_dead_count = info.opponent_dead_count + 1
                 info.your_field_unit[opponent_defend_position!] = nil
+                info.your_dead_count = info.your_dead_count + 1
               } else {
-                info.your_field_unit[opponent_defend_position!] = nil
+                info.opponent_field_unit[info.enemy_attacking_card!.field_position] = nil
+                info.opponent_dead_count = info.opponent_dead_count + 1
               }
               info.your_field_unit_length = info.your_field_unit.keys.length
             }
@@ -1441,8 +1482,9 @@ pub contract CodeOfFlowBeta7 {
             var isRemoved = false
             if info.your_trigger_cards[position] != trigger_cards[position] && trigger_cards[position] != 0 {
               let card_id = trigger_cards[position]
+              info.your_trigger_cards[position] = card_id
               for hand_position in info.your_hand.keys {
-                  if card_id == info.your_hand[hand_position] {
+                  if card_id == info.your_hand[hand_position] && isRemoved == false {
                     info.your_hand[hand_position] = nil
                     isRemoved = true
                   }
@@ -1450,9 +1492,6 @@ pub contract CodeOfFlowBeta7 {
               if (isRemoved == false) {
                 panic("You set the card on trigger zone which is not exist in your hand")
               }
-            }
-            if (trigger_cards[position] != 0) {
-              info.your_trigger_cards[position] = trigger_cards[position]
             }
           }
         }
@@ -1617,7 +1656,7 @@ pub contract CodeOfFlowBeta7 {
 
       if let info = CodeOfFlowBeta7.battleInfo[player_id] {
         if (info.turn > 10) {
-          if (info.your_life > info.opponent_life || (info.your_life == info.opponent_life && !info.is_first_turn)) {
+          if (info.your_life > info.opponent_life || (info.your_life == info.opponent_life && info.is_first == false)) { // Second Attack wins if lives are same.
             let opponent = info.opponent
             CodeOfFlowBeta7.battleInfo.remove(key: player_id)
             CodeOfFlowBeta7.battleInfo.remove(key: opponent)
@@ -1658,6 +1697,50 @@ pub contract CodeOfFlowBeta7 {
             // Game Reward
             let reward <- CodeOfFlowBeta7.account.borrow<&{FungibleToken.Provider}>(from: /storage/flowTokenVault)!.withdraw(amount: 0.5) as! @FlowToken.Vault
             CodeOfFlowBeta7.PlayerFlowTokenVault[opponent]!.borrow()!.deposit(from: <- reward)
+            return true
+          }
+        } else if (info.turn == 10 && info.is_first_turn == false) { // 10 turn and second attack
+          if (info.your_life <= info.opponent_life && info.is_first == true) { // Lose if palyer is First Attack & life is less than opponent
+            let opponent = info.opponent
+            CodeOfFlowBeta7.battleInfo.remove(key: player_id)
+            CodeOfFlowBeta7.battleInfo.remove(key: opponent)
+            if let cyberScore = CodeOfFlowBeta7.playerList[player_id] {
+              cyberScore.score.append({getCurrentBlock().timestamp: 0})
+              cyberScore.loss_count = cyberScore.loss_count + 1
+              CodeOfFlowBeta7.playerList[player_id] = cyberScore
+            }
+            if let cyberScore = CodeOfFlowBeta7.playerList[opponent] {
+              cyberScore.score.append({getCurrentBlock().timestamp: 1})
+              cyberScore.win_count = cyberScore.win_count + 1
+              CodeOfFlowBeta7.playerList[opponent] = cyberScore
+            }
+            CodeOfFlowBeta7.playerMatchingInfo[player_id] = PlayerMatchingStruct() // ゲームが終了したのでnilで初期化
+            CodeOfFlowBeta7.playerMatchingInfo[opponent] = PlayerMatchingStruct() // ゲームが終了したのでnilで初期化
+            emit BattleSequence(sequence: 3, player_id: opponent, opponent: player_id)
+            // Game Reward
+            let reward <- CodeOfFlowBeta7.account.borrow<&{FungibleToken.Provider}>(from: /storage/flowTokenVault)!.withdraw(amount: 0.5) as! @FlowToken.Vault
+            CodeOfFlowBeta7.PlayerFlowTokenVault[opponent]!.borrow()!.deposit(from: <- reward)
+            return true
+          } else if (info.your_life >= info.opponent_life && info.is_first == false) {// Win if palyer is Second Attack & life is more than opponent
+            let opponent = info.opponent
+            CodeOfFlowBeta7.battleInfo.remove(key: player_id)
+            CodeOfFlowBeta7.battleInfo.remove(key: opponent)
+            if let cyberScore = CodeOfFlowBeta7.playerList[player_id] {
+              cyberScore.score.append({getCurrentBlock().timestamp: 1})
+              cyberScore.win_count = cyberScore.win_count + 1
+              CodeOfFlowBeta7.playerList[player_id] = cyberScore
+            }
+            if let cyberScore = CodeOfFlowBeta7.playerList[opponent] {
+              cyberScore.score.append({getCurrentBlock().timestamp: 0})
+              cyberScore.loss_count = cyberScore.loss_count + 1
+              CodeOfFlowBeta7.playerList[opponent] = cyberScore
+            }
+            CodeOfFlowBeta7.playerMatchingInfo[player_id] = PlayerMatchingStruct() // ゲームが終了したのでnilで初期化
+            CodeOfFlowBeta7.playerMatchingInfo[opponent] = PlayerMatchingStruct() // ゲームが終了したのでnilで初期化
+            emit BattleSequence(sequence: 3, player_id: player_id, opponent: opponent)
+            // Game Reward
+            let reward <- CodeOfFlowBeta7.account.borrow<&{FungibleToken.Provider}>(from: /storage/flowTokenVault)!.withdraw(amount: 0.5) as! @FlowToken.Vault
+            CodeOfFlowBeta7.PlayerFlowTokenVault[player_id]!.borrow()!.deposit(from: <- reward)
             return true
           }
         }
