@@ -590,7 +590,7 @@ pub contract CodeOfFlowBeta7 {
               } else if (unit.skill.ask_1 == 2) {
                 if target > 0 {
                   if (info.opponent_field_unit[target] != nil && info.opponent_field_unit[target]! > 0) {
-                    if (info.opponent_field_unit_action[target] == 3) { // // 2: can attack, 1: can defence only, 0: nothing can do.
+                    if (info.opponent_field_unit_action[target] == 0) { // // 2: can attack, 1: can defence only, 0: nothing can do.
                       if let opponent_field_unit_bp_amount_of_change = info.opponent_field_unit_bp_amount_of_change[target] {
                         info.opponent_field_unit_bp_amount_of_change[target] = opponent_field_unit_bp_amount_of_change + (-1 * Int(unit.skill.amount_1))
                       } else {
@@ -686,12 +686,26 @@ pub contract CodeOfFlowBeta7 {
                           }
                         }
                       // Only target which has no action right
+                      // Photon
                       } else if (trigger.skill.ask_1 == 2) {
-                        if (info.opponent_field_unit_action[target] == 3) { // // 2: can attack, 1: can defence only, 0: nothing can do.
+                        if (info.opponent_field_unit_action[target] == 0) { // // 2: can attack, 1: can defence only, 0: nothing can do.
                           if let opponent_field_unit_bp_amount_of_change = info.opponent_field_unit_bp_amount_of_change[target] {
                             info.opponent_field_unit_bp_amount_of_change[target] = opponent_field_unit_bp_amount_of_change + (-1 * Int(trigger.skill.amount_1))
                           } else {
                             info.opponent_field_unit_bp_amount_of_change[target] = -1 * Int(trigger.skill.amount_1)
+                          }
+                        } else {
+                          // To avoid a something bug, damage any other target which match the condition.
+                          let unitPositions: [UInt8] = [1, 2, 3, 4, 5]
+                          for unit_position in unitPositions {
+                            if info.opponent_field_unit_action[unit_position] == 0 {
+                              if let opponent_field_unit_bp_amount_of_change = info.opponent_field_unit_bp_amount_of_change[unit_position] {
+                                info.opponent_field_unit_bp_amount_of_change[unit_position] = opponent_field_unit_bp_amount_of_change + (-1 * Int(trigger.skill.amount_1))
+                              } else {
+                                info.opponent_field_unit_bp_amount_of_change[unit_position] = -1 * Int(trigger.skill.amount_1)
+                              }
+                              break;
+                            }
                           }
                         }
                       }
@@ -920,7 +934,7 @@ pub contract CodeOfFlowBeta7 {
               if enemy_skill_target != nil {
                 target = enemy_skill_target!
               }
-              if (info.opponent_field_unit_action[target] == 3) { // // 2: can attack, 1: can defence only, 0: nothing can do.
+              if (info.opponent_field_unit_action[target] == 0) { // // 2: can attack, 1: can defence only, 0: nothing can do.
                 if let opponent_field_unit_bp_amount_of_change = info.opponent_field_unit_bp_amount_of_change[target] {
                   info.opponent_field_unit_bp_amount_of_change[target] = opponent_field_unit_bp_amount_of_change + (-1 * Int(unit.skill.amount_1))
                 } else {
@@ -1043,7 +1057,7 @@ pub contract CodeOfFlowBeta7 {
                 }
               // Only target which has no action right
               } else if (trigger.skill.ask_1 == 2) {
-                if (info.opponent_field_unit_action[target] == 3) { // // 2: can attack, 1: can defence only, 0: nothing can do.
+                if (info.opponent_field_unit_action[target] == 0) { // // 2: can attack, 1: can defence only, 0: nothing can do.
                   if let opponent_field_unit_bp_amount_of_change = info.opponent_field_unit_bp_amount_of_change[target] {
                     info.opponent_field_unit_bp_amount_of_change[target] = opponent_field_unit_bp_amount_of_change + (-1 * Int(trigger.skill.amount_1))
                   } else {
@@ -1091,20 +1105,7 @@ pub contract CodeOfFlowBeta7 {
         // Process Battle Action END
         //////////////////////////////////////////////////
 
-        // If there is not unit in opponent field, automatically give damage to enemy.
-        var hasEnemyUnit = false
-        for opponent_position in info.opponent_field_unit.keys {
-          hasEnemyUnit = true
-        }
-
-        if hasEnemyUnit == true {
-          info.last_time_turnend = info.last_time_turnend! + 10.0
-        } else {
-          info.opponent_life = info.opponent_life - 1
-          // For the loading time.
-          info.last_time_turnend = info.last_time_turnend! + 5.0
-        }
-
+        info.last_time_turnend = info.last_time_turnend! + 5.0
         info.your_attacking_card = attacking_card_to_enemy
 
         let opponent = info.opponent
@@ -1181,6 +1182,10 @@ pub contract CodeOfFlowBeta7 {
       }
 
       if let info = CodeOfFlowBeta7.battleInfo[player_id] {
+        if (info.your_attacking_card == nil && info.enemy_attacking_card == nil) {
+          panic("Battle seems already settled.")
+        }
+
         info.newly_drawed_cards = []
         let opponent = info.opponent
         //////////////////////////////////
@@ -1465,6 +1470,7 @@ pub contract CodeOfFlowBeta7 {
 
     pub fun turn_change(player_id: UInt, from_opponent: Bool, trigger_cards: {UInt8: UInt16}) {
       if let info = CodeOfFlowBeta7.battleInfo[player_id] {
+
         info.newly_drawed_cards = []
 
         // Check is turn already changed.
@@ -1473,6 +1479,14 @@ pub contract CodeOfFlowBeta7 {
         }
 
         info.last_time_turnend = getCurrentBlock().timestamp
+
+        // 決着がついていない攻撃がまだある
+        if (info.your_attacking_card != nil && info.your_attacking_card!.attacked_time + 5.0 > info.last_time_turnend!) {
+          return;
+        }
+        if (info.enemy_attacking_card != nil && info.enemy_attacking_card!.attacked_time + 5.0 > info.last_time_turnend!) {
+          return;
+        }
 
         // トリガーゾーンのカードを合わせる
         for position in trigger_cards.keys {
@@ -1926,7 +1940,7 @@ pub contract CodeOfFlowBeta7 {
       11: CardStruct(card_id: 11, name: "Allie", bp: 2000, cost: 1, type: 1, category: 0, skill: Skill(description: "When this unit enters the field, choose one of your opponent's units. Consume it's right of action.", triggers: [1], asks: [1], types: [5], amounts: [0], skills: [])),
       13: CardStruct(card_id: 13, name: "Caim", bp: 5000, cost: 3, type: 1, category: 0, skill: Skill(description: "When this unit enters the field, you draw a card.", triggers: [1], asks: [0], types: [7], amounts: [1], skills: [])),
       14: CardStruct(card_id: 14, name: "Limaru", bp: 6000, cost: 3, type: 1, category: 0, skill: Skill(description: "At the end of your turn, restore this unit's right of action.", triggers: [4], asks: [0], types: [8], amounts: [0], skills: [])),
-      15: CardStruct(card_id: 15, name: "Roin", bp: 3000, cost: 2, type: 1, category: 0, skill: Skill(description: "When this unit blocks, this unit's BP is +2000 until end of turn.", triggers: [3], asks: [0], types: [2], amounts: [2000], skills: [])),
+      15: CardStruct(card_id: 15, name: "Roin", bp: 4000, cost: 2, type: 1, category: 0, skill: Skill(description: "When this unit blocks, this unit's BP is +2000 until end of turn.", triggers: [3], asks: [0], types: [2], amounts: [2000], skills: [])),
       16: CardStruct(card_id: 16, name: "Rairyu", bp: 6000, cost: 5, type: 1, category: 0, skill: Skill(description: "When this unit enters the field, choose one of your opponent's acted-up units. Deal 7000 damage to it.", triggers: [1], asks: [2], types: [1], amounts: [7000], skills: [])),
       17: CardStruct(card_id: 17, name: "Drive", bp: 0, cost: 0, type: 4, category: 1, skill: Skill(description: "When your unit attacks, its BP is +2000 until end of turn.", triggers: [2], asks: [0], types: [2], amounts: [3000], skills: [])),
       18: CardStruct(card_id: 18, name: "Canon", bp: 0, cost: 0, type: 4, category: 1, skill: Skill(description: "When your unit enters the field, choose one of your opponent's units. Deal 1000 damage to it.", triggers: [1], asks: [1], types: [1], amounts: [1000], skills: [])),
@@ -1936,7 +1950,7 @@ pub contract CodeOfFlowBeta7 {
       22: CardStruct(card_id: 22, name: "Dainsleif", bp: 0, cost: 1, type: 0, category: 2, skill: Skill(description: "When your unit attacks, destroy a card in your opponent's trigger zone at random.", triggers: [2], asks: [0], types: [3], amounts: [1], skills: [])),
       23: CardStruct(card_id: 23, name: "Photon", bp: 0, cost: 0, type: 1, category: 2, skill: Skill(description: "When your unit enters the field, choose one of your opponent's acted-up units. Deal 3000 damage to it.", triggers: [1], asks: [2], types: [1], amounts: [3000], skills: [])),
       24: CardStruct(card_id: 24, name: "Titan's Lock", bp: 0, cost: 0, type: 1, category: 2, skill: Skill(description: "When your unit attacks, choose one of your opponent's units. Consume it's right of action.", triggers: [2], asks: [1], types: [5], amounts: [1], skills: [])),
-      25: CardStruct(card_id: 25, name: "Judge", bp: 0, cost: 6, type: 1, category: 2, skill: Skill(description: "Consumes the right of action of all opposing units.", triggers: [2], asks: [0], types: [5], amounts: [5], skills: [])),
+      25: CardStruct(card_id: 25, name: "Judge", bp: 0, cost: 6, type: 1, category: 2, skill: Skill(description: "When your unit attacks, consumes the right of action of all opposing units.", triggers: [2], asks: [0], types: [5], amounts: [5], skills: [])),
       26: CardStruct(card_id: 26, name: "Hero's Sword", bp: 0, cost: 0, type: 4, category: 2, skill: Skill(description: "When your unit fights, it gets +2000 BP until end of turn.", triggers: [5], asks: [0], types: [2], amounts: [2000], skills: [])),
       27: CardStruct(card_id: 27, name: "Signal for assault", bp: 0, cost: 3, type: 4, category: 2, skill: Skill(description: "When your unit enters the field, it gives all your units [Speed Move] (this unit is not affected by action restrictions for the turn it enters the field) until end of turn.", triggers: [1], asks: [3], types: [11], amounts: [0], skills: []))
       /* MEMO
