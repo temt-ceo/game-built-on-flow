@@ -602,6 +602,17 @@ pub contract CodeOfFlowBeta7 {
                   }
                 }
               }
+              // assess is this damage enough to beat the unit.
+              if let opponent = info.opponent_field_unit[target] {
+                let card_id: UInt16 = info.opponent_field_unit[target]!
+                let enemy = CodeOfFlowBeta7.cardInfo[card_id]!
+                if Int(enemy.bp) <= info.opponent_field_unit_bp_amount_of_change[target]! * -1 {
+                  // beat the opponent
+                  info.opponent_field_unit[target] = nil
+                  info.opponent_field_unit_bp_amount_of_change[target] = nil
+                  info.opponent_dead_count = info.opponent_dead_count + 1
+                }
+              }
             }
             //---- HellDog (Trigger lost) ----
             if (unit.skill.type_1 == 3) {
@@ -1019,6 +1030,87 @@ pub contract CodeOfFlowBeta7 {
             lost_card_flg_cnt = lost_card_flg_cnt + 1
           }
         }
+
+        // Used Intercept Card
+        for card_position in used_intercept_positions {
+          let trigger_card_id = info.your_trigger_cards[card_position]!
+          let trigger = CodeOfFlowBeta7.cardInfo[trigger_card_id]!
+          // info.your_trigger_cards[card_position] = nil  Remove when defence_action transaction is executed.
+          // info.your_dead_count = info.your_dead_count + 1
+
+          // trigger when the unit is attacking
+          if (trigger.skill.trigger_1 == 2 || trigger.skill.trigger_1 == 5) {
+            //---- BP Pump ----
+            if (trigger.skill.type_1 == 2) {
+              if let your_field_unit_bp_amount_of_change = info.your_field_unit_bp_amount_of_change[attack_unit] {
+                info.your_field_unit_bp_amount_of_change[attack_unit] = your_field_unit_bp_amount_of_change + Int(trigger.skill.amount_1)
+              } else {
+                info.your_field_unit_bp_amount_of_change[attack_unit] = Int(trigger.skill.amount_1)
+              }
+            }
+            // Enemy Unit Target
+            var target: UInt8 = 1
+            if (enemy_skill_target != nil) {
+              target = enemy_skill_target!
+            }
+            //---- Damage ----
+            if (trigger.skill.type_1 == 1) {
+              // Damage to one target unit
+              if (trigger.skill.ask_1 == 1) {
+                if let opponent_field_unit_bp_amount_of_change = info.opponent_field_unit_bp_amount_of_change[target] {
+                  info.opponent_field_unit_bp_amount_of_change[target] = opponent_field_unit_bp_amount_of_change + (-1 * Int(trigger.skill.amount_1))
+                } else {
+                  info.opponent_field_unit_bp_amount_of_change[target] = -1 * Int(trigger.skill.amount_1)
+                }
+                // assess is this damage enough to beat the unit.
+                if let opponent = info.opponent_field_unit[target] {
+                  let card_id: UInt16 = info.opponent_field_unit[target]!
+                  let unit = CodeOfFlowBeta7.cardInfo[card_id]!
+                  if Int(unit.bp) < info.opponent_field_unit_bp_amount_of_change[target]! * -1 {
+                    // beat the opponent
+                    info.opponent_field_unit[target] = nil
+                    info.opponent_dead_count = info.opponent_dead_count + 1
+                  }
+                }
+              // Only target which has no action right
+              } else if (trigger.skill.ask_1 == 2) {
+                if (info.opponent_field_unit_action[target] == 3) { // // 2: can attack, 1: can defence only, 0: nothing can do.
+                  if let opponent_field_unit_bp_amount_of_change = info.opponent_field_unit_bp_amount_of_change[target] {
+                    info.opponent_field_unit_bp_amount_of_change[target] = opponent_field_unit_bp_amount_of_change + (-1 * Int(trigger.skill.amount_1))
+                  } else {
+                    info.opponent_field_unit_bp_amount_of_change[target] = -1 * Int(trigger.skill.amount_1)
+                  }
+                }
+                // assess is this damage enough to beat the unit.
+                if let opponent = info.opponent_field_unit[target] {
+                  let card_id: UInt16 = info.opponent_field_unit[target]!
+                  let unit = CodeOfFlowBeta7.cardInfo[card_id]!
+                  if Int(unit.bp) < info.opponent_field_unit_bp_amount_of_change[target]! * -1 {
+                    // beat the opponent
+                    info.opponent_field_unit[target] = nil
+                    info.opponent_dead_count = info.opponent_dead_count + 1
+                  }
+                }
+              }
+            }
+
+            //---- Trigger lost ----
+            if (trigger.skill.type_1 == 3) {
+              lost_card_flg_cnt = lost_card_flg_cnt + 1
+            }
+            //---- Remove action right ----
+            if (trigger.skill.type_1 == 5) {
+              if trigger.skill.amount_1 == 1 {
+                info.opponent_field_unit_action[target] = 0 // // 2: can attack, 1: can defence only, 0: nothing can do.
+              } else if (trigger.skill.amount_1 == 5) {
+                for enemy_position in info.opponent_field_unit_action.keys {
+                  info.opponent_field_unit_action[enemy_position] = 0
+                }
+              }
+            }
+          }
+          used_trigger_cards.append(trigger_card_id)
+        }
         ///////////////↑↑attribute evaluation↑↑///////////
 
         var unit_pump: UInt = 0
@@ -1115,7 +1207,7 @@ pub contract CodeOfFlowBeta7 {
         info.newly_drawed_cards = []
         let opponent = info.opponent
         //////////////////////////////////
-        // When the player has attacked //
+        // The Transaction from the player has attacked (アタック側からのトランザクション)
         //////////////////////////////////
         if (info.is_first == info.is_first_turn && info.your_attacking_card != nil) {
           /// attribute evaluation ///
@@ -1174,10 +1266,10 @@ pub contract CodeOfFlowBeta7 {
                   if (trigger.skill.trigger_1 == 2 || trigger.skill.trigger_1 == 5) {
                     //---- BP Pump ----
                     if (trigger.skill.type_1 == 2) {
-                      if let opponent_field_unit_bp_amount_of_change = infoOpponent.your_field_unit_bp_amount_of_change[attack_unit] {
-                        info.opponent_field_unit_bp_amount_of_change[attack_unit] = opponent_field_unit_bp_amount_of_change + Int(trigger.skill.amount_1)
+                      if let opponent_field_unit_bp_amount_of_change = info.opponent_field_unit_bp_amount_of_change[opponent_defend_position!] {
+                        info.opponent_field_unit_bp_amount_of_change[opponent_defend_position!] = opponent_field_unit_bp_amount_of_change + Int(trigger.skill.amount_1)
                       } else {
-                        info.opponent_field_unit_bp_amount_of_change[attack_unit] = Int(trigger.skill.amount_1)
+                        info.opponent_field_unit_bp_amount_of_change[opponent_defend_position!] = Int(trigger.skill.amount_1)
                       }
                     }
                   }
@@ -1203,23 +1295,49 @@ pub contract CodeOfFlowBeta7 {
               if (Int(unit.bp) + opponentPump < Int(info.your_attacking_card!.bp) + yourPump) {
                 info.opponent_field_unit[opponent_defend_position!] = nil
                 info.opponent_field_unit_bp_amount_of_change[opponent_defend_position!] = nil
+                info.opponent_field_unit_action[opponent_defend_position!] = nil
                 info.opponent_dead_count = info.opponent_dead_count + 1
+                info.your_field_unit_bp_amount_of_change[info.your_attacking_card!.position] = (Int(info.your_attacking_card!.bp) + yourPump) - (Int(unit.bp) + opponentPump)
               } else if (Int(unit.bp) + opponentPump == Int(info.your_attacking_card!.bp) + yourPump) {
                 info.your_field_unit[info.your_attacking_card!.position] = nil
                 info.your_field_unit_bp_amount_of_change[info.your_attacking_card!.position!] = nil
+                info.your_field_unit_action[info.your_attacking_card!.position!] = nil
                 info.your_dead_count = info.your_dead_count + 1
                 info.opponent_field_unit[opponent_defend_position!] = nil
                 info.opponent_field_unit_bp_amount_of_change[opponent_defend_position!] = nil
+                info.opponent_field_unit_action[opponent_defend_position!] = nil
                 info.opponent_dead_count = info.opponent_dead_count + 1
               } else {
                 info.your_field_unit[info.your_attacking_card!.position] = nil
                 info.your_field_unit_bp_amount_of_change[info.your_attacking_card!.position!] = nil
+                info.your_field_unit_action[info.your_attacking_card!.position!] = nil
                 info.your_dead_count = info.your_dead_count + 1
+                info.opponent_field_unit_bp_amount_of_change[opponent_defend_position!] = (Int(unit.bp) + opponentPump) - (Int(info.your_attacking_card!.bp) + yourPump)
               }
               info.your_field_unit_length = info.your_field_unit.keys.length
             }
           } else {
             info.opponent_life = info.opponent_life - 1
+            for card_position in attacker_used_intercept_positions {
+              let trigger_card_id = info.your_trigger_cards[card_position]!
+              let trigger = CodeOfFlowBeta7.cardInfo[trigger_card_id]!
+              let attack_unit = info.your_attacking_card!.position
+
+              info.your_trigger_cards[card_position] = nil
+              info.your_dead_count = info.your_dead_count + 1
+
+              // trigger when the unit is attacking
+              if (trigger.skill.trigger_1 == 2 || trigger.skill.trigger_1 == 5) {
+                //---- BP Pump ----
+                if (trigger.skill.type_1 == 2) {
+                  if let your_field_unit_bp_amount_of_change = info.your_field_unit_bp_amount_of_change[attack_unit] {
+                    info.your_field_unit_bp_amount_of_change[attack_unit] = your_field_unit_bp_amount_of_change + Int(trigger.skill.amount_1)
+                  } else {
+                    info.your_field_unit_bp_amount_of_change[attack_unit] = Int(trigger.skill.amount_1)
+                  }
+                }
+              }
+            }
           }
           if info.your_attacking_card!.attacked_time > info.last_time_turnend! {
             info.last_time_turnend = info.last_time_turnend! + (info.your_attacking_card!.attacked_time - info.last_time_turnend!)
@@ -1262,7 +1380,7 @@ pub contract CodeOfFlowBeta7 {
             CodeOfFlowBeta7.battleInfo[opponent] = infoOpponent
           }
         //////////////////////////////////
-        // When the player has defended //
+        // The Transaction from the player has defended (防御側からのトランザクション)
         //////////////////////////////////
         } else if (info.is_first != info.is_first_turn && info.enemy_attacking_card != nil) {
           /// attribute evaluation ///
@@ -1346,23 +1464,53 @@ pub contract CodeOfFlowBeta7 {
               if (Int(unit.bp) + yourPump < Int(info.enemy_attacking_card!.bp) + opponentPump) {
                 info.your_field_unit[opponent_defend_position!] = nil
                 info.your_field_unit_bp_amount_of_change[opponent_defend_position!] = nil
+                info.your_field_unit_action[opponent_defend_position!] = nil
                 info.your_dead_count = info.your_dead_count + 1
+                info.opponent_field_unit_bp_amount_of_change[info.enemy_attacking_card!.position] = (Int(info.enemy_attacking_card!.bp) + opponentPump) - (Int(unit.bp) + yourPump)
               } else if (Int(unit.bp) + yourPump == Int(info.enemy_attacking_card!.bp) + opponentPump) {
                 info.opponent_field_unit[info.enemy_attacking_card!.field_position] = nil
                 info.opponent_field_unit_bp_amount_of_change[info.enemy_attacking_card!.position] = nil
+                info.opponent_field_unit_action[info.enemy_attacking_card!.position] = nil
                 info.opponent_dead_count = info.opponent_dead_count + 1
                 info.your_field_unit[opponent_defend_position!] = nil
                 info.your_field_unit_bp_amount_of_change[opponent_defend_position!] = nil
+                info.your_field_unit_action[opponent_defend_position!] = nil
                 info.your_dead_count = info.your_dead_count + 1
               } else {
                 info.opponent_field_unit[info.enemy_attacking_card!.field_position] = nil
                 info.opponent_field_unit_bp_amount_of_change[info.enemy_attacking_card!.position] = nil
+                info.opponent_field_unit_action[info.enemy_attacking_card!.position] = nil
                 info.opponent_dead_count = info.opponent_dead_count + 1
+                info.your_field_unit_bp_amount_of_change[opponent_defend_position!] = (Int(unit.bp) + yourPump) - (Int(info.enemy_attacking_card!.bp) + opponentPump)
               }
               info.your_field_unit_length = info.your_field_unit.keys.length
             }
           } else {
             info.your_life = info.your_life - 1
+            if let infoOpponent = CodeOfFlowBeta7.battleInfo[opponent] {
+              for card_position in attacker_used_intercept_positions {
+                let trigger_card_id = infoOpponent.your_trigger_cards[card_position]!
+                let trigger = CodeOfFlowBeta7.cardInfo[trigger_card_id]!
+                let attack_unit = info.enemy_attacking_card!.position
+
+                infoOpponent.your_trigger_cards[card_position] = nil
+                infoOpponent.your_dead_count = infoOpponent.your_dead_count + 1
+
+                // trigger when the unit is attacking
+                if (trigger.skill.trigger_1 == 2 || trigger.skill.trigger_1 == 5) {
+                  //---- BP Pump ----
+                  if (trigger.skill.type_1 == 2) {
+                    if let opponent_field_unit_bp_amount_of_change = infoOpponent.your_field_unit_bp_amount_of_change[attack_unit] {
+                      info.opponent_field_unit_bp_amount_of_change[attack_unit] = opponent_field_unit_bp_amount_of_change + Int(trigger.skill.amount_1)
+                    } else {
+                      info.opponent_field_unit_bp_amount_of_change[attack_unit] = Int(trigger.skill.amount_1)
+                    }
+                  }
+                }
+              }
+              // Save
+              CodeOfFlowBeta7.battleInfo[opponent] = infoOpponent
+            }
           }
           if info.enemy_attacking_card!.attacked_time > info.last_time_turnend! {
             info.last_time_turnend = info.last_time_turnend! + (info.enemy_attacking_card!.attacked_time - info.last_time_turnend!)
@@ -1413,14 +1561,10 @@ pub contract CodeOfFlowBeta7 {
     pub fun turn_change(player_id: UInt, from_opponent: Bool, trigger_cards: {UInt8: UInt16}) {
       if let info = CodeOfFlowBeta7.battleInfo[player_id] {
 
-        info.newly_drawed_cards = []
-
         // Check is turn already changed.
         if info.is_first != info.is_first_turn {
           return;
         }
-
-        info.last_time_turnend = getCurrentBlock().timestamp
 
         // 決着がついていない攻撃がまだある
         if (info.your_attacking_card != nil && info.your_attacking_card!.attacked_time + 20.0 > info.last_time_turnend!) {
@@ -1433,6 +1577,9 @@ pub contract CodeOfFlowBeta7 {
         } else {
           info.enemy_attacking_card = nil
         }
+
+        info.newly_drawed_cards = []
+        info.last_time_turnend = getCurrentBlock().timestamp
 
         // トリガーゾーンのカードを合わせる
         for position in trigger_cards.keys {
@@ -1466,7 +1613,9 @@ pub contract CodeOfFlowBeta7 {
 
         // Set Field Unit Actions To Defence Only
         for position in info.your_field_unit.keys {
-          info.your_field_unit_action[position] = 1 // 2: can attack, 1: can defence only, 0: nothing can do.
+          if (info.your_field_unit_action[position] == 2) {
+            info.your_field_unit_action[position] = 1 // 2: can attack, 1: can defence only, 0: nothing can do.
+          }
           if info.your_field_unit[position] != nil && info.your_field_unit[position] != 0 {
             let card_id: UInt16 = info.your_field_unit[position]!
             let unit = CodeOfFlowBeta7.cardInfo[card_id]!
@@ -1552,7 +1701,11 @@ pub contract CodeOfFlowBeta7 {
 
           // Recover Field Unit Actions
           for position in infoOpponent.your_field_unit_action.keys {
-            infoOpponent.your_field_unit_action[position] = 2 // 2: can attack, 1: can defence only, 0: nothing can do.
+            if (infoOpponent.your_field_unit[position] == nil) {
+              infoOpponent.your_field_unit_action[position] = nil
+            } else {
+              infoOpponent.your_field_unit_action[position] = 2 // 2: can attack, 1: can defence only, 0: nothing can do.
+            }
           }
           // Recover CP
           if infoOpponent.turn <= 6 {
