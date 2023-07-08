@@ -333,13 +333,13 @@ pub contract CodeOfFlowV2 {
 
   pub fun calcPoint(win_count: UInt, loss_count: UInt): UInt {
     if ((win_count + loss_count) > 25) {
-      return UInt((win_count / (win_count + loss_count)) * 100 + win_count);
+      return UInt(UFix64(win_count) / UFix64(win_count + loss_count) * 100.0) + win_count;
     } else if ((win_count + loss_count) > 15) {
-      return UInt((win_count / (win_count + loss_count)) * 50 + win_count);
+      return UInt(UFix64(win_count) / UFix64(win_count + loss_count) * 50.0) + win_count;
     } else if ((win_count + loss_count) > 5) {
-      return UInt((win_count / (win_count + loss_count)) * 25 + win_count);
+      return UInt(UFix64(win_count) / UFix64(win_count + loss_count) * 25.0) + win_count;
     } else {
-      return UInt((win_count / (win_count + loss_count)) * 12 + win_count);
+      return UInt(UFix64(win_count) / UFix64(win_count + loss_count) * 12.0) + win_count;
     }
   }
 
@@ -824,8 +824,20 @@ pub contract CodeOfFlowV2 {
                               } else {
                                 info.opponent_field_unit_bp_amount_of_change[unit_position] = -1 * Int(trigger.skill.amount_1)
                               }
+                              target = unit_position;
                               break;
                             }
+                          }
+                        }
+                        // assess is this damage enough to beat the unit.
+                        if let opponent = info.opponent_field_unit[target] {
+                          let card_id: UInt16 = info.opponent_field_unit[target]!
+                          let unit = CodeOfFlowV2.cardInfo[card_id]!
+                          if Int(unit.bp) <= info.opponent_field_unit_bp_amount_of_change[target]! * -1 {
+                            // beat the opponent
+                            info.opponent_field_unit[target] = nil
+                            info.opponent_field_unit_bp_amount_of_change[target] = nil
+                            info.opponent_dead_count = info.opponent_dead_count + 1
                           }
                         }
                       }
@@ -915,16 +927,16 @@ pub contract CodeOfFlowV2 {
               let decodedArray = blockCreatedAt.decodeHex()
               let pseudorandomNumber1 = decodedArray[decodedArray.length - 1]
               let withdrawPosition1 = pseudorandomNumber1 % (UInt8(infoOpponent.your_trigger_cards.keys.length) - 1)
-              var target: UInt8 = 0
+              var lostTarget: UInt8 = 0
               for key in infoOpponent.your_trigger_cards.keys {
                 if (key == withdrawPosition1 + 1) {
-                  target = key
+                  lostTarget = key
                 }
               }
-              if (target == 0) {
-                target = infoOpponent.your_trigger_cards.keys[0]
+              if (lostTarget == 0) {
+                lostTarget = infoOpponent.your_trigger_cards.keys[0]
               }
-              infoOpponent.your_trigger_cards.remove(key: target)
+              infoOpponent.your_trigger_cards.remove(key: lostTarget)
               infoOpponent.your_dead_count = infoOpponent.your_dead_count + 1
               info.opponent_trigger_cards = infoOpponent.your_trigger_cards.length
               info.opponent_dead_count = info.opponent_dead_count + 1
@@ -1144,7 +1156,7 @@ pub contract CodeOfFlowV2 {
           // info.your_dead_count = info.your_dead_count + 1
 
           // trigger when the unit is attacking
-          if (trigger.skill.trigger_1 == 2 || trigger.skill.trigger_1 == 5) {
+          if (trigger.skill.trigger_1 == 2) {
             //---- BP Pump ----
             if (trigger.skill.type_1 == 2) {
               if let your_field_unit_bp_amount_of_change = info.your_field_unit_bp_amount_of_change[attack_unit] {
@@ -1341,8 +1353,8 @@ pub contract CodeOfFlowV2 {
                 info.your_trigger_cards[card_position] = nil
                 info.your_dead_count = info.your_dead_count + 1
 
-                // trigger when the unit is attacking
-                if (trigger.skill.trigger_1 == 2 || trigger.skill.trigger_1 == 5) {
+                // trigger when the unit is battling
+                if (trigger.skill.trigger_1 == 5) {
                   //---- BP Pump ----
                   if (trigger.skill.type_1 == 2) {
                     if let your_field_unit_bp_amount_of_change = info.your_field_unit_bp_amount_of_change[attack_unit] {
@@ -1366,8 +1378,8 @@ pub contract CodeOfFlowV2 {
                   info.opponent_dead_count = info.opponent_dead_count + 1
 
 
-                  // trigger when the unit is attacking
-                  if (trigger.skill.trigger_1 == 2 || trigger.skill.trigger_1 == 5) {
+                  // trigger when the unit is battling
+                  if (trigger.skill.trigger_1 == 5) {
                     //---- BP Pump ----
                     if (trigger.skill.type_1 == 2) {
                       if let opponent_field_unit_bp_amount_of_change = info.opponent_field_unit_bp_amount_of_change[opponent_defend_position!] {
@@ -1401,7 +1413,7 @@ pub contract CodeOfFlowV2 {
                 info.opponent_field_unit_bp_amount_of_change[opponent_defend_position!] = nil
                 info.opponent_field_unit_action[opponent_defend_position!] = nil
                 info.opponent_dead_count = info.opponent_dead_count + 1
-                info.your_field_unit_bp_amount_of_change[info.your_attacking_card!.position] = (Int(info.your_attacking_card!.bp) + yourPump) - (Int(unit.bp) + opponentPump)
+                info.your_field_unit_bp_amount_of_change[info.your_attacking_card!.position] = yourPump - (Int(unit.bp) + opponentPump) // Calculate unit's damage.
               } else if (Int(unit.bp) + opponentPump == Int(info.your_attacking_card!.bp) + yourPump) {
                 info.your_field_unit[info.your_attacking_card!.position] = nil
                 info.your_field_unit_bp_amount_of_change[info.your_attacking_card!.position!] = nil
@@ -1416,7 +1428,7 @@ pub contract CodeOfFlowV2 {
                 info.your_field_unit_bp_amount_of_change[info.your_attacking_card!.position!] = nil
                 info.your_field_unit_action[info.your_attacking_card!.position!] = nil
                 info.your_dead_count = info.your_dead_count + 1
-                info.opponent_field_unit_bp_amount_of_change[opponent_defend_position!] = (Int(unit.bp) + opponentPump) - (Int(info.your_attacking_card!.bp) + yourPump)
+                info.opponent_field_unit_bp_amount_of_change[opponent_defend_position!] = opponentPump - (Int(info.your_attacking_card!.bp) + yourPump)  // Calculate unit's damage.
               }
             }
           } else {
@@ -1429,8 +1441,8 @@ pub contract CodeOfFlowV2 {
               info.your_trigger_cards[card_position] = nil
               info.your_dead_count = info.your_dead_count + 1
 
-              // trigger when the unit is attacking
-              if (trigger.skill.trigger_1 == 2 || trigger.skill.trigger_1 == 5) {
+              // trigger when the unit is battling
+              if (trigger.skill.trigger_1 == 5) {
                 //---- BP Pump ----
                 if (trigger.skill.type_1 == 2) {
                   if let your_field_unit_bp_amount_of_change = info.your_field_unit_bp_amount_of_change[attack_unit] {
@@ -1513,8 +1525,8 @@ pub contract CodeOfFlowV2 {
                   infoOpponent.your_trigger_cards[card_position] = nil
                   infoOpponent.your_dead_count = infoOpponent.your_dead_count + 1
 
-                  // trigger when the unit is attacking
-                  if (trigger.skill.trigger_1 == 2 || trigger.skill.trigger_1 == 5) {
+                  // trigger when the unit is battling
+                  if (trigger.skill.trigger_1 == 5) {
                     //---- BP Pump ----
                     if (trigger.skill.type_1 == 2) {
                       if let opponent_field_unit_bp_amount_of_change = infoOpponent.your_field_unit_bp_amount_of_change[attack_unit] {
@@ -1536,7 +1548,7 @@ pub contract CodeOfFlowV2 {
                 info.your_trigger_cards[card_position] = nil
                 info.your_dead_count = info.your_dead_count + 1
 
-                // trigger when the unit is blocking
+                // trigger when the unit is battling or blocking
                 if (trigger.skill.trigger_1 == 3 || unit.skill.trigger_1 == 5) {
                   //---- BP Pump ----
                   if (trigger.skill.type_1 == 2) {
@@ -1568,7 +1580,7 @@ pub contract CodeOfFlowV2 {
                 info.your_field_unit_bp_amount_of_change[opponent_defend_position!] = nil
                 info.your_field_unit_action[opponent_defend_position!] = nil
                 info.your_dead_count = info.your_dead_count + 1
-                info.opponent_field_unit_bp_amount_of_change[info.enemy_attacking_card!.position] = (Int(info.enemy_attacking_card!.bp) + opponentPump) - (Int(unit.bp) + yourPump)
+                info.opponent_field_unit_bp_amount_of_change[info.enemy_attacking_card!.position] = opponentPump - (Int(unit.bp) + yourPump) // Calculate unit's damage.
               } else if (Int(unit.bp) + yourPump == Int(info.enemy_attacking_card!.bp) + opponentPump) {
                 info.opponent_field_unit[info.enemy_attacking_card!.position] = nil
                 info.opponent_field_unit_bp_amount_of_change[info.enemy_attacking_card!.position] = nil
@@ -1583,7 +1595,7 @@ pub contract CodeOfFlowV2 {
                 info.opponent_field_unit_bp_amount_of_change[info.enemy_attacking_card!.position] = nil
                 info.opponent_field_unit_action[info.enemy_attacking_card!.position] = nil
                 info.opponent_dead_count = info.opponent_dead_count + 1
-                info.your_field_unit_bp_amount_of_change[opponent_defend_position!] = (Int(unit.bp) + yourPump) - (Int(info.enemy_attacking_card!.bp) + opponentPump)
+                info.your_field_unit_bp_amount_of_change[opponent_defend_position!] = yourPump - (Int(info.enemy_attacking_card!.bp) + opponentPump) // Calculate unit's damage.
               }
             }
           } else {
@@ -1597,8 +1609,8 @@ pub contract CodeOfFlowV2 {
                 infoOpponent.your_trigger_cards[card_position] = nil
                 infoOpponent.your_dead_count = infoOpponent.your_dead_count + 1
 
-                // trigger when the unit is attacking
-                if (trigger.skill.trigger_1 == 2 || trigger.skill.trigger_1 == 5) {
+                // trigger when the unit is battling
+                if (trigger.skill.trigger_1 == 5) {
                   //---- BP Pump ----
                   if (trigger.skill.type_1 == 2) {
                     if let opponent_field_unit_bp_amount_of_change = infoOpponent.your_field_unit_bp_amount_of_change[attack_unit] {
@@ -2027,9 +2039,6 @@ pub contract CodeOfFlowV2 {
     pub fun rankingTotalling(playerid: UInt) {
       CodeOfFlowV2.rankingBattleCount = CodeOfFlowV2.rankingBattleCount + 1;
       if let cyberScore = CodeOfFlowV2.playerList[playerid] {
-        // Save battle win.
-        cyberScore.period_win_count = cyberScore.period_win_count + 1;
-        CodeOfFlowV2.playerList[playerid] = cyberScore; // Save
 
         if (playerid != CodeOfFlowV2.ranking3rdWinningPlayerId && playerid != CodeOfFlowV2.ranking2ndWinningPlayerId && playerid != CodeOfFlowV2.ranking1stWinningPlayerId) {
           if let rank3rdScore = CodeOfFlowV2.playerList[CodeOfFlowV2.ranking3rdWinningPlayerId] {
@@ -2079,6 +2088,14 @@ pub contract CodeOfFlowV2 {
         }
       }
       if (CodeOfFlowV2.rankingBattleCount >= CodeOfFlowV2.rankingPeriod) {
+        // Initialize the ranking win count.
+        for playerId in CodeOfFlowV2.playerList.keys {
+          if let score = CodeOfFlowV2.playerList[playerId] {
+            score.period_win_count = 0;
+            score.period_loss_count = 0;
+            CodeOfFlowV2.playerList[playerId] = score; // Save
+          }
+        }
         // Initialize the count.
         CodeOfFlowV2.rankingBattleCount = 0;
         // Pay ranking reward(20 $FLOW)
@@ -2232,7 +2249,7 @@ pub contract CodeOfFlowV2 {
       14: CardStruct(card_id: 14, name: "Limaru", bp: 6000, cost: 3, type: 1, category: 0, skill: Skill(description: "At the end of your turn, restore this unit's right of action.", triggers: [4], asks: [0], types: [8], amounts: [0], skills: [])),
       15: CardStruct(card_id: 15, name: "Roin", bp: 4000, cost: 2, type: 1, category: 0, skill: Skill(description: "When this unit blocks, this unit's BP is +2000 until end of turn.", triggers: [3], asks: [0], types: [2], amounts: [2000], skills: [])),
       16: CardStruct(card_id: 16, name: "Rairyu", bp: 6000, cost: 5, type: 1, category: 0, skill: Skill(description: "When this unit enters the field, choose one of your opponent's acted-up units. Deal 7000 damage to it.", triggers: [1], asks: [2], types: [1], amounts: [7000], skills: [])),
-      17: CardStruct(card_id: 17, name: "Drive", bp: 0, cost: 0, type: 4, category: 1, skill: Skill(description: "When your unit attacks, its BP is +2000 until end of turn.", triggers: [2], asks: [0], types: [2], amounts: [3000], skills: [])),
+      17: CardStruct(card_id: 17, name: "Drive", bp: 0, cost: 0, type: 4, category: 1, skill: Skill(description: "When your unit attacks, its BP is +3000 until end of turn.", triggers: [2], asks: [0], types: [2], amounts: [3000], skills: [])),
       18: CardStruct(card_id: 18, name: "Canon", bp: 0, cost: 0, type: 4, category: 1, skill: Skill(description: "When your unit enters the field, choose one of your opponent's units. Deal 1000 damage to it.", triggers: [1], asks: [1], types: [1], amounts: [1000], skills: [])),
       19: CardStruct(card_id: 19, name: "Merchant", bp: 0, cost: 0, type: 4, category: 1, skill: Skill(description: "When your unit enters the field, you draw a card.", triggers: [1], asks: [0], types: [7], amounts: [1], skills: [])),
       20: CardStruct(card_id: 20, name: "Breaker", bp: 0, cost: 1, type: 0, category: 2, skill: Skill(description: "When your unit enters the field, choose one of your opponent's units. Deal 3000 damage to it.", triggers: [1], asks: [1], types: [1], amounts: [3000], skills: [])),
@@ -2240,7 +2257,7 @@ pub contract CodeOfFlowV2 {
       22: CardStruct(card_id: 22, name: "Dainsleif", bp: 0, cost: 1, type: 0, category: 2, skill: Skill(description: "When your unit attacks, destroy a card in your opponent's trigger zone at random.", triggers: [2], asks: [0], types: [3], amounts: [1], skills: [])),
       23: CardStruct(card_id: 23, name: "Photon", bp: 0, cost: 0, type: 1, category: 2, skill: Skill(description: "When your unit enters the field, choose one of your opponent's acted-up units. Deal 3000 damage to it.", triggers: [1], asks: [2], types: [1], amounts: [3000], skills: [])),
       24: CardStruct(card_id: 24, name: "Titan's Lock", bp: 0, cost: 0, type: 1, category: 2, skill: Skill(description: "When your unit attacks, choose one of your opponent's units. Consume it's right of action.", triggers: [2], asks: [1], types: [5], amounts: [1], skills: [])),
-      25: CardStruct(card_id: 25, name: "Judge", bp: 0, cost: 6, type: 1, category: 2, skill: Skill(description: "When your unit attacks, consumes the right of action of all opposing units.", triggers: [2], asks: [0], types: [5], amounts: [5], skills: [])),
+      25: CardStruct(card_id: 25, name: "Judgement", bp: 0, cost: 6, type: 1, category: 2, skill: Skill(description: "When your unit attacks, consumes the right of action of all opposing units.", triggers: [2], asks: [0], types: [5], amounts: [5], skills: [])),
       26: CardStruct(card_id: 26, name: "Hero's Sword", bp: 0, cost: 0, type: 4, category: 2, skill: Skill(description: "When your unit fights, it gets +2000 BP until end of turn.", triggers: [5], asks: [0], types: [2], amounts: [2000], skills: [])),
       27: CardStruct(card_id: 27, name: "Signal for assault", bp: 0, cost: 3, type: 4, category: 2, skill: Skill(description: "When your unit enters the field, it gives all your units [Speed Move] (this unit is not affected by action restrictions for the turn it enters the field) until end of turn.", triggers: [1], asks: [3], types: [11], amounts: [0], skills: []))
       /* MEMO
