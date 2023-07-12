@@ -355,6 +355,10 @@ pub contract CodeOfFlow {
     return self.rankingBattleCount;
   }
 
+  pub fun getCurrentRunkingWinners(): [UInt] {
+    return [self.ranking1stWinningPlayerId, self.ranking2ndWinningPlayerId, self.ranking3rdWinningPlayerId];
+  }
+
   /*
   ** [Resource] Admin (Game Server Processing)
   */
