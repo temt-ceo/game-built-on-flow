@@ -2052,7 +2052,7 @@ pub contract CodeOfFlow {
       CodeOfFlow.rankingBattleCount = CodeOfFlow.rankingBattleCount + 1;
       if let cyberScore = CodeOfFlow.playerList[playerid] {
         // When this game only started
-        if (CodeOfFlow.ranking3rdWinningPlayerId == 0 || CodeOfFlow.ranking2ndWinningPlayerId == 0 || CodeOfFlow.ranking1stWinningPlayerId) {
+        if (CodeOfFlow.ranking3rdWinningPlayerId == 0 || CodeOfFlow.ranking2ndWinningPlayerId == 0 || CodeOfFlow.ranking1stWinningPlayerId == 0) {
           if (CodeOfFlow.ranking1stWinningPlayerId == 0) {
             CodeOfFlow.ranking1stWinningPlayerId = playerid;
           } else if(CodeOfFlow.ranking2ndWinningPlayerId == 0) {
