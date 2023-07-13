@@ -2080,13 +2080,13 @@ pub contract CodeOfFlow {
                   if (CodeOfFlow.calcPoint(win_count: rank2ndScore.period_win_count, loss_count: rank2ndScore.period_loss_count) < CodeOfFlow.calcPoint(win_count: cyberScore.period_win_count, loss_count: cyberScore.period_loss_count)) {
                     if let rank1stScore = CodeOfFlow.playerList[CodeOfFlow.ranking1stWinningPlayerId] {
                       if (CodeOfFlow.calcPoint(win_count: rank1stScore.period_win_count, loss_count: rank1stScore.period_loss_count) < CodeOfFlow.calcPoint(win_count: cyberScore.period_win_count, loss_count: cyberScore.period_loss_count)) {
-                        CodeOfFlow.ranking1stWinningPlayerId = playerid;
-                        CodeOfFlow.ranking2ndWinningPlayerId = CodeOfFlow.ranking1stWinningPlayerId;
                         CodeOfFlow.ranking3rdWinningPlayerId = CodeOfFlow.ranking2ndWinningPlayerId;
+                        CodeOfFlow.ranking2ndWinningPlayerId = CodeOfFlow.ranking1stWinningPlayerId;
+                        CodeOfFlow.ranking1stWinningPlayerId = playerid;
 
                       } else {
-                        CodeOfFlow.ranking2ndWinningPlayerId = playerid;
                         CodeOfFlow.ranking3rdWinningPlayerId = CodeOfFlow.ranking2ndWinningPlayerId;
+                        CodeOfFlow.ranking2ndWinningPlayerId = playerid;
                       }
                     }
                   } else {
@@ -2100,13 +2100,12 @@ pub contract CodeOfFlow {
               if (CodeOfFlow.calcPoint(win_count: rank2ndScore.period_win_count, loss_count: rank2ndScore.period_loss_count) < CodeOfFlow.calcPoint(win_count: cyberScore.period_win_count, loss_count: cyberScore.period_loss_count)) {
                 if let rank1stScore = CodeOfFlow.playerList[CodeOfFlow.ranking1stWinningPlayerId] {
                   if (CodeOfFlow.calcPoint(win_count: rank1stScore.period_win_count, loss_count: rank1stScore.period_loss_count) < CodeOfFlow.calcPoint(win_count: cyberScore.period_win_count, loss_count: cyberScore.period_loss_count)) {
-                    CodeOfFlow.ranking1stWinningPlayerId = playerid;
+                    CodeOfFlow.ranking3rdWinningPlayerId = CodeOfFlow.ranking2ndWinningPlayerId;
                     CodeOfFlow.ranking2ndWinningPlayerId = CodeOfFlow.ranking1stWinningPlayerId;
-                    CodeOfFlow.ranking3rdWinningPlayerId = CodeOfFlow.ranking2ndWinningPlayerId;
-
+                    CodeOfFlow.ranking1stWinningPlayerId = playerid;
                   } else {
-                    CodeOfFlow.ranking2ndWinningPlayerId = playerid;
                     CodeOfFlow.ranking3rdWinningPlayerId = CodeOfFlow.ranking2ndWinningPlayerId;
+                    CodeOfFlow.ranking2ndWinningPlayerId = playerid;
                   }
                 }
               }
@@ -2114,8 +2113,8 @@ pub contract CodeOfFlow {
           } else if (playerid != CodeOfFlow.ranking1stWinningPlayerId) {
             if let rank1stScore = CodeOfFlow.playerList[CodeOfFlow.ranking1stWinningPlayerId] {
               if (CodeOfFlow.calcPoint(win_count: rank1stScore.period_win_count, loss_count: rank1stScore.period_loss_count) < CodeOfFlow.calcPoint(win_count: cyberScore.period_win_count, loss_count: cyberScore.period_loss_count)) { // If it's equal, first come first served.
-                CodeOfFlow.ranking1stWinningPlayerId = playerid;
                 CodeOfFlow.ranking2ndWinningPlayerId = CodeOfFlow.ranking1stWinningPlayerId;
+                CodeOfFlow.ranking1stWinningPlayerId = playerid;
               }
             }
           }
