@@ -687,8 +687,8 @@ pub contract CodeOfFlow {
                   // assess is this damage enough to beat the unit.
                   if let opponent = info.opponent_field_unit[opponent_position] {
                     let card_id: UInt16 = info.opponent_field_unit[opponent_position]!
-                    let unit = CodeOfFlow.cardInfo[card_id]!
-                    if Int(unit.bp) <= info.opponent_field_unit_bp_amount_of_change[opponent_position]! * -1 {
+                    let opponentUnit = CodeOfFlow.cardInfo[card_id]!
+                    if Int(opponentUnit.bp) <= info.opponent_field_unit_bp_amount_of_change[opponent_position]! * -1 {
                       // beat the opponent
                       info.opponent_field_unit[opponent_position] = nil
                       info.opponent_field_unit_action[opponent_position] = nil
@@ -708,8 +708,8 @@ pub contract CodeOfFlow {
                     // assess is this damage enough to beat the unit.
                     if let opponent = info.opponent_field_unit[target] {
                       let card_id: UInt16 = info.opponent_field_unit[target]!
-                      let unit = CodeOfFlow.cardInfo[card_id]!
-                      if Int(unit.bp) <= info.opponent_field_unit_bp_amount_of_change[target]! * -1 {
+                      let opponentUnit = CodeOfFlow.cardInfo[card_id]!
+                      if Int(opponentUnit.bp) <= info.opponent_field_unit_bp_amount_of_change[target]! * -1 {
                         // beat the opponent
                         info.opponent_field_unit[target] = nil
                         info.opponent_field_unit_bp_amount_of_change[target] = nil
@@ -821,8 +821,8 @@ pub contract CodeOfFlow {
                         // assess is this damage enough to beat the unit.
                         if let opponent = info.opponent_field_unit[target] {
                           let card_id: UInt16 = info.opponent_field_unit[target]!
-                          let unit = CodeOfFlow.cardInfo[card_id]!
-                          if Int(unit.bp) <= info.opponent_field_unit_bp_amount_of_change[target]! * -1 {
+                          let opponentUnit = CodeOfFlow.cardInfo[card_id]!
+                          if Int(opponentUnit.bp) <= info.opponent_field_unit_bp_amount_of_change[target]! * -1 {
                             // beat the opponent
                             info.opponent_field_unit[target] = nil
                             info.opponent_field_unit_bp_amount_of_change[target] = nil
@@ -856,8 +856,8 @@ pub contract CodeOfFlow {
                         // assess is this damage enough to beat the unit.
                         if let opponent = info.opponent_field_unit[target] {
                           let card_id: UInt16 = info.opponent_field_unit[target]!
-                          let unit = CodeOfFlow.cardInfo[card_id]!
-                          if Int(unit.bp) <= info.opponent_field_unit_bp_amount_of_change[target]! * -1 {
+                          let opponentUnit = CodeOfFlow.cardInfo[card_id]!
+                          if Int(opponentUnit.bp) <= info.opponent_field_unit_bp_amount_of_change[target]! * -1 {
                             // beat the opponent
                             info.opponent_field_unit[target] = nil
                             info.opponent_field_unit_bp_amount_of_change[target] = nil
@@ -1053,8 +1053,8 @@ pub contract CodeOfFlow {
                 // assess is this damage enough to beat the unit.
                 if let opponent = info.opponent_field_unit[opponent_position] {
                   let card_id: UInt16 = info.opponent_field_unit[opponent_position]!
-                  let unit = CodeOfFlow.cardInfo[card_id]!
-                  if Int(unit.bp) <= info.opponent_field_unit_bp_amount_of_change[opponent_position]! * -1 {
+                  let opponentUnit = CodeOfFlow.cardInfo[card_id]!
+                  if Int(opponentUnit.bp) <= info.opponent_field_unit_bp_amount_of_change[opponent_position]! * -1 {
                     // beat the opponent
                     info.opponent_field_unit[opponent_position] = nil
                     info.opponent_field_unit_bp_amount_of_change[opponent_position] = nil
@@ -1076,8 +1076,8 @@ pub contract CodeOfFlow {
               // assess is this damage enough to beat the unit.
               if let opponent = info.opponent_field_unit[target] {
                 let card_id: UInt16 = info.opponent_field_unit[target]!
-                let unit = CodeOfFlow.cardInfo[card_id]!
-                if Int(unit.bp) <= info.opponent_field_unit_bp_amount_of_change[target]! * -1 {
+                let opponentUnit = CodeOfFlow.cardInfo[card_id]!
+                if Int(opponentUnit.bp) <= info.opponent_field_unit_bp_amount_of_change[target]! * -1 {
                   // beat the opponent
                   info.opponent_field_unit[target] = nil
                   info.opponent_field_unit_bp_amount_of_change[target] = nil
@@ -1101,8 +1101,8 @@ pub contract CodeOfFlow {
               // assess is this damage enough to beat the unit.
               if let opponent = info.opponent_field_unit[target] {
                 let card_id: UInt16 = info.opponent_field_unit[target]!
-                let unit = CodeOfFlow.cardInfo[card_id]!
-                if Int(unit.bp) <= info.opponent_field_unit_bp_amount_of_change[target]! * -1 {
+                let opponentUnit = CodeOfFlow.cardInfo[card_id]!
+                if Int(opponentUnit.bp) <= info.opponent_field_unit_bp_amount_of_change[target]! * -1 {
                   // beat the opponent
                   info.opponent_field_unit[target] = nil
                   info.opponent_field_unit_bp_amount_of_change[target] = nil
@@ -1206,8 +1206,8 @@ pub contract CodeOfFlow {
                 // assess is this damage enough to beat the unit.
                 if let opponent = info.opponent_field_unit[target] {
                   let card_id: UInt16 = info.opponent_field_unit[target]!
-                  let unit = CodeOfFlow.cardInfo[card_id]!
-                  if Int(unit.bp) < info.opponent_field_unit_bp_amount_of_change[target]! * -1 {
+                  let opponentUnit = CodeOfFlow.cardInfo[card_id]!
+                  if Int(opponentUnit.bp) < info.opponent_field_unit_bp_amount_of_change[target]! * -1 {
                     // beat the opponent
                     info.opponent_field_unit[target] = nil
                     info.opponent_dead_count = info.opponent_dead_count + 1
@@ -1225,8 +1225,8 @@ pub contract CodeOfFlow {
                 // assess is this damage enough to beat the unit.
                 if let opponent = info.opponent_field_unit[target] {
                   let card_id: UInt16 = info.opponent_field_unit[target]!
-                  let unit = CodeOfFlow.cardInfo[card_id]!
-                  if Int(unit.bp) < info.opponent_field_unit_bp_amount_of_change[target]! * -1 {
+                  let opponentUnit = CodeOfFlow.cardInfo[card_id]!
+                  if Int(opponentUnit.bp) < info.opponent_field_unit_bp_amount_of_change[target]! * -1 {
                     // beat the opponent
                     info.opponent_field_unit[target] = nil
                     info.opponent_dead_count = info.opponent_dead_count + 1
@@ -2308,7 +2308,7 @@ pub contract CodeOfFlow {
        type 3: Trigger lost(トリガーロスト)
        type 5: Remove action right(行動権剥奪)
        type 7: Draw cards(カードドロー)
-       type 7: Indomitable spirit(不屈)
+       type 8: Indomitable spirit(不屈)
        type 11: Speed Move(スピードムーブ)
 
       */
