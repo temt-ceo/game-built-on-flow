@@ -975,6 +975,7 @@ pub contract CodeOfFlow {
           infoOpponent.opponent_field_unit_action = info.your_field_unit_action
           infoOpponent.your_field_unit_action = info.opponent_field_unit_action
           infoOpponent.your_field_unit_bp_amount_of_change = info.opponent_field_unit_bp_amount_of_change
+          infoOpponent.opponent_field_unit_bp_amount_of_change = info.your_field_unit_bp_amount_of_change
           infoOpponent.your_field_unit = info.opponent_field_unit
           infoOpponent.your_dead_count = info.opponent_dead_count
           infoOpponent.opponent_dead_count = info.your_dead_count
@@ -2100,7 +2101,7 @@ pub contract CodeOfFlow {
             return true
           }
         }
-        if (info.your_life == 0) {
+        if (info.opponent_life == 0) {
           let opponent = info.opponent
           CodeOfFlow.battleInfo.remove(key: player_id)
           CodeOfFlow.battleInfo.remove(key: opponent)
@@ -2124,7 +2125,7 @@ pub contract CodeOfFlow {
           CodeOfFlow.PlayerFlowTokenVault[player_id]!.borrow()!.deposit(from: <- reward)
           self.rankingTotalling(playerid: player_id);
           return true
-        } else if (info.opponent_life == 0) {
+        } else if (info.your_life == 0) {
           let opponent = info.opponent
           CodeOfFlow.battleInfo.remove(key: player_id)
           CodeOfFlow.battleInfo.remove(key: opponent)
