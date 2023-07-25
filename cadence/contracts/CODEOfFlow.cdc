@@ -644,6 +644,7 @@ pub contract CodeOfFlow {
         }
         var lost_card_flg = false
         var speed_move_flg = false
+        var signal_for_assault_flg = false
         // Process Card Skills
         for field_position in unit_card.keys { // Usually this is only one card
           let card_id: UInt16 = unit_card[field_position]!
@@ -944,7 +945,13 @@ pub contract CodeOfFlow {
                 }
                 //---- Speed Move ----
                 if (trigger.skill.type_1 == 11) {
-                  speed_move_flg = true
+                  // Signal for assault
+                  if (trigger.skill.ask_1 == 3) {
+                    signal_for_assault_flg = true;
+                  // Imperiale
+                  } else {
+                    speed_move_flg = true
+                  }
                 }
               }
             }
@@ -956,6 +963,15 @@ pub contract CodeOfFlow {
             info.your_field_unit_action[field_position] = 2 // 2: can attack, 1: can defence only, 0: nothing can do.
           } else {
             info.your_field_unit_action[field_position] = 1
+          }
+        }
+
+        if (signal_for_assault_flg == true) {
+          for your_unit_position in info.your_field_unit.keys {
+            // Add speed move.
+            if (info.your_field_unit_action[your_unit_position] == 1) {
+              info.your_field_unit_action[your_unit_position] = 2
+            }
           }
         }
 
@@ -2168,8 +2184,8 @@ pub contract CodeOfFlow {
             CodeOfFlow.ranking3rdWinningPlayerId = playerid;
           }
         } else {
-          for player_id in self.playerList.keys {
-            if let score = self.playerList[player_id] {
+          for player_id in CodeOfFlow.playerList.keys {
+            if let score = CodeOfFlow.playerList[player_id] {
               if (score.win_count + score.loss_count > 0) {
                 if (player_id != CodeOfFlow.ranking3rdWinningPlayerId && player_id != CodeOfFlow.ranking2ndWinningPlayerId && player_id != CodeOfFlow.ranking1stWinningPlayerId) {
                   if let rank3rdScore = CodeOfFlow.playerList[CodeOfFlow.ranking3rdWinningPlayerId] {
