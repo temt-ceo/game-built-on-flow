@@ -644,6 +644,7 @@ pub contract CodeOfFlow {
         }
         var lost_card_flg = false
         var speed_move_flg = false
+        var signal_for_assault_flg = false
         // Process Card Skills
         for field_position in unit_card.keys { // Usually this is only one card
           let card_id: UInt16 = unit_card[field_position]!
@@ -807,6 +808,45 @@ pub contract CodeOfFlow {
               if (trigger.skill.trigger_1 == 1) {
                 //---- Damage ----
                 if (trigger.skill.type_1 == 1) {
+                  // RainyFlame (Damage to all unit on the field)
+                  if (trigger.skill.ask_1 == 3) {
+                    for opponent_position in info.opponent_field_unit.keys {
+                      if let opponent_field_unit_bp_amount_of_change = info.opponent_field_unit_bp_amount_of_change[opponent_position] {
+                        info.opponent_field_unit_bp_amount_of_change[opponent_position] = opponent_field_unit_bp_amount_of_change + (-1 * Int(trigger.skill.amount_1))
+                      } else {
+                        info.opponent_field_unit_bp_amount_of_change[opponent_position] = -1 * Int(trigger.skill.amount_1)
+                      }
+                      // assess is this damage enough to beat the unit.
+                      if let opponent = info.opponent_field_unit[opponent_position] {
+                        let card_id: UInt16 = info.opponent_field_unit[opponent_position]!
+                        let opponentUnit = CodeOfFlow.cardInfo[card_id]!
+                        if Int(opponentUnit.bp) <= info.opponent_field_unit_bp_amount_of_change[opponent_position]! * -1 {
+                          // beat the opponent
+                          info.opponent_field_unit[opponent_position] = nil
+                          info.opponent_field_unit_action[opponent_position] = nil
+                          info.opponent_dead_count = info.opponent_dead_count + 1
+                        }
+                      }
+                    }
+                    for your_position in info.your_field_unit.keys {
+                      if let your_field_unit_bp_amount_of_change = info.your_field_unit_bp_amount_of_change[your_position] {
+                        info.your_field_unit_bp_amount_of_change[your_position] = your_field_unit_bp_amount_of_change + (-1 * Int(trigger.skill.amount_1))
+                      } else {
+                        info.your_field_unit_bp_amount_of_change[your_position] = -1 * Int(trigger.skill.amount_1)
+                      }
+                      // assess is this damage enough to beat the unit.
+                      if let unit = info.your_field_unit[your_position] {
+                        let card_id: UInt16 = info.your_field_unit[your_position]!
+                        let yourUnit = CodeOfFlow.cardInfo[card_id]!
+                        if Int(yourUnit.bp) <= info.your_field_unit_bp_amount_of_change[your_position]! * -1 {
+                          // the unit is beaten
+                          info.your_field_unit[your_position] = nil
+                          info.your_field_unit_action[your_position] = nil
+                          info.your_dead_count = info.your_dead_count + 1
+                        }
+                      }
+                    }
+                  }
                   // Damage Target
                   if target > 0 {
                     if (info.opponent_field_unit[target] != nil && info.opponent_field_unit[target]! > 0) {
@@ -905,7 +945,13 @@ pub contract CodeOfFlow {
                 }
                 //---- Speed Move ----
                 if (trigger.skill.type_1 == 11) {
-                  speed_move_flg = true
+                  // Signal for assault
+                  if (trigger.skill.ask_1 == 3) {
+                    signal_for_assault_flg = true;
+                  // Imperiale
+                  } else {
+                    speed_move_flg = true
+                  }
                 }
               }
             }
@@ -917,6 +963,15 @@ pub contract CodeOfFlow {
             info.your_field_unit_action[field_position] = 2 // 2: can attack, 1: can defence only, 0: nothing can do.
           } else {
             info.your_field_unit_action[field_position] = 1
+          }
+        }
+
+        if (signal_for_assault_flg == true) {
+          for your_unit_position in info.your_field_unit.keys {
+            // Add speed move.
+            if (info.your_field_unit_action[your_unit_position] == 1) {
+              info.your_field_unit_action[your_unit_position] = 2
+            }
           }
         }
 
@@ -936,6 +991,7 @@ pub contract CodeOfFlow {
           infoOpponent.opponent_field_unit_action = info.your_field_unit_action
           infoOpponent.your_field_unit_action = info.opponent_field_unit_action
           infoOpponent.your_field_unit_bp_amount_of_change = info.opponent_field_unit_bp_amount_of_change
+          infoOpponent.opponent_field_unit_bp_amount_of_change = info.your_field_unit_bp_amount_of_change
           infoOpponent.your_field_unit = info.opponent_field_unit
           infoOpponent.your_dead_count = info.opponent_dead_count
           infoOpponent.opponent_dead_count = info.your_dead_count
@@ -1477,6 +1533,36 @@ pub contract CodeOfFlow {
                 }
               }
             }
+            if (info.opponent_life == 1) {
+              if let infoOpponent = CodeOfFlow.battleInfo[opponent] {
+                for card_position in infoOpponent.your_trigger_cards.keys {
+                  let trigger_card_id = infoOpponent.your_trigger_cards[card_position]!
+                  let trigger = CodeOfFlow.cardInfo[trigger_card_id]!
+                  // trigger when the player is hit by a player attack
+                  if (trigger.skill.trigger_1 == 6) {
+                    if (trigger.skill.type_1 == 9 && trigger.skill.ask_1 == 3) {
+                      // Yggdrasill
+                      infoOpponent.your_trigger_cards[card_position] = nil
+                      // Save
+                      CodeOfFlow.battleInfo[opponent] = infoOpponent
+
+                      for opponent_position in info.opponent_field_unit.keys {
+                        // destroy the unit
+                        info.opponent_field_unit[opponent_position] = nil
+                        info.opponent_field_unit_action[opponent_position] = nil
+                        info.opponent_dead_count = info.opponent_dead_count + 1
+                      }
+                      for your_position in info.your_field_unit.keys {
+                        // destroy the unit
+                        info.your_field_unit[your_position] = nil
+                        info.your_field_unit_action[your_position] = nil
+                        info.your_dead_count = info.your_dead_count + 1
+                      }
+                    }
+                  }
+                }
+              }
+            }
           }
           if info.your_attacking_card!.attacked_time > info.last_time_turnend! {
             info.last_time_turnend = info.last_time_turnend! + (info.your_attacking_card!.attacked_time - info.last_time_turnend!)
@@ -1647,6 +1733,31 @@ pub contract CodeOfFlow {
               }
               // Save
               CodeOfFlow.battleInfo[opponent] = infoOpponent
+            }
+            if (info.your_life == 1) {
+              for card_position in info.your_trigger_cards.keys {
+                let trigger_card_id = info.your_trigger_cards[card_position]!
+                let trigger = CodeOfFlow.cardInfo[trigger_card_id]!
+                // trigger when the player is hit by a player attack
+                if (trigger.skill.trigger_1 == 6) {
+                  if (trigger.skill.type_1 == 9 && trigger.skill.ask_1 == 3) {
+                    // Yggdrasill
+                    info.your_trigger_cards[card_position] = nil
+                    for opponent_position in info.opponent_field_unit.keys {
+                      // destroy the unit
+                      info.opponent_field_unit[opponent_position] = nil
+                      info.opponent_field_unit_action[opponent_position] = nil
+                      info.opponent_dead_count = info.opponent_dead_count + 1
+                    }
+                    for your_position in info.your_field_unit.keys {
+                      // destroy the unit
+                      info.your_field_unit[your_position] = nil
+                      info.your_field_unit_action[your_position] = nil
+                      info.your_dead_count = info.your_dead_count + 1
+                    }
+                  }
+                }
+              }
             }
           }
           if info.enemy_attacking_card!.attacked_time > info.last_time_turnend! {
@@ -2006,7 +2117,7 @@ pub contract CodeOfFlow {
             return true
           }
         }
-        if (info.your_life == 0) {
+        if (info.opponent_life == 0) {
           let opponent = info.opponent
           CodeOfFlow.battleInfo.remove(key: player_id)
           CodeOfFlow.battleInfo.remove(key: opponent)
@@ -2030,7 +2141,7 @@ pub contract CodeOfFlow {
           CodeOfFlow.PlayerFlowTokenVault[player_id]!.borrow()!.deposit(from: <- reward)
           self.rankingTotalling(playerid: player_id);
           return true
-        } else if (info.opponent_life == 0) {
+        } else if (info.your_life == 0) {
           let opponent = info.opponent
           CodeOfFlow.battleInfo.remove(key: player_id)
           CodeOfFlow.battleInfo.remove(key: opponent)
@@ -2062,8 +2173,8 @@ pub contract CodeOfFlow {
     // Totalling Ranking values.
     pub fun rankingTotalling(playerid: UInt) {
       CodeOfFlow.rankingBattleCount = CodeOfFlow.rankingBattleCount + 1;
-      if let cyberScore = CodeOfFlow.playerList[playerid] {
-        // When this game only started
+      if let score = CodeOfFlow.playerList[playerid] {
+        // When this game just started
         if (CodeOfFlow.ranking3rdWinningPlayerId == 0 || CodeOfFlow.ranking2ndWinningPlayerId == 0 || CodeOfFlow.ranking1stWinningPlayerId == 0) {
           if (CodeOfFlow.ranking1stWinningPlayerId == 0) {
             CodeOfFlow.ranking1stWinningPlayerId = playerid;
@@ -2073,48 +2184,54 @@ pub contract CodeOfFlow {
             CodeOfFlow.ranking3rdWinningPlayerId = playerid;
           }
         } else {
-          if (playerid != CodeOfFlow.ranking3rdWinningPlayerId && playerid != CodeOfFlow.ranking2ndWinningPlayerId && playerid != CodeOfFlow.ranking1stWinningPlayerId) {
-            if let rank3rdScore = CodeOfFlow.playerList[CodeOfFlow.ranking3rdWinningPlayerId] {
-              if (CodeOfFlow.calcPoint(win_count: rank3rdScore.period_win_count, loss_count: rank3rdScore.period_loss_count) < CodeOfFlow.calcPoint(win_count: cyberScore.period_win_count, loss_count: cyberScore.period_loss_count)) { // If it's equal, first come first served.
-                if let rank2ndScore = CodeOfFlow.playerList[CodeOfFlow.ranking2ndWinningPlayerId] {
-                  if (CodeOfFlow.calcPoint(win_count: rank2ndScore.period_win_count, loss_count: rank2ndScore.period_loss_count) < CodeOfFlow.calcPoint(win_count: cyberScore.period_win_count, loss_count: cyberScore.period_loss_count)) {
-                    if let rank1stScore = CodeOfFlow.playerList[CodeOfFlow.ranking1stWinningPlayerId] {
-                      if (CodeOfFlow.calcPoint(win_count: rank1stScore.period_win_count, loss_count: rank1stScore.period_loss_count) < CodeOfFlow.calcPoint(win_count: cyberScore.period_win_count, loss_count: cyberScore.period_loss_count)) {
-                        CodeOfFlow.ranking3rdWinningPlayerId = CodeOfFlow.ranking2ndWinningPlayerId;
-                        CodeOfFlow.ranking2ndWinningPlayerId = CodeOfFlow.ranking1stWinningPlayerId;
-                        CodeOfFlow.ranking1stWinningPlayerId = playerid;
+          for player_id in CodeOfFlow.playerList.keys {
+            if let cyberScore = CodeOfFlow.playerList[player_id] {
+              if (cyberScore.win_count + cyberScore.loss_count > 0) {
+                if (player_id != CodeOfFlow.ranking3rdWinningPlayerId && player_id != CodeOfFlow.ranking2ndWinningPlayerId && player_id != CodeOfFlow.ranking1stWinningPlayerId) {
+                  if let rank3rdScore = CodeOfFlow.playerList[CodeOfFlow.ranking3rdWinningPlayerId] {
+                    if (CodeOfFlow.calcPoint(win_count: rank3rdScore.period_win_count, loss_count: rank3rdScore.period_loss_count) < CodeOfFlow.calcPoint(win_count: cyberScore.period_win_count, loss_count: cyberScore.period_loss_count)) { // If it's equal, first come first served.
+                      if let rank2ndScore = CodeOfFlow.playerList[CodeOfFlow.ranking2ndWinningPlayerId] {
+                        if (CodeOfFlow.calcPoint(win_count: rank2ndScore.period_win_count, loss_count: rank2ndScore.period_loss_count) < CodeOfFlow.calcPoint(win_count: cyberScore.period_win_count, loss_count: cyberScore.period_loss_count)) {
+                          if let rank1stScore = CodeOfFlow.playerList[CodeOfFlow.ranking1stWinningPlayerId] {
+                            if (CodeOfFlow.calcPoint(win_count: rank1stScore.period_win_count, loss_count: rank1stScore.period_loss_count) < CodeOfFlow.calcPoint(win_count: cyberScore.period_win_count, loss_count: cyberScore.period_loss_count)) {
+                              CodeOfFlow.ranking3rdWinningPlayerId = CodeOfFlow.ranking2ndWinningPlayerId;
+                              CodeOfFlow.ranking2ndWinningPlayerId = CodeOfFlow.ranking1stWinningPlayerId;
+                              CodeOfFlow.ranking1stWinningPlayerId = player_id;
 
-                      } else {
-                        CodeOfFlow.ranking3rdWinningPlayerId = CodeOfFlow.ranking2ndWinningPlayerId;
-                        CodeOfFlow.ranking2ndWinningPlayerId = playerid;
+                            } else {
+                              CodeOfFlow.ranking3rdWinningPlayerId = CodeOfFlow.ranking2ndWinningPlayerId;
+                              CodeOfFlow.ranking2ndWinningPlayerId = player_id;
+                            }
+                          }
+                        } else {
+                          CodeOfFlow.ranking3rdWinningPlayerId = player_id;
+                        }
                       }
                     }
-                  } else {
-                    CodeOfFlow.ranking3rdWinningPlayerId = playerid;
+                  }
+                } else if (player_id != CodeOfFlow.ranking2ndWinningPlayerId && player_id != CodeOfFlow.ranking1stWinningPlayerId) {
+                  if let rank2ndScore = CodeOfFlow.playerList[CodeOfFlow.ranking2ndWinningPlayerId] { // If it's equal, first come first served.
+                    if (CodeOfFlow.calcPoint(win_count: rank2ndScore.period_win_count, loss_count: rank2ndScore.period_loss_count) < CodeOfFlow.calcPoint(win_count: cyberScore.period_win_count, loss_count: cyberScore.period_loss_count)) {
+                      if let rank1stScore = CodeOfFlow.playerList[CodeOfFlow.ranking1stWinningPlayerId] {
+                        if (CodeOfFlow.calcPoint(win_count: rank1stScore.period_win_count, loss_count: rank1stScore.period_loss_count) < CodeOfFlow.calcPoint(win_count: cyberScore.period_win_count, loss_count: cyberScore.period_loss_count)) {
+                          CodeOfFlow.ranking3rdWinningPlayerId = CodeOfFlow.ranking2ndWinningPlayerId;
+                          CodeOfFlow.ranking2ndWinningPlayerId = CodeOfFlow.ranking1stWinningPlayerId;
+                          CodeOfFlow.ranking1stWinningPlayerId = player_id;
+                        } else {
+                          CodeOfFlow.ranking3rdWinningPlayerId = CodeOfFlow.ranking2ndWinningPlayerId;
+                          CodeOfFlow.ranking2ndWinningPlayerId = player_id;
+                        }
+                      }
+                    }
+                  }
+                } else if (player_id != CodeOfFlow.ranking1stWinningPlayerId) {
+                  if let rank1stScore = CodeOfFlow.playerList[CodeOfFlow.ranking1stWinningPlayerId] {
+                    if (CodeOfFlow.calcPoint(win_count: rank1stScore.period_win_count, loss_count: rank1stScore.period_loss_count) < CodeOfFlow.calcPoint(win_count: cyberScore.period_win_count, loss_count: cyberScore.period_loss_count)) { // If it's equal, first come first served.
+                      CodeOfFlow.ranking2ndWinningPlayerId = CodeOfFlow.ranking1stWinningPlayerId;
+                      CodeOfFlow.ranking1stWinningPlayerId = player_id;
+                    }
                   }
                 }
-              }
-            }
-          } else if (playerid != CodeOfFlow.ranking2ndWinningPlayerId && playerid != CodeOfFlow.ranking1stWinningPlayerId) {
-            if let rank2ndScore = CodeOfFlow.playerList[CodeOfFlow.ranking2ndWinningPlayerId] { // If it's equal, first come first served.
-              if (CodeOfFlow.calcPoint(win_count: rank2ndScore.period_win_count, loss_count: rank2ndScore.period_loss_count) < CodeOfFlow.calcPoint(win_count: cyberScore.period_win_count, loss_count: cyberScore.period_loss_count)) {
-                if let rank1stScore = CodeOfFlow.playerList[CodeOfFlow.ranking1stWinningPlayerId] {
-                  if (CodeOfFlow.calcPoint(win_count: rank1stScore.period_win_count, loss_count: rank1stScore.period_loss_count) < CodeOfFlow.calcPoint(win_count: cyberScore.period_win_count, loss_count: cyberScore.period_loss_count)) {
-                    CodeOfFlow.ranking3rdWinningPlayerId = CodeOfFlow.ranking2ndWinningPlayerId;
-                    CodeOfFlow.ranking2ndWinningPlayerId = CodeOfFlow.ranking1stWinningPlayerId;
-                    CodeOfFlow.ranking1stWinningPlayerId = playerid;
-                  } else {
-                    CodeOfFlow.ranking3rdWinningPlayerId = CodeOfFlow.ranking2ndWinningPlayerId;
-                    CodeOfFlow.ranking2ndWinningPlayerId = playerid;
-                  }
-                }
-              }
-            }
-          } else if (playerid != CodeOfFlow.ranking1stWinningPlayerId) {
-            if let rank1stScore = CodeOfFlow.playerList[CodeOfFlow.ranking1stWinningPlayerId] {
-              if (CodeOfFlow.calcPoint(win_count: rank1stScore.period_win_count, loss_count: rank1stScore.period_loss_count) < CodeOfFlow.calcPoint(win_count: cyberScore.period_win_count, loss_count: cyberScore.period_loss_count)) { // If it's equal, first come first served.
-                CodeOfFlow.ranking2ndWinningPlayerId = CodeOfFlow.ranking1stWinningPlayerId;
-                CodeOfFlow.ranking1stWinningPlayerId = playerid;
               }
             }
           }
@@ -2151,6 +2268,13 @@ pub contract CodeOfFlow {
           CodeOfFlow.PlayerFlowTokenVault[CodeOfFlow.ranking3rdWinningPlayerId]!.borrow()!.deposit(from: <- reward1st)
         }
       }
+    }
+    /*
+    ** Add new card line-up / revise card info.
+    */
+    pub fun edit_card_info() {
+      CodeOfFlow.cardInfo[28] = CodeOfFlow.CardStruct(card_id: 28, name: "RainyFlame", bp: 0, cost: 1, type: 0, category: 2, skill: Skill(description: "When your unit enters the field, deal 2000 damage to all units on the field.", triggers: [1], asks: [3], types: [1], amounts: [2000], skills: []));
+      CodeOfFlow.cardInfo[29] = CodeOfFlow.CardStruct(card_id: 29, name: "Yggdrasill", bp: 0, cost: 0, type: 4, category: 1, skill: Skill(description: "When you are hit by a player attack, if you have 1 life or less, destroy all units.", triggers: [6], asks: [3], types: [9], amounts: [0], skills: []));
     }
     init() {
     }
@@ -2292,13 +2416,14 @@ pub contract CodeOfFlow {
       24: CardStruct(card_id: 24, name: "Titan's Lock", bp: 0, cost: 0, type: 1, category: 2, skill: Skill(description: "When your unit attacks, choose one of your opponent's units. Consume it's right of action.", triggers: [2], asks: [1], types: [5], amounts: [1], skills: [])),
       25: CardStruct(card_id: 25, name: "Judgement", bp: 0, cost: 6, type: 1, category: 2, skill: Skill(description: "When your unit attacks, consumes the right of action of all opposing units.", triggers: [2], asks: [0], types: [5], amounts: [5], skills: [])),
       26: CardStruct(card_id: 26, name: "Hero's Sword", bp: 0, cost: 0, type: 4, category: 2, skill: Skill(description: "When your unit fights, it gets +2000 BP until end of turn.", triggers: [5], asks: [0], types: [2], amounts: [2000], skills: [])),
-      27: CardStruct(card_id: 27, name: "Signal for assault", bp: 0, cost: 3, type: 4, category: 2, skill: Skill(description: "When your unit enters the field, it gives all your units [Speed Move] (this unit is not affected by action restrictions for the turn it enters the field) until end of turn.", triggers: [1], asks: [3], types: [11], amounts: [0], skills: []))
+      27: CardStruct(card_id: 27, name: "Signal for assault", bp: 0, cost: 3, type: 4, category: 2, skill: Skill(description: "When your unit enters the field, give all your units [Speed Move] (this unit is not affected by action restrictions for the turn it enters the field) until end of turn.", triggers: [1], asks: [3], types: [11], amounts: [0], skills: []))
       /* MEMO
        trigger 1: trigger when the card is put on the field (フィールド上にカードを置いた時)  -- trigger: 18,19 intercept: 20,21,23,27 unit: 4,5,7,8,11,13,16
        trigger 2: trigger when the unit is attacking(攻撃時)
        trigger 3: trigger when the unit is blocking(防御時)
        trigger 4: trigger when the turn is changing(ターンが変わる時)
        trigger 5: trigger when the unit is battling（戦闘時）
+       trigger 6: trigger when the player is hit by a player attack（プレイヤーアタック成功時）
        ask 0: Not choose target. (選ばない)
        ask 1: Target one unit (相手を選ぶ)
        ask 2: Only target which has no action right(行動権がない相手を選ぶ)
@@ -2309,6 +2434,7 @@ pub contract CodeOfFlow {
        type 5: Remove action right(行動権剥奪)
        type 7: Draw cards(カードドロー)
        type 8: Indomitable spirit(不屈)
+       type 9: Destroy unit cards(ユニットカード破壊)
        type 11: Speed Move(スピードムーブ)
 
       */

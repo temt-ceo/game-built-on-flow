@@ -1,3 +1,7 @@
+# Note
+This repository is for the application of first Flow Hackathon.<br>
+For the repository of game for Flow Hackathon Season 2, see https://github.com/temt-ceo/CODE-of-flow<br>
+
 # Code Of Joker on the Blockchain!!!!
 
 Can you believe it? My most favorite game is now live on the blockchain.<br>
