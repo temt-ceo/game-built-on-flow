@@ -2173,7 +2173,7 @@ pub contract CodeOfFlow {
     // Totalling Ranking values.
     pub fun rankingTotalling(playerid: UInt) {
       CodeOfFlow.rankingBattleCount = CodeOfFlow.rankingBattleCount + 1;
-      if let cyberScore = CodeOfFlow.playerList[playerid] {
+      if let score = CodeOfFlow.playerList[playerid] {
         // When this game just started
         if (CodeOfFlow.ranking3rdWinningPlayerId == 0 || CodeOfFlow.ranking2ndWinningPlayerId == 0 || CodeOfFlow.ranking1stWinningPlayerId == 0) {
           if (CodeOfFlow.ranking1stWinningPlayerId == 0) {
@@ -2185,8 +2185,8 @@ pub contract CodeOfFlow {
           }
         } else {
           for player_id in CodeOfFlow.playerList.keys {
-            if let score = CodeOfFlow.playerList[player_id] {
-              if (score.win_count + score.loss_count > 0) {
+            if let cyberScore = CodeOfFlow.playerList[player_id] {
+              if (cyberScore.win_count + cyberScore.loss_count > 0) {
                 if (player_id != CodeOfFlow.ranking3rdWinningPlayerId && player_id != CodeOfFlow.ranking2ndWinningPlayerId && player_id != CodeOfFlow.ranking1stWinningPlayerId) {
                   if let rank3rdScore = CodeOfFlow.playerList[CodeOfFlow.ranking3rdWinningPlayerId] {
                     if (CodeOfFlow.calcPoint(win_count: rank3rdScore.period_win_count, loss_count: rank3rdScore.period_loss_count) < CodeOfFlow.calcPoint(win_count: cyberScore.period_win_count, loss_count: cyberScore.period_loss_count)) { // If it's equal, first come first served.
